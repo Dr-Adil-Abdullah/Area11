@@ -1,0 +1,78 @@
+name: Publish demo to GitHub Pages
+
+# The user requested a permanent site that follows this Arena working branch.
+# Room edits must first be committed/pushed; PRs and other branches do not publish.
+on:
+  push:
+    branches:
+      - arena/01a0f117-area11
+  workflow_dispatch:
+    inputs:
+      confirm_public_demo:
+        description: 'Publish this sample-data demo publicly (not a production pharmacy system)'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ github.ref == 'refs/heads/arena/01a0f117-area11' && (github.event_name == 'push' || inputs.confirm_public_demo) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm audit
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Read configured Pages URL
+        id: pages
+        uses: actions/configure-pages@v5
+      - name: Build for the configured project path or custom domain
+        run: npm run build
+        env:
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+      - name: Include non-secret deployed revision metadata
+        run: |
+          node --input-type=module -e "import { readFileSync, writeFileSync } from 'node:fs'; writeFileSync('dist/deployment.json', JSON.stringify({ version: JSON.parse(readFileSync('package.json', 'utf8')).version, commit: process.env.GITHUB_SHA, branch: process.env.GITHUB_REF_NAME, builtAt: new Date().toISOString() }) + '\n')"
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pages-browser-test-failures
+          path: test-results/
+          retention-days: 7
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish built demo
+        id: deployment
+        uses: actions/deploy-pages@v4
