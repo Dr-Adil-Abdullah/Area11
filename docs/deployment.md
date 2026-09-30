@@ -4,11 +4,13 @@
 
 > موجودہ build sample-data demo ہے۔ Static hosting سے مشترکہ cloud database، login/security یا multi-device stock sync خود نہیں بنتے۔ حقیقی مالی/مریضوں کے records upload نہ کریں۔
 
-## موجودہ blocker — GitHub Pages کی ایک بار owner setup
+## موجودہ حالت — code GitHub پر موجود، hosting کا account setup باقی
+
+**application code کامیابی سے اسی [GitHub branch](https://github.com/Dr-Adil-Abdullah/Area11/tree/arena/01a0f117-area11) پر push اور remote API سے verify کیا گیا ہے۔** Cloudflare میں اسے ابھی connect کیا جا سکتا ہے۔ مستقل public website ابھی deploy/verify نہیں ہوئی۔
 
 Arena کے GitHub connection نے repository access دیا، لیکن **Pages enable کرنے کی درخواست HTTP 403: `Resource not accessible by integration`** سے روکی گئی۔ Pages پہلے سے enabled بھی ثابت نہیں ہوئی۔ Active `.github/workflows` files کے ساتھ Git push بھی connection کی **workflows permission** نہ ہونے سے رد ہوئی۔ اس لیے ابھی کسی متوقع public URL کو working/live website نہیں کہا جا رہا۔
 
-Password، personal access token یا 2FA code chat میں دینے کی ضرورت نہیں۔ **اس connection کے ساتھ ترجیح: Cloudflare Pages + Git integration**؛ application code اسی session branch پر push کیا جا سکتا ہے، اور Cloudflare خود build/deploy کرے گا۔ GitHub Pages اختیار کرنا ہو تو Arena میں GitHub connection دوبارہ connect/اس کی workflow اجازت درست کریں، یا repository owner نیچے دیے ہوئے workflow templates خود install کرے۔
+Password، personal access token یا 2FA code chat میں دینے کی ضرورت نہیں۔ **اس connection کے ساتھ ترجیح: Cloudflare Pages + Git integration**؛ application code اسی session branch پر push ہو چکا ہے؛ Cloudflare کو ایک بار connect کرنے کے بعد وہ ہر نئی push پر خود build/deploy کرے گا۔ GitHub Pages اختیار کرنا ہو تو Arena میں GitHub connection دوبارہ connect/اس کی workflow اجازت درست کریں، یا repository owner نیچے دیے ہوئے workflow templates خود install کرے۔
 
 ## راستہ A — GitHub Pages
 
@@ -25,8 +27,9 @@ Password، personal access token یا 2FA code chat میں دینے کی ضرو�
 ```text
 اس room میں code change
    ↓ commit + push to arena/01a0f117-area11
-GitHub Actions: checks + Chromium tests + production build
-   ↓ only if all steps pass
+Cloudflare Git integration: configured production build
+(یا permissions کے بعد installed GitHub Actions: checks + tests + build)
+   ↓ کامیاب build/deployment کے بعد
 اسی مستقل public website کی نئی deployment
    ↓ browser reload
 آپ کو نئی UI/code changes نظر آئیں گی
