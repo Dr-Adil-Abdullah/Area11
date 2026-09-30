@@ -15,6 +15,17 @@
 
 **App dobara chalane ke liye:** `npm run dev` (folder: `Area11`)
 
+### Kya kya kaam kar raha hai (Phase 1)
+
+| Screen | Kya kar sakte hain |
+|---|---|
+| **Products** | Naya product, pack formula (1 Box = X Strip = Y Tab), rates (retail/VIP/doctor), barcode, rack, category/company — sab screen se |
+| **Suppliers** | Naya supplier, balance khud update hota hai |
+| **Purchases** | Stock-in: auto **PINV-0001**, batch + expiry, supplier khatay me, bill print |
+| **Counter (POS)** | Barcode/naam se search, **FIFO** (qareeb tareen expiry pehle), [Box][Strip][Tablet], discount, **neeche round-off**, hold cart, cash/credit, save + print |
+| **Receipt** | 58mm/80mm thermal format, auto-print |
+| **Settings** | Sab kuch badalne ke qabil |
+
 ---
 
 ## 📁 Files (naqsha)
@@ -67,7 +78,7 @@ bash scripts/rules-count.sh                 # Numbered rules check
 |---|---|---|
 | **Stone 0** | Repo, checkpoint system, spec, numbered rule book | ✅ Complete |
 | **Stone 0.5** | Next.js + database + **live preview** + **editable settings** | ✅ **Complete** |
-| **Phase 1** | Products, purchases (PINV), batches/expiry, counter billing, round-off, print, role switcher | ⏳ Agla |
+| **Phase 1** | Products, purchases (PINV), batches/expiry, counter billing, round-off, print | ✅ **Mostly complete** (role switcher baqi) |
 | Phase 2 | Returns, cash closing, owner drawing, expenses | ⏳ |
 | Phase 3 | Suppliers, expiry alerts, reorder + WhatsApp order, samples | ⏳ |
 | Phase 4 | Customers, loyalty, multi-tier rates, split payments, custom fields | ⏳ |

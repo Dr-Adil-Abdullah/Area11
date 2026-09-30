@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
+  Receipt,
   LayoutDashboard,
   ShoppingCart,
   PackagePlus,
@@ -29,13 +30,14 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, ready: true },
-  { href: "/pos", label: "Counter / Billing", icon: ShoppingCart, ready: false, phase: "Phase 1" },
-  { href: "/purchases", label: "Purchases (Stock-In)", icon: PackagePlus, ready: false, phase: "Phase 1" },
-  { href: "/products", label: "Products", icon: Pill, ready: false, phase: "Phase 1" },
+  { href: "/pos", label: "Counter / Billing", icon: ShoppingCart, ready: true },
+  { href: "/purchases", label: "Purchases (Stock-In)", icon: PackagePlus, ready: true },
+  { href: "/products", label: "Products", icon: Pill, ready: true },
   { href: "/inventory", label: "Inventory", icon: Boxes, ready: false, phase: "Phase 3" },
   { href: "/expiry", label: "Expiry Alerts", icon: CalendarClock, ready: false, phase: "Phase 3" },
   { href: "/customers", label: "Customers", icon: Users, ready: false, phase: "Phase 4" },
-  { href: "/suppliers", label: "Suppliers", icon: Truck, ready: false, phase: "Phase 3" },
+  { href: "/sales", label: "Sales history", icon: Receipt, ready: false, phase: "Phase 2" },
+  { href: "/suppliers", label: "Suppliers", icon: Truck, ready: true },
   { href: "/reports", label: "Reports", icon: BarChart3, ready: false, phase: "Phase 5" },
   { href: "/settings", label: "Settings", icon: SettingsIcon, ready: true },
 ];

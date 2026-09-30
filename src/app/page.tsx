@@ -55,7 +55,7 @@ function StatCard({
   );
 }
 
-function Step({ done, title, phase, href }: { done: boolean; title: string; phase?: string; href?: string }) {
+function Step({ done = false, title, phase, href }: { done?: boolean; title: string; phase?: string; href?: string }) {
   return (
     <li className="flex items-start gap-3 py-2">
       {done ? (
@@ -173,10 +173,10 @@ export default async function DashboardPage() {
               <Step done title="Numbered rule book written (104 rules: U/R/E/S/P/B/Z/T/M/Q)" />
               <Step done title="Foundation: Next.js + TypeScript + database + live preview ready" />
               <Step done title="Settings system — everything editable from the screen" href="/settings" />
-              <Step title="Auto invoice numbering, round-off & receipt layout (test in Settings)" phase="0.5" href="/settings" />
-              <Step title="Products & categories (with Box = Strip = Tablet formula)" phase="Phase 1" />
-              <Step title="Purchases / stock-in with PINV codes + batch & expiry" phase="Phase 1" />
-              <Step title="Counter billing (barcode, FIFO batch, hold cart, thermal print)" phase="Phase 1" />
+              <Step done title="Products & categories — pack formula (1 Box = X Strips = Y Tablets), rates, barcode, rack" href="/products" />
+              <Step done title="Suppliers with running balances" href="/suppliers" />
+              <Step done title="Purchases / stock-in — auto PINV code, batches, expiry, supplier account" href="/purchases" />
+              <Step done title="Counter billing — barcode, FIFO batch pick, Box/Strip/Tablet, hold cart, thermal print" href="/pos" />
               <Step title="Returns, cash closing & owner drawing" phase="Phase 2" />
               <Step title="Suppliers, expiry alerts, reorder + WhatsApp order" phase="Phase 3" />
               <Step title="Customers, loyalty, multi-tier rates, split payments" phase="Phase 4" />
