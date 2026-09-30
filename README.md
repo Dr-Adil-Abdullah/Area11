@@ -1,66 +1,82 @@
 # Area11
 
-**سمارٹ فارمیسی اینڈ ریٹیل POS + انوینٹری سسٹم** — لائیو پریویو اور "واپس جانے" کے نظام کے ساتھ۔
-
-> **📚 سب کچھ نمبر دار** — کوئی بات مس نہ ہو: **164 نکات** (U/R/E/S/P/B/Z/T/M/Q = 104 • A = 49 • Q = 15)
-> خود جانچیں: `bash scripts/rules-count.sh`
+**Smart Pharmacy & Retail POS + Inventory System** — offline-first, everything editable, with live preview and a go-back (checkpoint) system.
 
 ---
 
-## 📁 فائلیں (نقشہ)
+## 🟢 App chal rahi hai (Live Preview)
 
-| فائل | کام |
+| Cheez | Haal |
 |---|---|
-| **`PHASE-TWO-INFORMATION.md`** | ⭐ **ضابطہ + منصوبہ** — پارٹ 1: ان پٹ انفارمیشن • پارٹ 2: سارے احکام (U/R/E/S/P/B/Z/T/M/Q) |
-| **`INPUT-INFORMATION.md`** | پارٹ 1: ماسٹر سپیک **ہوبہو** • پارٹ 2: تعریفی معلومات (A-01…A-49، Q-01…Q-15) |
-| **`complete_numbered_master_specs (1).md`** | اصل ماسٹر سپیک — **واحد حتمی سچائی** (16 سیکشن • 44 ذیلی • 102 پوائنٹس • 5 فیز) |
-| **`scripts/ckpt.sh`** | واپس جانے کا نظام — سٹیج محفوظ کریں، پرانی سٹیج پر جائیں |
-| **`scripts/sync-spec.sh`** | سپیک → INPUT پارٹ 1 خودکار نقل (فرق نہیں ہو سکتا) |
-| **`scripts/rules-count.sh`** | نمبروں کی خودکار گنتی — کوئی نمبر مس/دوہرا ہو تو پکڑ لے |
+| **App** | **chal rahi hai** — browser me preview khula hai (port 3000) |
+| Database | ✅ ban gaya — `data/area11.db` (ek file) |
+| Settings | ✅ poori tarah kaam kar rahe hain (save test ho chuka) |
+| Dashboard | ✅ chal raha hai |
+
+**App dobara chalane ke liye:** `npm run dev` (folder: `Area11`)
 
 ---
 
-## 🧾 نمبروں کا نظام (ایک نظر میں)
+## 📁 Files (naqsha)
 
-| سابقہ | مطلب | تعداد |
-|---|---|---|
-| **U** | آپ کے احکام (User Rules) | 12 |
-| **R** | کوڈ دوبارہ استعمال (کم کوڈ) | 10 |
-| **E** | ہر چیز قابلِ تبدیلی (نہ لوگو، نہ ایپ نام — کوئی چیز فائنل نہیں) | 14 |
-| **S** | فرنٹ اینڈ تبدیلی → بیک اینڈ/ڈیٹا میں خود بخود | 9 |
-| **P** | لائیو پریویو | 5 |
-| **B** | واپس جانا (Checkpoint) | 9 |
-| **Z** | صفر ایرر | 10 |
-| **T** | ٹیکنالوجی | 12 |
-| **M** | مرحلہ وار منصوبہ | 8 |
-| **Q** | کھلے فیصلے (تصدیق درکار) | 15 |
-| **A** | سپیک سے طے شدہ تعریفیں | 49 |
+| File | Kaam |
+|---|---|
+| **`PHASE-TWO-INFORMATION.md`** | ⭐ **Zabta + mansooba** — 109 numbered rules (U/R/E/S/P/B/Z/T/M/Q) |
+| **`INPUT-INFORMATION.md`** | Part 1: master spec **hoobahoo** • Part 2: A-01…A-49 (tay shuda) + Q-01…Q-19 (aap ke faisle) |
+| **`complete_numbered_master_specs (1).md`** | Asal master spec — **Single Source of Truth** |
+| `src/` | App ka code (Next.js + TypeScript) |
+| `scripts/ckpt.sh` | **Wapas jane ka system** (checkpoint) |
+| `scripts/sync-spec.sh` | Spec → INPUT Part 1 khud-ba-khud copy |
+| `scripts/rules-count.sh` | Numbered points ki ginti (koi baat miss na ho) |
+| `data/area11.db` | Aap ka **asli data** (SQLite — backup = ek file ki copy) |
 
 ---
 
-## ⏪ واپس جانا (Save / Go Back) — تیار ہے ✅
+## 🚀 Roz-marra ka kaam
 
 ```bash
-bash scripts/ckpt.sh save "کام کا نام"   # ✅ سٹیج محفوظ کرو
-bash scripts/ckpt.sh list                 # 📋 ساری سٹیجیں دیکھو
-bash scripts/ckpt.sh go 2                 # ↩️ کسی بھی سٹیج پر جاؤ
-bash scripts/ckpt.sh undo                 # ↩️ پچھلی سٹیج پر جاؤ
-bash scripts/ckpt.sh push                 # ☁️ گٹ ہب پر محفوظ
+npm run dev            # App chalayein (http://localhost:3000)
+bash scripts/ckpt.sh save "kaam ka naam"    # Save point
+bash scripts/ckpt.sh list                   # Saare stages dekhein
+bash scripts/ckpt.sh go 3                   # Kisi bhi stage par wapas
+bash scripts/ckpt.sh undo                   # Ek qadam peeche
+bash scripts/ckpt.sh push                   # GitHub par mehfooz
+bash scripts/rules-count.sh                 # Numbered rules check
 ```
 
-**خاص بات:** `go`/`undo` سے پہلے نظام **خود بخود** آپ کا موجودہ کام سنبھال لیتا ہے — کچھ ضائع نہیں ہوتا۔
+**Backup:** `data/area11.db` file ki copy — bas itna hi.
 
 ---
 
-## 🚦 موجودہ حالت
+## 🛠 Technology (kam code = kam error)
 
-| کام | حالت |
-|---|---|
-| ماسٹر سپیک موصول + پارٹ 1 ہوبہو نقل | ✅ (حرف بہ حرف تصدیق شدہ) |
-| نمبر دار ضابطہ (164 نکات، تصدیق شدہ) | ✅ |
-| کوڈ دوبارہ استعمال کی تحقیق (ریپوز + لائبریریاں) | ✅ |
-| واپس جانے کا نظام | ✅ مکمل اور آزمودہ |
-| **لائیو پریویو (سٹون 0.5)** | ⏳ **آپ کی تصدیق پر شروع** |
-| فیز 1 — کاؤنٹر چالو کرنے والا کام | ⏳ سٹون 0.5 کے بعد |
+| Hissa | Kya | Kyun |
+|---|---|---|
+| App | **Next.js + TypeScript** | live preview, kam code |
+| UI | **Tailwind CSS + Lucide icons** | tayyar cheezein |
+| Database | **SQLite (Node ka built-in)** | **zero extra library**, ek file, offline |
+| Money | **paisa (integer)** | calculation me kabhi ghalti nahi |
+| Auth | Node ka built-in scrypt | staff PIN + owner password |
+| Cloud | **Supabase** (Phase 5) | aap ka intekhab |
 
-**اگلا قدم:** `PHASE-TWO-INFORMATION.md` کے حصہ **Q** میں سے کوئی ایک جملہ: *"سب تجاویز ٹھیک ہیں"* — بس اسی پر سٹون 0.5 شروع ہو جائے گا۔
+---
+
+## 🚦 Kaam ki tarakki
+
+| Stage | Kaam | Haal |
+|---|---|---|
+| **Stone 0** | Repo, checkpoint system, spec, numbered rule book | ✅ Complete |
+| **Stone 0.5** | Next.js + database + **live preview** + **editable settings** | ✅ **Complete** |
+| **Phase 1** | Products, purchases (PINV), batches/expiry, counter billing, round-off, print, role switcher | ⏳ Agla |
+| Phase 2 | Returns, cash closing, owner drawing, expenses | ⏳ |
+| Phase 3 | Suppliers, expiry alerts, reorder + WhatsApp order, samples | ⏳ |
+| Phase 4 | Customers, loyalty, multi-tier rates, split payments, custom fields | ⏳ |
+| Phase 5 | Blackbox audit, smart search, analytics, Supabase sync, backups | ⏳ |
+
+---
+
+## 💡 Yaad rahe
+
+- **Har cheez badli ja sakti hai** — app ka naam, logo, rang, dukan ki maloomat, categories, expiry levels, receipt layout… sab `Settings` se. Koi code change nahi.
+- **Frontend se badlav → database me khud-ba-khud** — jo screen par banaein, wohi data me jata hai.
+- **Kuch bhi final nahi** — jab jo chahe tab badal lein.
