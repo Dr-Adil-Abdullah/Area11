@@ -67,6 +67,28 @@ Cloudflare Git integration: configured production build
 
 Cloudflare setup کی official guide: [React deployment](https://developers.cloudflare.com/pages/framework-guides/deploy-a-react-site/)۔ GitHub setup: [custom Pages workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)۔
 
+## راستہ C — Netlify، Cloudflare کا Git-connected متبادل
+
+`netlify.toml` ریپو میں شامل ہے: build **`npm run build`**، publish **`dist`**، Node **22.22.3**، root base **`/`**۔ یہ صرف build configuration ہے؛ provider account authorization یا live deployment کا دعویٰ نہیں۔
+
+1. **[Netlify signup/dashboard](https://app.netlify.com/)** کھولیں؛ account بنائیں یا login کریں۔
+2. **Add new project → Import an existing project → GitHub** منتخب کریں اور اپنے account سے Netlify کو existing repository کی access دیں۔ [1](https://docs.netlify.com/start/quickstarts/deploy-from-repository/)
+3. existing **`Dr-Adil-Abdullah/Area11`** repository اور **Production branch `arena/01a0f117-area11`** منتخب کریں۔ `main` یا نئی copy/fork نہیں؛ اس room کی branch ضروری ہے۔
+4. `netlify.toml` سے build settings آ جائیں گی؛ پھر بھی build `npm run build`، publish `dist`، base directory root/blank check کریں۔
+5. **Publish** کریں۔ نئے credit-based accounts پر projects private-by-default ہو سکتے ہیں؛ عوامی لنک کے لیے **Publish / Make public** لازم ہے۔ Incognito browser میں `*.netlify.app` link کھول کر check کریں کہ login/token نہ مانگے۔ [1](https://docs.netlify.com/start/quickstarts/deploy-from-repository/)
+6. اصل dashboard link مجھے دیں تاکہ site اور assets externally verify کیے جا سکیں۔ ابھی Netlify account connect نہیں ہوا اور کوئی Netlify URL live نہیں کہا جا رہا۔
+7. Git integration کے بعد اس production branch کی push نئی build/deploy خود چلائے گی؛ room کا local save کافی نہیں۔ [2](https://docs.netlify.com/deploy/create-deploys/)
+
+[Netlify pricing](https://www.netlify.com/pricing/) کے 30 ستمبر 2026 کے official page پر Free plan **300 credits/month** دکھاتا ہے؛ production deploys، bandwidth وغیرہ credit استعمال کرتے ہیں۔ اسے unlimited free hosting/updates نہ سمجھیں؛ limits بڑھنے یا بدلنے پر provider کی موجودہ pricing دیکھیں۔
+
+### InfinityFree کا فرق
+
+اگر صارف کی مراد **[InfinityFree](https://www.infinityfree.com/)** ہے تو یہ build کی static files host کرنے کا متبادل ہے۔ React/Vite project کو پہلے `npm run build` کریں، پھر صرف built `dist` contents کو hosting کے `htdocs` میں upload کریں؛ raw repository/node_modules/browser recovery records نہیں۔
+
+اس کا native free-hosting GitHub integration نہیں؛ documented workaround FTP deployment کے لیے الگ CI pipeline ہے۔ [3](https://forum.infinityfree.com/t/github-integration/76439) اس Arena connection کی workflow permission پہلے ہی blocked ہے، اس لیے InfinityFree پر خودکار Git updates اس وقت one-click راستہ نہیں۔ صرف manual file upload سے ہر push کے بعد website خود update نہیں ہوگی۔ FTP/account credentials chat یا repo میں نہ رکھیں؛ اگر یہ provider بعد میں منتخب ہو تو owner اپنی secret-management screen سے setup کرے۔
+
+اس room کی **push-based auto-update** ضرورت کے لیے پہلے Cloudflare Git integration یا Netlify Git import استعمال کرنا زیادہ سیدھا ہے۔
+
 ## Browser data کے بارے میں اہم بات
 
 Website code کی deployment اور shop data کی synchronization الگ چیزیں ہیں۔ Same permanent origin پر browser data عموماً نئی frontend build کے بعد موجود رہتی ہے اور supported schema migration سے upgrade ہوتی ہے، مگر site-data clearing، device/browser change یا نیا hosting domain data خود منتقل نہیں کرتا۔ Provider کو صرف built app assets ملتے ہیں؛ آپ کے localStorage کھاتے نہیں۔ پہلے **Settings → Download saved snapshot** محفوظ کریں۔ Restore/shared database/scheduled backups roadmap کے بعد کے کام ہیں۔
