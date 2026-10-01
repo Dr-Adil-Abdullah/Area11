@@ -73,11 +73,14 @@ export function migrate(database: DatabaseSync = db): void {
 type Param = string | number | bigint | null | Uint8Array;
 
 export function query<T = Record<string, unknown>>(sql: string, params: Param[] = []): T[] {
-  return db.prepare(sql).all(...params) as T[];
+  // node:sqlite rows ka prototype null hota hai -> Next client components reject karte hain.
+  // Is liye har row plain object bana dete hain (poore app me yehi ek jagah).
+  return (db.prepare(sql).all(...params) as object[]).map((r) => ({ ...r })) as T[];
 }
 
 export function get<T = Record<string, unknown>>(sql: string, params: Param[] = []): T | undefined {
-  return db.prepare(sql).get(...params) as T | undefined;
+  const row = db.prepare(sql).get(...params);
+  return row ? ({ ...row } as T) : undefined;
 }
 
 export function run(

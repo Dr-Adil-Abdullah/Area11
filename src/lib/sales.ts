@@ -14,7 +14,7 @@
 
 import { get, query, run, tx, scalar } from "./db";
 import { takeNextCode } from "./numbering";
-import { applyDownwardRound, toBaseUnits, marginDiscount, retailDiscount, percentOf } from "./money";
+import { applyRoundWithCostGuard, toBaseUnits, marginDiscount, retailDiscount, percentOf } from "./money";
 import { getSettings } from "./settings";
 import { audit } from "./audit";
 
@@ -112,10 +112,13 @@ export function createSale(input: SaleInput, user?: { id?: number; name?: string
       ? percentOf(afterDiscount, settingsSnapshot.tax.percent)
       : 0;
     const beforeRound = afterDiscount + taxPaisa;
-    const { finalPaise, roundOffPaise } =
+    const totalCost = Math.round(lines.reduce((sum, l) => sum + l.qtyBase * l.costPaisa, 0));
+    const { finalPaise, roundOffPaise, guarded } =
       settingsSnapshot.roundMode === "down10"
-        ? applyDownwardRound(beforeRound, settingsSnapshot.roundTo)
-        : { finalPaise: beforeRound, roundOffPaise: 0 };
+        ? applyRoundWithCostGuard(beforeRound, settingsSnapshot.roundTo, totalCost)
+        : { finalPaise: beforeRound, roundOffPaise: 0, guarded: false };
+    if (guarded) warnings.push("Round-off skipped: it would put the bill below purchase cost.");
+    if (finalPaise < totalCost) warnings.push("Bill total is BELOW purchase cost (loss sale). Check discount.");
 
     const method = input.paymentMethod ?? "cash";
     const isCredit = method === "credit";

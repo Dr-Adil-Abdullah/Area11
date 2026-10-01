@@ -74,6 +74,13 @@ export default function SuppliersClient({ initialSuppliers }: { initialSuppliers
     }
   }
 
+  async function payNow(s: Supplier) {
+    const v = prompt(`Pay ${s.name}. Amount in Rs (we owe ${(s.balance_paisa / 100).toFixed(2)}):`, String(Math.max(0, s.balance_paisa) / 100));
+    if (!v) return;
+    const r = await (await fetch("/api/suppliers/pay", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ supplierId: s.id, amountPaisa: toPaisa(v) }) })).json();
+    if (!r.ok) alert(r.error); else await reload();
+  }
+
   async function remove(s: Supplier) {
     if (!confirm(`Remove supplier "${s.name}"? Old purchase records stay safe.`)) return;
     setBusy(true);
@@ -204,6 +211,7 @@ export default function SuppliersClient({ initialSuppliers }: { initialSuppliers
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
+                    {s.balance_paisa > 0 && <button className="btn-secondary !py-1 !text-xs" onClick={() => payNow(s)}>Pay</button>}
                     <button className="btn-ghost !px-2 text-rose-600" onClick={() => remove(s)}>
                       <Trash2 className="h-4 w-4" />
                     </button>

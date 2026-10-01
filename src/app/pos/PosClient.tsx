@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import {
-  applyDownwardRound,
+  applyRoundWithCostGuard,
   formatPKR,
   fromBaseUnits,
   marginDiscount,
@@ -269,17 +269,17 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
     const afterDiscount = Math.max(0, linesTotal - billDisc);
     const tax = settings.taxEnabled ? percentOf(afterDiscount, settings.taxPercent) : 0;
     const beforeRound = afterDiscount + tax;
-    const { finalPaise, roundOffPaise } =
-      settings.roundMode === "down10"
-        ? applyDownwardRound(beforeRound, settings.roundTo)
-        : { finalPaise: beforeRound, roundOffPaise: 0 };
-
-    const paid = paidNow === "" ? finalPaise : Math.min(toPaisa(paidNow || 0), finalPaise);
-    const due = Math.max(0, finalPaise - paid);
     const cost = lines.reduce(
       (s, l) => s + toBaseUnits(l.qty, l.unit, l.boxStrips, l.stripTablets) * l.costPaisa,
       0
     );
+    const { finalPaise, roundOffPaise } =
+      settings.roundMode === "down10"
+        ? applyRoundWithCostGuard(beforeRound, settings.roundTo, Math.round(cost))
+        : { finalPaise: beforeRound, roundOffPaise: 0 };
+
+    const paid = paidNow === "" ? finalPaise : Math.min(toPaisa(paidNow || 0), finalPaise);
+    const due = Math.max(0, finalPaise - paid);
     const profit = finalPaise - cost;
 
     // discount limit check

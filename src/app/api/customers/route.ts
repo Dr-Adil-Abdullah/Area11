@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createCustomer, findCustomers, listCustomers } from "@/lib/customers";
+import { createCustomer, findCustomers, listCustomers, updateCustomer } from "@/lib/customers";
 import { ensureBootstrap } from "@/lib/bootstrap";
 import { currentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
@@ -44,5 +44,18 @@ export async function POST(req: Request) {
       { ok: false, error: e instanceof Error ? e.message : "failed" },
       { status: 400 }
     );
+  }
+}
+
+export async function PATCH(req: Request) {
+  const user = await currentUser();
+  try {
+    const b = (await req.json()) as { id?: number; name?: string; phone?: string | null; category?: string; creditLimitPaisa?: number; notes?: string | null };
+    if (!b.id) throw new Error("id required");
+    updateCustomer(b.id, b);
+    void audit({ action: "update", userId: user?.id, userName: user?.name, entity: "Customer", entityId: b.id, details: { name: b.name } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "failed" }, { status: 400 });
   }
 }

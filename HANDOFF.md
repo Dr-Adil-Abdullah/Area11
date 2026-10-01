@@ -1,0 +1,137 @@
+# HANDOFF — read this first (any new agent)
+
+> **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** نیچے "TODO" سے کام جاری رکھیں۔ ہر کام کے بعد اس فائل کو اپ ڈیٹ کریں۔
+
+Last updated: **2026-10-01** · App version **0.6.0 (Phase 1 done + Phase 2 essentials)** · Latest tag: see `git tag`.
+
+---
+
+## 0. The 60-second picture
+
+| | |
+|---|---|
+| **Product** | "Smart Pharmacy & Retail POS / Inventory Management" — web app (PWA-ready) for one pharmacy: 2 counters + owner's phone on the shop LAN, **100 % usable without internet**. |
+| **Single source of truth (spec)** | [`complete_numbered_master_specs (1).md`](./complete_numbered_master_specs%20%281%29.md) — 16 sections, 5 phases, built **strictly in order**. Copy verbatim in `INPUT-INFORMATION.md` Part 1. |
+| **Real app** | **Repo root** — Next.js 15 (App Router) + TypeScript + Tailwind + **`node:sqlite`** (Node's built-in SQLite, zero DB dependency). |
+| **Reference only** | [`legacy-demo-vite/`](./legacy-demo-vite) — a *different* browser-only Vite demo (phases 1-3, sample data, tests, docs) made by another session. **Do not merge into root.** Mine it for logic/tests (see §7). |
+| **Language / currency** | UI **English**; money **PKR**, stored as **integer paisa** (`*_paisa`). Dates local time (Asia/Karachi). |
+| **Owner's language** | Urdu — talk to the owner in Urdu (Roman-Urdu/Urdu script both fine); code & UI in English. |
+
+## 1. Standing rules from the owner (numbered in `PHASE-TWO-INFORMATION.md`, 116 points — `bash scripts/rules-count.sh` must say `SAB THEEK`)
+
+1. **Questions are already answered** (`INPUT-INFORMATION.md` Part 2, Q-01…Q-19). Do **not** re-ask them. If something truly new blocks you: ask via **multiple-choice in chat (with a "type your own" option) — never write questions into project files**; ask all of them together, up front.
+2. **Reuse existing code in any form; write as little new code as possible** (U-08/R-*). Check `legacy-demo-vite/`, npm libraries, and open-source repos before writing from scratch.
+3. **Everything must be editable later** (app name, logo, colours, categories, rates, discount limits, expiry windows, receipt layout…) → via **Settings**, never hard-coded. A change made in the UI must reach the database automatically (E-*, S-*).
+4. **Business-reliable**: no recurring technical errors; money in integer paisa; DB writes inside `tx()`; never delete data (soft-delete / reversing rows).
+5. **Live preview** while working (bind dev server to `0.0.0.0`; `next.config.ts` already allows `*.e2b.app`).
+6. **Always checkpoint**: `bash scripts/ckpt.sh save "what changed"` then `bash scripts/ckpt.sh push`. The owner must be able to return to any earlier stage (see §6).
+7. **Every new owner instruction gets a new number** appended in `PHASE-TWO-INFORMATION.md` (short meaning + number), then update the `V` matrix (`rules-count.sh` verifies).
+8. **After each piece of work update this file (§3 status + §4 TODO) and README.**
+
+## 2. Run it
+
+```bash
+# Node >= 22.5 required (node:sqlite).   Tested on Node 22.22
+npm install
+npm run dev          # http://localhost:3000   (0.0.0.0, live preview friendly)
+# production on the shop PC:
+npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3000
+```
+
+* DB file: `data/area11.db` (**git-ignored**, created + migrated automatically on first request; owner account + 5 categories + settings seeded by `src/lib/bootstrap.ts`).
+* **First login values:** owner password `area11`, PIN `1111` (from `.env`; dashboard warns until changed). *There is no login screen yet* — see TODO P1-1.
+* `node_modules/`, `data/`, `.next/` are **not** in git. A fresh sandbox needs `npm install` again.
+* Health check: `GET /api/health` → `{ok:true, database:"connected", ...}`.
+* Backup: Cash page → **Download database backup** (`GET /api/backup`, uses `VACUUM INTO`, safe while running). Restore = stop app, replace `data/area11.db`.
+* `node:sqlite` prints an *ExperimentalWarning* — harmless.
+
+## 3. What is DONE (all tested through the API + page loads)
+
+| Area | Where | Notes |
+|---|---|---|
+| Settings (≈50 keys) | `/settings`, `src/lib/settings.ts`, `settings/actions.ts` | brand/logo/colour, store info, bill prefixes & padding, tax (OFF), discount mode/limits, 3 expiry levels (365/180/90), loyalty (structure only), printer 58/80, receipt layout, payments, security, sync flags. Saved + audited. |
+| DB layer | `src/lib/db.ts`, `schema.ts` | WAL, FK on, `tx()`, migrations `001_core` (18 tables), `002_returns`. **Add new migrations at the end; never edit old ones** (S-06). Rows are plain objects (null-prototype fix). |
+| Products | `/products`, `lib/catalog.ts`, `/api/products*` | pack formula 1 Box = X Strip = Y base unit; retail/VIP/doctor rates; barcode; rack; category/company created from the UI; soft delete; price changes audited. |
+| Suppliers | `/suppliers` | running balance; **Pay** button (supplier payment). |
+| Purchases (Stock-In) | `/purchases`, `/purchases/new`, `lib/purchases.ts` | auto `PINV-0001`, batch + expiry per line, updates stock, cost/rates, supplier balance, payment row, stock movement. Sample/bonus flag exists in API (`isSample`), **no UI toggle yet**. |
+| Counter / POS | `/pos`, `lib/sales.ts`, `lib/pos.ts` | search by name/salt/brand/barcode/rack, **nearest-expiry-first (FEFO)** batches, expired batches blocked, Box/Strip/Tablet, hold cart (localStorage), discount (margin/retail mode), cash/credit, `INV-0001`, F2 search / F4 save. |
+| **Rounding** | `lib/money.ts` | floor to Rs 10 **unless it drops below purchase cost** (owner-confirmed: 545/cost 543 → 545; 545/cost 500 → 540). Warning if bill < cost. |
+| Receipt | `/receipt/[id]` (`?type=purchase`) | 58/80 mm layout, browser print dialog, reprint any time. |
+| **Sales history / Returns / Void** | `/sales`, `lib/returns.ts` | find by date/bill/customer; partial **return** by item (refund = share of the amount actually collected; default **quarantine**, optional "put back in stock"); credit is reduced before cash is refunded; **void** whole bill (only if no returns). Originals never edited. |
+| **Customers & credit** | `/customers`, `lib/customers.ts`, `lib/cash.ts` | add/list, balance, **Receive payment** (applied to oldest bills first). Credit-limit warning at sale time. |
+| **Cash & day-end** | `/cash`, `lib/cash.ts` | day summary (sales, credit, returns, profit, cash in/out), expected cash vs counted, expenses, owner drawings, backup button. |
+| **Expiry & stock alerts** | `/alerts`, `lib/alerts.ts` | windows from Settings; expired value at cost; reorder list from per-product reorder level. |
+| Audit log (write side) | `lib/audit.ts` → `audit_logs` | create/update/delete/price_change/void/return/settings_change/backup. **No viewer yet.** |
+| Dev tooling | `scripts/ckpt.sh`, `rules-count.sh`, `sync-spec.sh` | checkpoint/rollback, numbering check, spec copy. |
+
+## 4. TODO — in priority order
+
+### P1 · finish Phase 1 / blockers for real use
+1. **Login + roles** (Q-13, Q-18): owner = password, staff = 4-digit PIN; roles Owner/Manager/Cashier (owner-only first). Today `lib/session.ts` returns the owner for everybody. `lib/auth.ts` already has scrypt hash/verify; `users` table + `security.*` settings exist. Needs: login page, signed cookie session, route protection, role switcher (spec Phase 1), enforce discount limits `discount.maxPercentCashier/Manager`, hide cost columns for non-owners (`receipt.showCostColumns`).
+2. **Cash change calculator** at counter (tendered → change; spec Phase 1) — not revenue.
+3. **Unit-level stock edit / write-off / adjustment** (expired write-off, count correction) using `stock_movements` types `adjust`/`writeoff`.
+4. **Excel import of old data** (Q-19) with SheetJS (`xlsx`): products, batches, customers, supplier balances; dry-run preview first.
+5. **Offline hardening**: service worker + cached shell so the UI loads with no internet (manifest exists, SW doesn't). Server runs on the shop PC so DB is already local.
+6. Small UI gaps: customer edit (API `PATCH /api/customers` exists), category rename/delete (API exists), supplier-purchase "sample/bonus" checkbox, product stock adjust screen, receipt shows cost columns only for owner.
+
+### P2 · Phase 2 remainder (spec §…)
+* Persisted **shift open/close** with opening float & variance (`shifts` table exists; `/cash` computes expected cash only) — port ideas from `legacy-demo-vite/src/domain/cash.ts`.
+* **Provisional ("rush-time") returns** and lost-bill lookup by phone/medicine/date; role-gated restock (cashier cannot restock) — see `legacy-demo-vite/src/domain/returns.ts`.
+* Discount safety rules end-to-end (never below cost, per-role limits).
+
+### P3 · Phase 3
+Supplier ledger & **supplier returns**, bonus/sample stock UI, reorder list → **WhatsApp order text** (free `wa.me` link, Q-11), daily report via WhatsApp, expiry-return to supplier flow.
+
+### P4 · Phase 4
+Customer profiles/stars/**loyalty** (structure exists, OFF), multi-tier rates (VIP/doctor already used at POS), **split payments**, credit-limit enforcement, custom fields & categories (everything editable).
+
+### P5 · Phase 5
+**Audit-log viewer** ("blackbox"), smart search, analytics/reports, stock-take, **Supabase cloud sync** (owner's phone from home; local SQLite stays primary — `sync.*` settings reserved), scheduled backups, restore UI, Windows/Android install polish, real thermal ESC/POS + USB barcode scanner verification on hardware (scanner currently works as keyboard input).
+
+## 5. Gotchas (save yourself an hour)
+
+* **Prisma is dead here** (engine download blocked). Use `node:sqlite` helpers `query/get/run/scalar/tx` from `src/lib/db.ts`. Don't add an ORM.
+* `lib/db.ts`: `let migrated` must stay **above** `export const db` (TDZ bug fixed once).
+* Next 15: `params` / `searchParams` are **Promises** — `await` them.
+* Timestamps are stored with `datetime('now','localtime')`; "today" = `date(date)=date('now','localtime')`.
+* `payments`: rows with `purchase_id`/`supplier_id` = money **out**; others = money **in** (refunds are negative). Day summary relies on this.
+* Never pass raw DB rows with null prototypes to client components (already fixed in `db.ts`).
+* After `npm run dev` code changes, hot reload is enough; a new migration applies on next request.
+* Typecheck: `npx tsc --noEmit` (root `tsconfig.json` excludes `legacy-demo-vite`). Keep it at **0 errors**.
+
+## 6. Going back (even after merges)
+
+* Stages are git tags: `stage-1 … stage-N` (all pushed). List: `bash scripts/ckpt.sh list`.
+* **Look at an old stage:** `git checkout stage-3` (then `git checkout <your-branch>` to return). **Return a branch to it:** `bash scripts/ckpt.sh go 3` (non-destructive; history stays).
+* **Undo a merged PR:** `git revert -m 1 <merge-commit-sha>` (creates a new commit; nothing is lost).
+* Merging never removes tags or commits. **Never delete tags, never force-push.**
+* `ckpt.sh` needs a git repo with full history; in a shallow clone run `git fetch --unshallow --tags` first.
+
+## 7. Reusing the legacy demo (`legacy-demo-vite/`)
+
+Browser/localStorage app (React 19 + Vite), phases 1-3 with **tests** (`vitest`) and docs in `legacy-demo-vite/docs/` (decisions, per-phase progress). Useful, already-reviewed logic to port into `src/lib/*` instead of rewriting:
+`src/domain/returns.ts` (exact refund allocation, quarantine, provisional returns), `cash.ts` (drawer, handover, variance), `accounts.ts` (owner drawings/expenses), `suppliers.ts` (ledger/returns), `alerts.ts` (expiry/reorder), `arithmetic.ts`, tests in `*.test.ts` (reuse as spec for the SQL versions).
+Its README says "demo only" — that is about *that* build (no real DB, fake auth), not this one.
+
+## 8. Decisions already made by the owner (full list: `INPUT-INFORMATION.md` Q-01…Q-19)
+
+Stack Next.js+TS+SQLite · English UI · expiry levels from settings (365/180/90 → blue/yellow/red) · `PINV-0001` / `INV-0001` · tax OFF (master switch) · round down to 10s **with cost guard** · discount default on margin · 58 + 80 mm printers, USB barcode scanner · reports via free WhatsApp · Supabase later (local SQLite primary) · offline 100 % · loyalty/discount structure only for now · staff PIN + owner password · 1 shop, 2 counters + owner mobile, LAN only · cash + credit payments · owner-only roles first · old data from Excel · app name default "Area11", editable.
+
+## 9. Quick verification recipe (≈2 min)
+
+```bash
+npm run dev &                    # then, with curl:
+curl -s localhost:3000/api/health
+curl -s -XPOST localhost:3000/api/products -H 'Content-Type: application/json' \
+  -d '{"name":"Panadol","barcode":"5012345","boxStrips":10,"stripTablets":10,"costPaisa":200,"retailPaisa":300}'
+curl -s -XPOST localhost:3000/api/purchases -H 'Content-Type: application/json' \
+  -d '{"items":[{"productId":1,"unit":"box","qty":5,"batchNo":"B1","expiryDate":"2027-12","costPaisa":200,"retailPaisa":300}]}'   # → PINV-0001, stock 500
+curl -s -XPOST localhost:3000/api/sales -H 'Content-Type: application/json' \
+  -d '{"paymentMethod":"cash","items":[{"productId":1,"batchId":1,"unit":"strip","qty":1,"unitPricePaisa":300},{"productId":1,"batchId":1,"unit":"base","qty":5,"unitPricePaisa":300}]}'  # Rs45 → Rs40 (round down)
+```
+Delete test rows afterwards (or delete `data/area11.db` on a dev box) so the owner starts clean.
+
+## 10. Branch / merge situation (as of 2026-10-01)
+
+* `main` originally received the **Vite demo** (PR #1 from another Arena session). This work (Next.js + SQLite app) lives on `arena/01a0f0cf-area11` and **already contains a merge of `main`** with the demo relocated to `legacy-demo-vite/` — so merging this branch into `main` is conflict-free and loses nothing.
+* The demo's own Netlify/Pages config still points at branch `arena/01a0f117-area11` (untouched). The new app needs a Node host/shop PC (SQLite), not static hosting.

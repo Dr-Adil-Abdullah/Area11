@@ -54,6 +54,23 @@ export function applyDownwardRound(
 }
 
 /**
+ * Round-off WITH COST PROTECTION (user ka tasdeeq shuda usool, 30-Sep-2026):
+ * agar neeche round karne se raqam KHARID LAGAT se kam ho jaye to round NAHI hoga.
+ *   545 bill, lagat 543 -> 540 < 543 -> 545 hi wasool    (545/500 -> 540)
+ */
+export function applyRoundWithCostGuard(
+  totalPaisa: number,
+  stepRupees: number,
+  costPaisa: number
+): { finalPaise: number; roundOffPaise: number; guarded: boolean } {
+  const r = applyDownwardRound(totalPaisa, stepRupees);
+  if (costPaisa > 0 && r.finalPaise < costPaisa) {
+    return { finalPaise: totalPaisa, roundOffPaise: 0, guarded: true };
+  }
+  return { ...r, guarded: false };
+}
+
+/**
  * Discount on PROFIT MARGIN (Spec 7.2.1):
  *   cost 200, sell 300, 10% discount -> discount sirf 100 par = 10 => final 290
  */

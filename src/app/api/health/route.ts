@@ -10,7 +10,7 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       app: "Area11",
-      version: "0.5.0",
+      version: "0.6.0",
       database: "connected",
       databaseFile: dbPath(),
       products,
