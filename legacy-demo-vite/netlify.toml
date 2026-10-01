@@ -1,0 +1,9 @@
+# Import the existing GitHub repository; do not clone/create a new repository.
+# Set the production branch in Netlify to: arena/01a0f117-area11
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22.22.3"
+  VITE_BASE_PATH = "/"

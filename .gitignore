@@ -25,3 +25,6 @@ backups/
 .env
 .env.local
 .env*.local
+
+tsconfig.tsbuildinfo
+*.tsbuildinfo
