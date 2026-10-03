@@ -6,7 +6,9 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-01) — v0.6.0
+## Status (2026-10-03) — v0.6.0
+
+**Branch:** `arena/01a10395-area11` → **PR #3** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 31 routes · `rules-count.sh` = `SAB THEEK` · live API smoke (`PINV-0001` purchase → `INV-0001` sale) OK · legacy demo tests 212/212.
 
 | Stage | Work | State |
 |---|---|---|
@@ -15,6 +17,8 @@
 | **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup | ✅ |
 | Phase 2 rest, 3, 4, 5 | provisional returns, shifts, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, Supabase sync … | ⏳ see `HANDOFF.md` §4 |
 
+**Live link (demo only):** <https://marea11.netlify.app> — Netlify project `marea11` publishes the **`legacy-demo-vite/` demo** (sample data) for now. The real app needs a **Node ≥ 22.5 host with a persistent disk** (shop PC / Node host with volume): a SQLite file cannot live on static or serverless hosting. Details in `HANDOFF.md` §10.
+
 ## 📁 Files (naqsha)
 
 | File | Kaam |
@@ -22,7 +26,8 @@
 | **`PHASE-TWO-INFORMATION.md`** | ⭐ **Zabta + mansooba** — 116 numbered rules (U/R/E/S/P/B/Z/T/M/Q) |
 | **`INPUT-INFORMATION.md`** | Part 1: master spec **hoobahoo** • Part 2: A-01…A-49 (tay shuda) + Q-01…Q-19 (aap ke faisle) |
 | **`complete_numbered_master_specs (1).md`** | Asal master spec — **Single Source of Truth** |
-| **`HANDOFF.md`** | ⭐ Naye agent ke liye pehla safha: status, TODO, run, rollback |
+| **`HANDOFF.md`** | ⭐ Naye agent ke liye pehla safha: **kya ho chuka / kya baqi hai**, run, gotchas, hosting, rollback — har kaam ke baad update karein |
+| **`AGENTS.md`** | Chhota rule sheet (non-negotiables) |
 | `src/` | App ka code (Next.js + TypeScript) |
 | `legacy-demo-vite/` | Purana browser-demo (reference / reuse) |
 | `scripts/ckpt.sh` | **Wapas jane ka system** (checkpoint) |

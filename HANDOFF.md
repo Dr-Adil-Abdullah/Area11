@@ -1,8 +1,8 @@
 # HANDOFF — read this first (any new agent)
 
-> **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** نیچے "TODO" سے کام جاری رکھیں۔ ہر کام کے بعد اس فائل کو اپ ڈیٹ کریں۔
+> **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں — **کام کرتا ہوا اور آج (2026-10-03) دوبارہ verify شدہ**۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** اگلا کام "§4 REMAINING" میں ہے (سب سے پہلے: **PR #3 merge** اور login+roles)۔ ہر کام کے بعد یہ فائل اپ ڈیٹ کریں۔
 
-Last updated: **2026-10-01** · App version **0.6.0 (Phase 1 done + Phase 2 essentials)** · Latest tag: see `git tag`.
+Last updated: **2026-10-03** · App version **0.6.0 (Phase 1 done + Phase 2 essentials)** · Session branch **`arena/01a10395-area11`** → PR **#3** into `main` · Newest tag: `stage-7` (`stage-1 … stage-6` = earlier history).
 
 ---
 
@@ -12,8 +12,9 @@ Last updated: **2026-10-01** · App version **0.6.0 (Phase 1 done + Phase 2 esse
 |---|---|
 | **Product** | "Smart Pharmacy & Retail POS / Inventory Management" — web app (PWA-ready) for one pharmacy: 2 counters + owner's phone on the shop LAN, **100 % usable without internet**. |
 | **Single source of truth (spec)** | [`complete_numbered_master_specs (1).md`](./complete_numbered_master_specs%20%281%29.md) — 16 sections, 5 phases, built **strictly in order**. Copy verbatim in `INPUT-INFORMATION.md` Part 1. |
-| **Real app** | **Repo root** — Next.js 15 (App Router) + TypeScript + Tailwind + **`node:sqlite`** (Node's built-in SQLite, zero DB dependency). |
-| **Reference only** | [`legacy-demo-vite/`](./legacy-demo-vite) — a *different* browser-only Vite demo (phases 1-3, sample data, tests, docs) made by another session. **Do not merge into root.** Mine it for logic/tests (see §7). |
+| **Real app** | **Repo root** — Next.js 15 (App Router) + TypeScript + Tailwind + **`node:sqlite`** (Node's built-in SQLite, zero DB dependency). 19 tables, 31 routes. |
+| **Reference only** | [`legacy-demo-vite/`](./legacy-demo-vite) — a *different* browser-only Vite demo (phases 1-3, sample data, 212 unit tests, docs) from an earlier session. **Do not merge into root.** Mine it for logic/tests (see §7). It is also the only thing currently published to the public web (§10). |
+| **This branch** | `arena/01a10395-area11` — contains everything from `arena/01a0f0cf-area11` (fast-forwarded 2026-10-03) **plus** this memory rewrite. PR #3 carries it into `main`. |
 | **Language / currency** | UI **English**; money **PKR**, stored as **integer paisa** (`*_paisa`). Dates local time (Asia/Karachi). |
 | **Owner's language** | Urdu — talk to the owner in Urdu (Roman-Urdu/Urdu script both fine); code & UI in English. |
 
@@ -31,7 +32,7 @@ Last updated: **2026-10-01** · App version **0.6.0 (Phase 1 done + Phase 2 esse
 ## 2. Run it
 
 ```bash
-# Node >= 22.5 required (node:sqlite).   Tested on Node 22.22
+# Node >= 22.5 required (node:sqlite).  Tested on Node 22.22.3
 npm install
 npm run dev          # http://localhost:3000   (0.0.0.0, live preview friendly)
 # production on the shop PC:
@@ -39,18 +40,30 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 ```
 
 * DB file: `data/area11.db` (**git-ignored**, created + migrated automatically on first request; owner account + 5 categories + settings seeded by `src/lib/bootstrap.ts`).
-* **First login values:** owner password `area11`, PIN `1111` (from `.env`; dashboard warns until changed). *There is no login screen yet* — see TODO P1-1.
+* **First login values:** owner password `area11`, PIN `1111` (from `.env`; dashboard warns until changed). *There is no login screen yet* — see REMAINING P1-1.
 * `node_modules/`, `data/`, `.next/` are **not** in git. A fresh sandbox needs `npm install` again.
 * Health check: `GET /api/health` → `{ok:true, database:"connected", ...}`.
 * Backup: Cash page → **Download database backup** (`GET /api/backup`, uses `VACUUM INTO`, safe while running). Restore = stop app, replace `data/area11.db`.
 * `node:sqlite` prints an *ExperimentalWarning* — harmless.
+* The legacy demo is its own Vite project: `cd legacy-demo-vite && npm ci && npm run dev` (its own `package.json`, tests and `netlify.toml`).
 
-## 3. What is DONE (all tested through the API + page loads)
+## 3. What is DONE
+
+**Verified again on 2026-10-03 by this session (no code changed — docs/memory only):**
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` | **0 errors** |
+| `npm run build` | **passes**, 31 routes |
+| `bash scripts/rules-count.sh` | **SAB THEEK** — phase-two 116 points; INPUT A-49 + Q-19 |
+| Live API smoke (health → product → purchase → sale) | `{ok:true, database:"connected", version 0.6.0}` · product id 1 · **`PINV-0001`** (`totalPaisa 100000`) · **`INV-0001`** (`totalPaisa 3000`) · `/` → HTTP 200 |
+| Legacy demo (`legacy-demo-vite/`) | `npm run typecheck` ✓ · `npm test` → **212/212** |
+| Public demo URL `https://marea11.netlify.app` | **live, public**, renders the Vite demo (checked from outside the sandbox) |
 
 | Area | Where | Notes |
 |---|---|---|
 | Settings (≈50 keys) | `/settings`, `src/lib/settings.ts`, `settings/actions.ts` | brand/logo/colour, store info, bill prefixes & padding, tax (OFF), discount mode/limits, 3 expiry levels (365/180/90), loyalty (structure only), printer 58/80, receipt layout, payments, security, sync flags. Saved + audited. |
-| DB layer | `src/lib/db.ts`, `schema.ts` | WAL, FK on, `tx()`, migrations `001_core` (18 tables), `002_returns`. **Add new migrations at the end; never edit old ones** (S-06). Rows are plain objects (null-prototype fix). |
+| DB layer | `src/lib/db.ts`, `schema.ts` | WAL, FK on, `tx()`, migrations `001_core` (18 tables), `002_returns` (**19 tables total**). **Add new migrations at the end; never edit old ones** (S-06). Rows are plain objects (null-prototype fix). |
 | Products | `/products`, `lib/catalog.ts`, `/api/products*` | pack formula 1 Box = X Strip = Y base unit; retail/VIP/doctor rates; barcode; rack; category/company created from the UI; soft delete; price changes audited. |
 | Suppliers | `/suppliers` | running balance; **Pay** button (supplier payment). |
 | Purchases (Stock-In) | `/purchases`, `/purchases/new`, `lib/purchases.ts` | auto `PINV-0001`, batch + expiry per line, updates stock, cost/rates, supplier balance, payment row, stock movement. Sample/bonus flag exists in API (`isSample`), **no UI toggle yet**. |
@@ -64,7 +77,12 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 | Audit log (write side) | `lib/audit.ts` → `audit_logs` | create/update/delete/price_change/void/return/settings_change/backup. **No viewer yet.** |
 | Dev tooling | `scripts/ckpt.sh`, `rules-count.sh`, `sync-spec.sh` | checkpoint/rollback, numbering check, spec copy. |
 
-## 4. TODO — in priority order
+## 4. REMAINING — in priority order
+
+### P0 · repo / merge / hosting (do this first)
+1. **Merge PR #3** (this branch → `main`). Afterwards PR **#2** is superseded and can be closed; branch `arena/01a0f0cf-area11` stays for history.
+2. **After the merge, check the Netlify project** `marea11` still builds (`https://marea11.netlify.app`). See §10 for the base-directory caveat.
+3. **Decide where the real app will actually run** (shop PC `npm start` is the simplest; a Node host with a persistent disk is the alternative). Static/serverless hosting **cannot** hold the SQLite file (§10).
 
 ### P1 · finish Phase 1 / blockers for real use
 1. **Login + roles** (Q-13, Q-18): owner = password, staff = 4-digit PIN; roles Owner/Manager/Cashier (owner-only first). Today `lib/session.ts` returns the owner for everybody. `lib/auth.ts` already has scrypt hash/verify; `users` table + `security.*` settings exist. Needs: login page, signed cookie session, route protection, role switcher (spec Phase 1), enforce discount limits `discount.maxPercentCashier/Manager`, hide cost columns for non-owners (`receipt.showCostColumns`).
@@ -74,18 +92,18 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 5. **Offline hardening**: service worker + cached shell so the UI loads with no internet (manifest exists, SW doesn't). Server runs on the shop PC so DB is already local.
 6. Small UI gaps: customer edit (API `PATCH /api/customers` exists), category rename/delete (API exists), supplier-purchase "sample/bonus" checkbox, product stock adjust screen, receipt shows cost columns only for owner.
 
-### P2 · Phase 2 remainder (spec §…)
+### P2 · Phase 2 remainder (spec §9, §14)
 * Persisted **shift open/close** with opening float & variance (`shifts` table exists; `/cash` computes expected cash only) — port ideas from `legacy-demo-vite/src/domain/cash.ts`.
 * **Provisional ("rush-time") returns** and lost-bill lookup by phone/medicine/date; role-gated restock (cashier cannot restock) — see `legacy-demo-vite/src/domain/returns.ts`.
 * Discount safety rules end-to-end (never below cost, per-role limits).
 
-### P3 · Phase 3
+### P3 · Phase 3 (spec §6, §10.2, §11.2, §11.3)
 Supplier ledger & **supplier returns**, bonus/sample stock UI, reorder list → **WhatsApp order text** (free `wa.me` link, Q-11), daily report via WhatsApp, expiry-return to supplier flow.
 
-### P4 · Phase 4
+### P4 · Phase 4 (spec §7.1, §8.5, §10.1, §2)
 Customer profiles/stars/**loyalty** (structure exists, OFF), multi-tier rates (VIP/doctor already used at POS), **split payments**, credit-limit enforcement, custom fields & categories (everything editable).
 
-### P5 · Phase 5
+### P5 · Phase 5 (spec §1.2, §11.1, §13, §15)
 **Audit-log viewer** ("blackbox"), smart search, analytics/reports, stock-take, **Supabase cloud sync** (owner's phone from home; local SQLite stays primary — `sync.*` settings reserved), scheduled backups, restore UI, Windows/Android install polish, real thermal ESC/POS + USB barcode scanner verification on hardware (scanner currently works as keyboard input).
 
 ## 5. Gotchas (save yourself an hour)
@@ -98,10 +116,12 @@ Customer profiles/stars/**loyalty** (structure exists, OFF), multi-tier rates (V
 * Never pass raw DB rows with null prototypes to client components (already fixed in `db.ts`).
 * After `npm run dev` code changes, hot reload is enough; a new migration applies on next request.
 * Typecheck: `npx tsc --noEmit` (root `tsconfig.json` excludes `legacy-demo-vite`). Keep it at **0 errors**.
+* **Two package.json files exist**: root = the real Next.js app; `legacy-demo-vite/package.json` = the old demo. Install/run them separately; don't mix their `node_modules` assumptions.
+* **The root of the repo is not a static site any more.** `/` serves the Next.js app; the Vite demo now builds only from `legacy-demo-vite/` (`npm run build` → `legacy-demo-vite/dist`). Any hosting config that still points at the repo root will therefore build the wrong thing (§10).
 
 ## 6. Going back (even after merges)
 
-* Stages are git tags: `stage-1 … stage-N` (all pushed). List: `bash scripts/ckpt.sh list`.
+* Stages are git tags: `stage-1 … stage-7` (all pushed). List: `bash scripts/ckpt.sh list`.
 * **Look at an old stage:** `git checkout stage-3` (then `git checkout <your-branch>` to return). **Return a branch to it:** `bash scripts/ckpt.sh go 3` (non-destructive; history stays).
 * **Undo a merged PR:** `git revert -m 1 <merge-commit-sha>` (creates a new commit; nothing is lost).
 * Merging never removes tags or commits. **Never delete tags, never force-push.**
@@ -109,7 +129,7 @@ Customer profiles/stars/**loyalty** (structure exists, OFF), multi-tier rates (V
 
 ## 7. Reusing the legacy demo (`legacy-demo-vite/`)
 
-Browser/localStorage app (React 19 + Vite), phases 1-3 with **tests** (`vitest`) and docs in `legacy-demo-vite/docs/` (decisions, per-phase progress). Useful, already-reviewed logic to port into `src/lib/*` instead of rewriting:
+Browser/localStorage app (React 19 + Vite), phases 1-3 with **tests** (`vitest`, 212 unit tests + 36 Playwright specs) and docs in `legacy-demo-vite/docs/` (decisions, per-phase progress, deployment). Useful, already-reviewed logic to port into `src/lib/*` instead of rewriting:
 `src/domain/returns.ts` (exact refund allocation, quarantine, provisional returns), `cash.ts` (drawer, handover, variance), `accounts.ts` (owner drawings/expenses), `suppliers.ts` (ledger/returns), `alerts.ts` (expiry/reorder), `arithmetic.ts`, tests in `*.test.ts` (reuse as spec for the SQL versions).
 Its README says "demo only" — that is about *that* build (no real DB, fake auth), not this one.
 
@@ -129,9 +149,30 @@ curl -s -XPOST localhost:3000/api/purchases -H 'Content-Type: application/json' 
 curl -s -XPOST localhost:3000/api/sales -H 'Content-Type: application/json' \
   -d '{"paymentMethod":"cash","items":[{"productId":1,"batchId":1,"unit":"strip","qty":1,"unitPricePaisa":300},{"productId":1,"batchId":1,"unit":"base","qty":5,"unitPricePaisa":300}]}'  # Rs45 → Rs40 (round down)
 ```
+
+Static gates (must all pass before any push): `npx tsc --noEmit` · `npm run build` · `bash scripts/rules-count.sh` (`SAB THEEK`).
 Delete test rows afterwards (or delete `data/area11.db` on a dev box) so the owner starts clean.
 
-## 10. Branch / merge situation (as of 2026-10-01)
+## 10. Branch, PR, hosting & merge situation (as of 2026-10-03)
 
-* `main` originally received the **Vite demo** (PR #1 from another Arena session). This work (Next.js + SQLite app) lives on `arena/01a0f0cf-area11` and **already contains a merge of `main`** with the demo relocated to `legacy-demo-vite/` — so merging this branch into `main` is conflict-free and loses nothing.
-* The demo's own Netlify/Pages config still points at branch `arena/01a0f117-area11` (untouched). The new app needs a Node host/shop PC (SQLite), not static hosting.
+**Branches / PRs**
+
+* `main` = PR #1 (the **Vite demo only**). Still the default branch; **does not contain the real app yet**.
+* `arena/01a0f0cf-area11` = previous session's branch (Next.js app, tags `stage-1 … stage-6`). PR **#2** was opened from it on 2026-10-01, is mergeable/clean, but was never merged.
+* **`arena/01a10395-area11` = current session branch.** On 2026-10-03 it was **fast-forwarded onto `arena/01a0f0cf-area11`** (nothing lost, no conflicts — the old branch already contained `main`), then this memory rewrite was added. **PR #3** carries it into `main`; PR #2 becomes redundant and may be closed (the old branch/tags stay). No open issues; no GitHub Actions workflows are installed (only templates in `legacy-demo-vite/docs/workflow-templates/`).
+
+**Hosting — what is actually live today**
+
+* ✅ **Public demo:** <https://marea11.netlify.app> — Netlify project `marea11`, connected to this repo, serving the **Vite demo** (sample data). Verified from outside the sandbox on 2026-10-03. The per-PR deploy preview (`deploy-preview-2--marea11.netlify.app`) also serves the demo.
+* ⚠️ **Netlify base-directory caveat:** the project builds the demo, not the repo root. Evidence: PR #2's deploy preview (2026-10-01 01:06 UTC) succeeded while the branch root had already become a Next.js app with no root `netlify.toml`. This was **not** re-checked in the Netlify dashboard (no account access from here) — if the settings really point at the repo root, the first deploy after merging PR #3 would fail. Before/after merging, open **Netlify → Site configuration → Build & deploy** and confirm: base directory `legacy-demo-vite`, build `npm run build`, publish `dist`, `NODE_VERSION` = 22.22.3, `VITE_BASE_PATH` = `/`.
+* ⚠️ **Vercel:** a production deployment of `main` exists (`area11-ekfim1j3c-dr92.vercel.app`, 2026-10-01) but it is **SSO/login-protected** — not a public site, not usable.
+* ❌ **GitHub Pages:** still blocked (the Arena GitHub connection gets HTTP 403 on Pages enable; pushes containing active workflow files are rejected without the `workflows` permission).
+
+**Where the real app must run**
+
+Static/serverless hosts (Netlify, Vercel, GitHub Pages) **cannot** run it: the database is a SQLite **file** that needs a writable, persistent disk, and `node:sqlite` needs Node ≥ 22.5. Realistic options: **(a) the shop PC** — `npm run build && npm start`, other devices on the LAN use `http://<PC-IP>:3000` (simplest, matches the "100 % offline" decision); **(b) a Node host with a persistent volume** (Render/Railway/Fly/… or a small VPS) if it must be reachable from outside the LAN. Phase 5's Supabase sync is the long-term answer for the owner's phone — local SQLite stays primary.
+
+**Housekeeping for the next agent**
+
+* `legacy-demo-vite/docs/deployment.md` and `phase-3-*.md` still name the **old** branch `arena/01a0f117-area11` and treat the repo root as the Vite demo. They are **historical records** inside the legacy folder — read them as reference, not as current instructions.
+* After every piece of work: `bash scripts/ckpt.sh save "…"` → `bash scripts/ckpt.sh push`, and update **this file (§3 + §4) and `README.md`**.
