@@ -2,7 +2,7 @@
 
 **Start with [`HANDOFF.md`](./HANDOFF.md)** — current status (done / remaining), run instructions, gotchas, hosting, rollback. It is the memory of this project: **update it (§3 + §4) and `README.md` after every piece of work.**
 
-Last updated: **2026-10-03** · `arena/01a10395-area11` → PR **#3** into `main`. Phase 1 complete at **stage-14**; current status/next work lives in `HANDOFF.md` §3–§4.
+Last updated: **2026-10-03** · `arena/01a10395-area11` → PR **#3** into `main`. Phase 1 complete at **stage-14**; Phase-2 essentials (cash shifts, lost-bill/rush-time returns) done at **stage-16**; current status/next work lives in `HANDOFF.md` §3–§4.
 
 Non-negotiables (details in `PHASE-TWO-INFORMATION.md`, 116 numbered rules):
 
