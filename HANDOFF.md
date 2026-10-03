@@ -2,7 +2,7 @@
 
 > **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں — **کام کرتا ہوا اور آج (2026-10-03) دوبارہ verify شدہ**۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** اگلا کام "§4 REMAINING" میں ہے (سب سے پہلے: **PR #3 merge** اور login+roles)۔ ہر کام کے بعد یہ فائل اپ ڈیٹ کریں۔
 
-Last updated: **2026-10-03** · App version **0.6.0 (Phase 1 done + Phase 2 essentials)** · Session branch **`arena/01a10395-area11`** → PR **#3** into `main` · Newest tag: `stage-7` (`stage-1 … stage-6` = earlier history).
+Last updated: **2026-10-03** · App version **0.6.0 (Phase 1 done + Phase 2 essentials)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: `stage-8` (`stage-1 … stage-7` = earlier history).
 
 ---
 
@@ -121,7 +121,7 @@ Customer profiles/stars/**loyalty** (structure exists, OFF), multi-tier rates (V
 
 ## 6. Going back (even after merges)
 
-* Stages are git tags: `stage-1 … stage-7` (all pushed). List: `bash scripts/ckpt.sh list`.
+* Stages are git tags: `stage-1 … stage-8` (all pushed). List: `bash scripts/ckpt.sh list`. (`stage-7` = the 2026-10-03 memory rewrite, `stage-8` = PR links added. If a fresh clone shows no tags, `git fetch origin --tags` **before** `ckpt.sh save` — otherwise it would restart numbering at `stage-1`.)
 * **Look at an old stage:** `git checkout stage-3` (then `git checkout <your-branch>` to return). **Return a branch to it:** `bash scripts/ckpt.sh go 3` (non-destructive; history stays).
 * **Undo a merged PR:** `git revert -m 1 <merge-commit-sha>` (creates a new commit; nothing is lost).
 * Merging never removes tags or commits. **Never delete tags, never force-push.**
@@ -159,7 +159,7 @@ Delete test rows afterwards (or delete `data/area11.db` on a dev box) so the own
 
 * `main` = PR #1 (the **Vite demo only**). Still the default branch; **does not contain the real app yet**.
 * `arena/01a0f0cf-area11` = previous session's branch (Next.js app, tags `stage-1 … stage-6`). PR **#2** was opened from it on 2026-10-01, is mergeable/clean, but was never merged.
-* **`arena/01a10395-area11` = current session branch.** On 2026-10-03 it was **fast-forwarded onto `arena/01a0f0cf-area11`** (nothing lost, no conflicts — the old branch already contained `main`), then this memory rewrite was added. **PR #3** carries it into `main`; PR #2 becomes redundant and may be closed (the old branch/tags stay). No open issues; no GitHub Actions workflows are installed (only templates in `legacy-demo-vite/docs/workflow-templates/`).
+* **`arena/01a10395-area11` = current session branch.** On 2026-10-03 it was **fast-forwarded onto `arena/01a0f0cf-area11`** (nothing lost, no conflicts — the old branch already contained `main`), then this memory rewrite was added. **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** carries it into `main`; PR #2 becomes redundant and may be closed (the old branch/tags stay). No open issues; no GitHub Actions workflows are installed (only templates in `legacy-demo-vite/docs/workflow-templates/`).
 
 **Hosting — what is actually live today**
 

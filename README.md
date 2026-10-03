@@ -8,7 +8,7 @@
 
 ## Status (2026-10-03) — v0.6.0
 
-**Branch:** `arena/01a10395-area11` → **PR #3** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 31 routes · `rules-count.sh` = `SAB THEEK` · live API smoke (`PINV-0001` purchase → `INV-0001` sale) OK · legacy demo tests 212/212.
+**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 31 routes · `rules-count.sh` = `SAB THEEK` · live API smoke (`PINV-0001` purchase → `INV-0001` sale) OK · legacy demo tests 212/212.
 
 | Stage | Work | State |
 |---|---|---|
