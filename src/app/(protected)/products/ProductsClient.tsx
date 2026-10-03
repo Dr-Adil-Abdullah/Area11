@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Plus, Pencil, Search, Trash2, X, Save, Pill, Package } from "lucide-react";
 import { toPaisa, formatPKR, fromBaseUnits } from "@/lib/money";
 import type { CustomField } from "@/lib/custom-fields-shared";
@@ -474,7 +475,7 @@ export default function ProductsClient({
                       <div className="flex items-center gap-2">
                         <Pill className="h-4 w-4 text-slate-400" />
                         <div>
-                          <div className="font-medium text-slate-800">{p.name}</div>
+                          <Link href={`/products/${p.id}`} className="font-medium text-slate-800 hover:underline">{p.name}</Link>
                           <div className="text-[11px] text-slate-500">
                             {[p.generic, p.brand, p.category_name, p.rack_no].filter(Boolean).join(" • ") || "—"}
                           </div>

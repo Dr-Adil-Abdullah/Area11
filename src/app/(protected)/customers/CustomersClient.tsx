@@ -1,5 +1,6 @@
 "use client";
 import { Fragment, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HandCoins, Pencil, Plus, Save, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
@@ -189,7 +190,10 @@ export default function CustomersClient({
               ) : null}
               {edit?.id === c.id ? null : (
               <tr>
-                <td className="font-medium">{c.name}</td><td>{c.phone ?? "—"}</td><td className="text-xs">{c.category}</td>
+                <td className="font-medium">
+                  <Link href={`/customers/${c.id}`} className="hover:underline">{c.name}</Link>
+                </td>
+                <td>{c.phone ?? "—"}</td><td className="text-xs">{c.category}</td>
                 <td className="text-right text-xs">{c.credit_limit_paisa ? formatPKR(c.credit_limit_paisa) : "—"}</td>
                 <td className={`text-right font-medium ${c.balance_paisa > 0 ? "text-rose-600" : ""}`}>{formatPKR(c.balance_paisa)}</td>
                 <td className="text-right">
