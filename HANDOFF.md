@@ -52,14 +52,14 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 ## 3. What is DONE
 
-**Where things stand on 2026-10-03:** the app was re-verified in the morning (docs only), then **login + roles were built in the evening** — that is the code change this branch adds on top of PR #2.
+**Where things stand on 2026-10-03:** the app was re-verified in the morning (docs only); in the evening **login + roles** (stage-9) were built, then a follow-up fixed the health version (stage-10), and then **cash-change calculator + stock write-off/adjust + URL-level page guard** (stage-11) — those are the code changes this branch adds on top of PR #2.
 
 | Check | Result |
 |---|---|
 | `npx tsc --noEmit` | **0 errors** |
-| `npm run build` | **passes**, 31 routes |
+| `npm run build` | **passes**, 32 routes (incl. `/stock` and `/api/stock/adjust`) |
 | `bash scripts/rules-count.sh` | **SAB THEEK** — phase-two 116 points; INPUT A-49 + Q-19 |
-| Live API smoke (health → product → purchase → sale) | `{ok:true, database:"connected", version 0.6.0}` · product id 1 · **`PINV-0001`** (`totalPaisa 100000`) · **`INV-0001`** (`totalPaisa 3000`) · `/` → HTTP 200 |
+| Live API smoke (stage-11) | `{ok:true, database:"connected", version 0.6.1}` · product id 1 · **`PINV-0001`** `totalPaisa 100000` · **`PINV-0001`** re-run OK · stock write-off `2 strip → value 10000, newQty 180` · over-write-off **blocked 400** ("sirf 180 tablet hain") · **`INV-0001`** with change: tender Rs 1000 → `tenderedPaisa 100000`, `changePaisa 94000` · adjustment list shows summary `todayPaisa 10000` · cashier → restricted pages **307 → `/pos`**, `/api/stock/adjust` **403** `{"error":"Owner or Manager only"}` · receipt prints *Cash received* + *Change returned* |
 | Legacy demo (`legacy-demo-vite/`) | `npm run typecheck` ✓ · `npm test` → **212/212** |
 | Public demo URL `https://marea11.netlify.app` | **live, public**, renders the Vite demo (checked from outside the sandbox) |
 
@@ -80,6 +80,9 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 | Audit log (write side) | `lib/audit.ts` → `audit_logs` | create/update/delete/price_change/void/return/settings_change/backup. **No viewer yet.** |
 | **Login & roles** | `/login`, `lib/session.ts`, `lib/auth.ts`, `lib/users.ts`, `lib/roles.ts`, `api/auth/*`, `api/users*` | HMAC-signed HttpOnly cookie (secret from `.env` or auto-generated in the DB), owner password / staff PIN, 5-try throttle, audit `login`/`login_failed`/`logout`, idle auto-lock (`security.autoLockMinutes`, default 15), session lifetime (`security.sessionHours`, default 12). Protected page group `src/app/(protected)/` + `guard()` on every API route. Role limits: cashier cannot create products/purchases/suppliers/supplier payments; Settings → Staff (owner only). |
 | **Discount guard (spec 7.3)** | `lib/sales.ts`, `lib/roles.ts`, `lib/settings.ts` | Server-side: percent limit per role (**cashier 5% · manager 20% · owner unlimited** — editable in Settings) **and** a hard block on any discount that would take a line or the bill below purchase cost (`discount.blockBelowCost`, default ON). |
+| **Cash change calculator** | `/pos`, `lib/sales.ts`, `sales.change_paisa` (migration 003) | Cashier types what the customer handed over (quick buttons Exact/100/500/1000/2000/5000) → **live change** shown before saving and printed on the receipt ("Cash received" / "Change returned"). Tendering is **not revenue**; change is stored per sale. |
+| **Stock write-off / adjust** | `/stock`, `lib/stock.ts`, `api/stock/adjust`, table `stock_adjustments` (migration 003) | Owner/Manager: choose product+batch, direction **out** (expired/damaged/lost/count-correction) or **in** (found/returned), reason + note; writes a `stock_movements` row (`writeoff`/`adjust`), moves the batch and product quantity, values the loss **at cost**, and lists history with today/month write-off totals. Over-writing more than the batch holds is blocked. |
+| **Page guard (roles, URL level)** | `lib/page-guard.ts` | Hiding a nav item is not enough: cashier opening `/products`, `/purchases`, `/suppliers`, `/cash`, `/settings` or `/stock` directly is redirected to `/pos` (owner/manager only). |
 | **Login reset script** | `scripts/reset-login.mjs` | `--list`, `--owner "new-password"`, `--user "Name" --pin 1234` — also writes an audit row. |
 | Dev tooling | `scripts/ckpt.sh`, `rules-count.sh`, `sync-spec.sh`, `reset-login.mjs` | checkpoint/rollback, numbering check, spec copy, login reset. |
 
@@ -92,11 +95,11 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 ### P1 · finish Phase 1 / blockers for real use
 1. ~~**Login + roles** (Q-13, Q-18)~~ — **DONE 2026-10-03** (see §3). Still open from that item: a visible role switcher when several people share one counter (today you log out/in), and per-user "shift" reporting.
-2. **Cash change calculator** at counter (tendered → change; spec Phase 1) — not revenue.
-3. **Unit-level stock edit / write-off / adjustment** (expired write-off, count correction) using `stock_movements` types `adjust`/`writeoff`.
+2. ~~**Cash change calculator** at counter~~ — **DONE 2026-10-03 (stage-11)**: tender + quick cash buttons + live change + receipt line; change is not revenue.
+3. ~~**Unit-level stock write-off / adjustment**~~ — **DONE 2026-10-03 (stage-11)**: `/stock` page (owner/manager), direction out/in, reason, value at cost, movement row, over-write-off blocked.
 4. **Excel import of old data** (Q-19) with SheetJS (`xlsx`): products, batches, customers, supplier balances; dry-run preview first.
 5. **Offline hardening**: service worker + cached shell so the UI loads with no internet (manifest exists, SW doesn't). Server runs on the shop PC so DB is already local.
-6. Small UI gaps: customer edit (API `PATCH /api/customers` exists), category rename/delete (API exists), supplier-purchase "sample/bonus" checkbox, product stock adjust screen, receipt shows cost columns only for owner.
+6. Small UI gaps: customer edit (API `PATCH /api/customers` exists), category rename/delete (API exists), supplier-purchase "sample/bonus" checkbox. ~~product stock adjust screen~~ ✅ done (`/stock`), ~~receipt cost columns owner-only~~ ✅ done.
 
 ### P2 · Phase 2 remainder (spec §9, §14)
 * Persisted **shift open/close** with opening float & variance (`shifts` table exists; `/cash` computes expected cash only) — port ideas from `legacy-demo-vite/src/domain/cash.ts`.
