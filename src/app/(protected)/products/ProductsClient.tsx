@@ -263,6 +263,25 @@ export default function ProductsClient({
     await refreshLists(); router.refresh();
   }
 
+  /** Select ke andar se nayi category (naam wapas milega) */
+  async function addCategoryInline(name: string): Promise<number | null> {
+    const r = await (await fetch("/api/categories", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }),
+    })).json();
+    if (!r.ok) { setListMsg(r.error ?? "category failed"); return null; }
+    await refreshLists();
+    return r.id ?? null;
+  }
+
+  async function addCompanyInline(name: string): Promise<number | null> {
+    const r = await (await fetch("/api/companies", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }),
+    })).json();
+    if (!r.ok) { setListMsg(r.error ?? "company failed"); return null; }
+    await refreshLists();
+    return (r.id as number) ?? null;
+  }
+
   async function addCategory() {
     if (!newCategory.trim()) return;
     setBusy(true);
@@ -356,20 +375,50 @@ export default function ProductsClient({
             </div>
             <div>
               <label className="label">Category</label>
-              <select className="select" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
+              <select
+                className="select"
+                value={form.categoryId}
+                onChange={async (e) => {
+                  if (e.target.value === "__new") {
+                    const name = prompt("Nayi category ka naam?");
+                    if (name?.trim()) {
+                      const id = await addCategoryInline(name.trim());
+                      if (id) set("categoryId", String(id));
+                    }
+                    return;
+                  }
+                  set("categoryId", e.target.value);
+                }}
+              >
                 <option value="">— none —</option>
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
+                <option value="__new">＋ Nayi category…</option>
               </select>
             </div>
             <div>
               <label className="label">Company</label>
-              <select className="select" value={form.companyId} onChange={(e) => set("companyId", e.target.value)}>
+              <select
+                className="select"
+                value={form.companyId}
+                onChange={async (e) => {
+                  if (e.target.value === "__new") {
+                    const name = prompt("Nayi company ka naam?");
+                    if (name?.trim()) {
+                      const id = await addCompanyInline(name.trim());
+                      if (id) set("companyId", String(id));
+                    }
+                    return;
+                  }
+                  set("companyId", e.target.value);
+                }}
+              >
                 <option value="">— none —</option>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
+                <option value="__new">＋ Nayi company…</option>
               </select>
             </div>
             <div>

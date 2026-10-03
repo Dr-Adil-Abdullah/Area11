@@ -13,19 +13,26 @@ function Section({
   title,
   desc,
   children,
+  open,
 }: {
   title: string;
   desc?: string;
   children: React.ReactNode;
+  /** true = shuru me khula hua */
+  open?: boolean;
 }) {
+  // <details> = click karne par andar ki tafseel khulti/band hoti hai (JS ki zaroorat nahi)
   return (
-    <div className="card">
-      <div className="card-head flex-col !items-start gap-0.5">
-        <div className="card-title">{title}</div>
-        {desc && <div className="text-xs font-normal text-slate-500">{desc}</div>}
-      </div>
+    <details className="card group" open={open}>
+      <summary className="card-head cursor-pointer select-none list-none">
+        <div className="flex-1">
+          <div className="card-title">{title}</div>
+          {desc && <div className="text-xs font-normal text-slate-500">{desc}</div>}
+        </div>
+        <span className="text-slate-400 transition group-open:rotate-180">▾</span>
+      </summary>
       <div className="card-body grid gap-4 md:grid-cols-2">{children}</div>
-    </div>
+    </details>
   );
 }
 
@@ -103,6 +110,7 @@ export default async function SettingsPage({
       <form action={saveSettingsAction} className="space-y-5">
         {/* ---------------- Store & branding ---------------- */}
         <Section
+          open
           title="Store &amp; Branding"
           desc="Appears on the app header and on printed receipts."
         >
@@ -136,7 +144,7 @@ export default async function SettingsPage({
         </Section>
 
         {/* ---------------- Billing ---------------- */}
-        <Section title="Bills &amp; Numbering" desc="Invoice numbers and round-off rules.">
+        <Section open title="Bills &amp; Numbering" desc="Invoice numbers and round-off rules.">
           <Field label="Purchase bill prefix">
             <input name="bill.purchasePrefix" defaultValue={s["bill.purchasePrefix"]} className="input" />
           </Field>
