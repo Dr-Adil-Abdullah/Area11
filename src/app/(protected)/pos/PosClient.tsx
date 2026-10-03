@@ -3,21 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  Barcode,
-  Check,
-  CreditCard,
-  Minus,
-  PauseCircle,
-  PlayCircle,
-  Plus,
-  Printer,
-  Search,
-  ShoppingCart,
-  Trash2,
-  User,
-  X,
-} from "lucide-react";
+import { Barcode, Check, CreditCard, Minus, PauseCircle, PlayCircle, Plus, Printer, Search, ShoppingCart, Trash2, User, X, AlertTriangle } from "lucide-react";
 import {
   applyRoundWithCostGuard,
   formatPKR,
@@ -108,6 +94,7 @@ type Props = {
   };
   customers: Customer[];
   userRole: string;
+  shiftOpen: boolean;
 };
 
 const statusColor: Record<string, string> = {
@@ -129,6 +116,7 @@ export default function PosClient({
   settings,
   customers: initialCustomers,
   userRole,
+  shiftOpen,
 }: Props) {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
@@ -444,6 +432,17 @@ export default function PosClient({
   }
 
   return (
+    <div className="space-y-3">
+      {!shiftOpen && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <AlertTriangle className="h-4 w-4" />
+          <span>
+            Galla (cash shift) khuli nahi hai — band karte waqt hisaab milane ke liye pehle
+            <a className="mx-1 font-semibold underline" href="/cash">Cash &amp; day-end</a>
+            par ja kar shift khol lein. (Billing ruk nahi rahi.)
+          </span>
+        </div>
+      )}
     <div className="grid gap-4 lg:grid-cols-5">
       {/* ---------------- LEFT: search ---------------- */}
       <div className="space-y-3 lg:col-span-3">
@@ -944,6 +943,7 @@ export default function PosClient({
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

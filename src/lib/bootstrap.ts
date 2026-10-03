@@ -42,12 +42,8 @@ export async function ensureBootstrap(): Promise<void> {
       });
     }
 
-    // Opening shift (cash drawer) -- Phase 2 me poora istemal hoga
-    const shiftOpen = get("SELECT id FROM shifts WHERE status = 'open' LIMIT 1");
-    if (!shiftOpen) {
-      const owner = get<{ id: number }>("SELECT id FROM users WHERE role = 'owner' LIMIT 1");
-      run("INSERT INTO shifts (user_id, opening_float_paisa) VALUES (?, 0)", [owner?.id ?? null]);
-    }
+    // NOTE: shift (galla) khud se nahi khulti -- cashier/owner /cash par ja kar
+    // opening float ke saath shift kholta hai (P2, stage-15).
   } catch (e) {
     console.error("[bootstrap] error:", e);
   }

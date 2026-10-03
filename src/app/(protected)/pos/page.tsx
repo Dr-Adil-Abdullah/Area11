@@ -2,6 +2,7 @@ import { getSettings } from "@/lib/settings";
 import { peekNextCode } from "@/lib/numbering";
 import { listCustomers } from "@/lib/customers";
 import { currentUser } from "@/lib/session";
+import { currentShift } from "@/lib/shifts";
 import PosClient from "./PosClient";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export default async function PosPage() {
       }}
       customers={JSON.parse(JSON.stringify(customers))}
       userRole={me?.role ?? "cashier"}
+      shiftOpen={!!currentShift()}
     />
   );
 }

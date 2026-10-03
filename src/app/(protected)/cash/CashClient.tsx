@@ -3,10 +3,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
+import ShiftCard from "./ShiftCard";
+import type { ShiftFlow, ShiftRow } from "@/lib/shifts";
 
 type S = { day: string; bills: number; voided: number; salesTotal: number; creditGiven: number; returnsTotal: number; profit: number; cashIn: number; cashRefunds: number; supplierPaid: number; expenses: number; drawings: number; expectedCash: number };
 
-export default function CashClient({ summary: s, expenses, drawings }: { summary: S; expenses: { id: number; date: string; category: string; title: string; amount_paisa: number }[]; drawings: { id: number; date: string; type: string; amount_paisa: number; note: string | null }[] }) {
+type ShiftData = { open: ShiftRow | null; flow: ShiftFlow | null; shifts: ShiftRow[]; todayVariancePaisa: number };
+
+export default function CashClient({ summary: s, expenses, drawings, shift }: { summary: S; expenses: { id: number; date: string; category: string; title: string; amount_paisa: number }[]; drawings: { id: number; date: string; type: string; amount_paisa: number; note: string | null }[]; shift: ShiftData }) {
   const router = useRouter();
   const [ex, setEx] = useState({ title: "", amount: "", category: "other" });
   const [dr, setDr] = useState({ amount: "", note: "", type: "cash" });
@@ -43,11 +47,12 @@ export default function CashClient({ summary: s, expenses, drawings }: { summary
           <Row k="Expenses" v={s.expenses} neg />
           <Row k="Owner cash drawings" v={s.drawings} neg />
           <Row k="Expected cash from today's activity" v={s.expectedCash} bold />
-          <p className="mt-1 text-[11px] text-slate-500">Add your opening float yourself when comparing with the drawer.</p>
+          <p className="mt-1 text-[11px] text-slate-500">Note: this is only today&apos;s movement. Opening float + farq (variance) ke liye upar wala <b>Cash shift (galla)</b> card dekhein.</p>
           <div className="mt-3 flex items-center gap-2"><input className="input-sm w-40" placeholder="Counted cash Rs" value={counted} onChange={(e) => setCounted(e.target.value)} />
             {diff !== null && <span className={`text-sm font-medium ${diff === 0 ? "text-emerald-700" : "text-rose-600"}`}>{diff === 0 ? "Matches" : diff > 0 ? `Excess ${formatPKR(diff)}` : `Short ${formatPKR(-diff)}`}</span>}</div>
         </div>
         <div className="space-y-4">
+          <ShiftCard open={shift.open} flow={shift.flow} shifts={shift.shifts} todayVariancePaisa={shift.todayVariancePaisa} />
           <div className="card card-body space-y-2"><div className="card-title">Add expense</div>
             <div className="flex flex-wrap gap-2"><input className="input-sm flex-1" placeholder="What for? (rent, tea, electricity…)" value={ex.title} onChange={(e) => setEx({ ...ex, title: e.target.value })} />
               <input className="input-sm w-28" placeholder="Rs" value={ex.amount} onChange={(e) => setEx({ ...ex, amount: e.target.value })} />
