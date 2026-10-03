@@ -6,19 +6,21 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-11**
+## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-12**
 
-**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 32 routes · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
+**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 36 routes · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
 | Stage | Work | State |
 |---|---|---|
 | Stone 0 / 0.5 | Repo, checkpoints, spec, 116 numbered rules, app foundation, editable Settings | ✅ |
-| **Phase 1** | Products + pack formula, suppliers, purchases (PINV, batch/expiry), counter billing (FEFO, Box/Strip/Tab, hold cart, round-off **with cost guard**), **cash tendered → change calculator** (quick cash buttons, receipt line), **stock write-off/adjust page** (expired/damaged/count correction, value at cost), thermal receipt, **login + roles (owner password / staff PIN) + URL-level page guard** | ✅ only Excel import + offline service worker left |
+| **Phase 1** | Products + pack formula, suppliers, purchases (PINV, batch/expiry), counter billing (FEFO, Box/Strip/Tab, hold cart, round-off **with cost guard**), **cash tendered → change calculator** (quick cash buttons, receipt line), **stock write-off/adjust page** (expired/damaged/count correction, value at cost), **Excel import of old data** (template → dry-run preview → import, opening stock/batches, customer udhaar, supplier payable), thermal receipt, **login + roles (owner password / staff PIN) + URL-level page guard** | ✅ only the offline service worker left |
 | **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup | ✅ |
 | **Discount guard (spec 7.3)** | Role percent limits (cashier 5 · manager 20 · owner unlimited) **and** no discount below purchase cost — both server-side and editable in Settings | ✅ |
 | Phase 2 rest, 3, 4, 5 | provisional returns, shifts, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, Supabase sync … | ⏳ see `HANDOFF.md` §4 |
 
-**Latest changes (stage-11):** `/stock` write-off & adjustment screen for owner/manager · cash-received box at the counter with live change + quick buttons · change printed on the receipt · purchased-cost guard still blocks below-cost discounts · a cashier typing an owner-only URL is sent back to `/pos`.
+**Latest changes (stage-12):** import screen `/import` — the shop's old list can come from Excel (with a ready template and a line-by-line preview before anything is saved) · duplicate names/phones are skipped automatically, rates are typed in rupees and stored as paisa, opening stock arrives as a proper batch with expiry.
+
+**Stage-11:** `/stock` write-off & adjustment screen for owner/manager · cash-received box at the counter with live change + quick buttons · change printed on the receipt · purchased-cost guard still blocks below-cost discounts · a cashier typing an owner-only URL is sent back to `/pos`.
 
 **Live link (demo only):** <https://marea11.netlify.app> — Netlify project `marea11` publishes the **`legacy-demo-vite/` demo** (sample data) for now. The real app needs a **Node ≥ 22.5 host with a persistent disk** (shop PC / Node host with volume): a SQLite file cannot live on static or serverless hosting. Details in `HANDOFF.md` §10.
 
