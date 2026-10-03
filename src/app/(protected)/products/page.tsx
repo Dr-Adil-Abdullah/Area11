@@ -1,9 +1,11 @@
 import { listCategories, listCompanies, listProducts } from "@/lib/catalog";
+import { requireShopManagerPage } from "@/lib/page-guard";
 import ProductsClient from "./ProductsClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
+  await requireShopManagerPage();
   const { rows, total } = listProducts({ limit: 200 });
   const categories = listCategories();
   const companies = listCompanies();

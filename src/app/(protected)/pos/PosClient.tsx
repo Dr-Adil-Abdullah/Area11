@@ -107,6 +107,7 @@ type Props = {
     loyaltyEnabled: boolean;
   };
   customers: Customer[];
+  userRole: string;
 };
 
 const statusColor: Record<string, string> = {
@@ -123,7 +124,12 @@ function priceForBatch(p: PosProduct, b: PosBatch | null, category: string): num
   return src.retail_paisa || p.retail_paisa;
 }
 
-export default function PosClient({ nextCode, settings, customers: initialCustomers }: Props) {
+export default function PosClient({
+  nextCode,
+  settings,
+  customers: initialCustomers,
+  userRole,
+}: Props) {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
   const [search, setSearch] = useState("");
@@ -137,10 +143,17 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [lastSale, setLastSale] = useState<{ id: number; code: string; total: number; due: number } | null>(null);
+  const [lastSale, setLastSale] = useState<{
+    id: number;
+    code: string;
+    total: number;
+    due: number;
+    change?: number;
+  } | null>(null);
   const [held, setHeld] = useState<HeldCart[]>([]);
   const [showHeld, setShowHeld] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: "", phone: "", category: "normal" });
+  const [tendered, setTendered] = useState(""); // grahak ne kitne cash diye
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -282,18 +295,26 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
     const due = Math.max(0, finalPaise - paid);
     const profit = finalPaise - cost;
 
-    // discount limit check
+    // change (cash counter) -- revenue nahi, sirf wapas kiye jaane wale paise
+    const tenderedPaisa = toPaisa(tendered || 0);
+    const change = Math.max(0, tenderedPaisa - finalPaise);
+
+    // discount limit check -- ROLE ke hisaab se (pehle ghalti se customer
+    // category dekhi ja rahi thi: vip customer se cashier ko manager limit mil jati thi)
     let limitWarning = "";
     if (settings.discountEnabled && billDisc > 0 && linesTotal > 0) {
       const pct = (billDisc / linesTotal) * 100;
-      const allowed = ["owner", "manager"].includes(category) ? settings.maxManager : settings.maxCashier;
+      const allowed = ["owner", "manager"].includes(userRole) ? settings.maxManager : settings.maxCashier;
       if (pct > allowed) {
         limitWarning = `Bill discount is ${pct.toFixed(1)}% — your limit is ${allowed}%. Ask the manager.`;
       }
     }
 
-    return { linesTotal, billDisc, tax, roundOffPaise, total: finalPaise, paid, due, cost, profit, limitWarning };
-  }, [lines, billDiscount, paidNow, settings, category]);
+    return {
+      linesTotal, billDisc, tax, roundOffPaise, total: finalPaise, paid, due,
+      cost, profit, limitWarning, tenderedPaisa, change,
+    };
+  }, [lines, billDiscount, paidNow, tendered, settings, userRole]);
 
   // ---------------- actions ----------------
   function clearCart() {
@@ -362,6 +383,7 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
         customerId: customerId ? Number(customerId) : null,
         paymentMethod,
         paidPaisa: paymentMethod === "credit" ? toPaisa(paidNow || 0) : totals.total,
+        tenderedPaisa: paymentMethod === "cash" ? (tendered ? toPaisa(tendered) : totals.total) : 0,
         billDiscountPaisa: totals.billDisc,
         notes: note || null,
         items: lines.map((l) => ({
@@ -380,7 +402,14 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
       });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || "Save failed");
-      setLastSale({ id: data.id, code: data.code, total: data.totalPaisa, due: data.duePaisa });
+      setLastSale({
+        id: data.id,
+        code: data.code,
+        total: data.totalPaisa,
+        due: data.duePaisa,
+        change: data.changePaisa ?? 0,
+      });
+      setTendered("");
       if (data.warnings?.length) setError(data.warnings.join(" | "));
       clearCart();
       router.refresh();
@@ -796,6 +825,38 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
                   <input className="input" value={paidNow} onChange={(e) => setPaidNow(e.target.value)} placeholder="0" />
                 </div>
               )}
+              {paymentMethod === "cash" && (
+                <div className="mt-2 space-y-2">
+                  <div>
+                    <label className="label">Cash received (Rs)</label>
+                    <input
+                      className="input"
+                      value={tendered}
+                      onChange={(e) => setTendered(e.target.value)}
+                      placeholder={String(totals.total / 100)}
+                      inputMode="decimal"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      className="btn-secondary !px-2 !py-1 !text-[11px]"
+                      onClick={() => setTendered(String(totals.total / 100))}
+                    >
+                      Exact
+                    </button>
+                    {[100, 500, 1000, 2000, 5000].map((note) => (
+                      <button
+                        key={note}
+                        className="btn-secondary !px-2 !py-1 !text-[11px]"
+                        onClick={() => setTendered(String(note))}
+                        disabled={note * 100 < totals.total}
+                      >
+                        {note}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* totals */}
@@ -839,10 +900,22 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
                 </>
               )}
               {paymentMethod === "cash" && (
-                <div className="flex justify-between text-slate-500">
-                  <span>Change to return</span>
-                  <span>—</span>
-                </div>
+                <>
+                  {totals.tenderedPaisa > 0 && (
+                    <div className="flex justify-between text-slate-600">
+                      <span>Cash received</span>
+                      <span>{formatPKR(totals.tenderedPaisa)}</span>
+                    </div>
+                  )}
+                  <div
+                    className={`flex justify-between ${
+                      totals.change > 0 ? "font-semibold text-emerald-700" : "text-slate-500"
+                    }`}
+                  >
+                    <span>Change to return</span>
+                    <span>{totals.change > 0 ? formatPKR(totals.change) : "—"}</span>
+                  </div>
+                </>
               )}
             </div>
 
@@ -861,6 +934,7 @@ export default function PosClient({ nextCode, settings, customers: initialCustom
                 <span>
                   Saved <span className="font-semibold">{lastSale.code}</span> • {formatPKR(lastSale.total)}
                   {lastSale.due > 0 ? ` • credit ${formatPKR(lastSale.due)}` : ""}
+                  {lastSale.change ? ` • change ${formatPKR(lastSale.change)}` : ""}
                 </span>
                 <Link href={`/receipt/${lastSale.id}?auto=1`} target="_blank" className="flex items-center gap-1 underline">
                   <Printer className="h-3 w-3" /> Print

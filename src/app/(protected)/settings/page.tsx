@@ -1,4 +1,5 @@
 import { getSettings } from "@/lib/settings";
+import { requireShopManagerPage } from "@/lib/page-guard";
 import { currentUser } from "@/lib/session";
 import { listUsers } from "@/lib/users";
 import StaffCard from "./StaffCard";
@@ -72,6 +73,7 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ saved?: string; staffSaved?: string; staffError?: string }>;
 }) {
+  await requireShopManagerPage();
   const s = await getSettings();
   const me = await currentUser();
   const isOwner = me?.role === "owner";

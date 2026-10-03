@@ -1,6 +1,7 @@
 import { getSettings } from "@/lib/settings";
 import { peekNextCode } from "@/lib/numbering";
 import { listCustomers } from "@/lib/customers";
+import { currentUser } from "@/lib/session";
 import PosClient from "./PosClient";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ export default async function PosPage() {
   const settings = await getSettings();
   const nextCode = await peekNextCode("sale");
   const customers = listCustomers();
+  const me = await currentUser();
 
   return (
     <PosClient
@@ -28,6 +30,7 @@ export default async function PosPage() {
         loyaltyEnabled: !!settings["loyalty.enabled"],
       }}
       customers={JSON.parse(JSON.stringify(customers))}
+      userRole={me?.role ?? "cashier"}
     />
   );
 }

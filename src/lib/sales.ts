@@ -33,6 +33,8 @@ export type SaleInput = {
   customerId?: number | null;
   items: CartLineInput[];
   billDiscountPaisa?: number;
+  /** Counter par grahak ne jo cash diya (change nikalne ke liye) -- revenue nahi */
+  tenderedPaisa?: number;
   paymentMethod?: "cash" | "credit" | "online" | "card" | "split";
   paidPaisa?: number;
   notes?: string | null;
@@ -49,6 +51,8 @@ export type SaleResult = {
   totalPaisa: number;
   paidPaisa: number;
   duePaisa: number;
+  tenderedPaisa: number;
+  changePaisa: number;
   warnings: string[];
 };
 
@@ -170,13 +174,19 @@ export function createSale(
       : Math.max(0, Math.round(input.paidPaisa ?? finalPaise));
     const due = Math.max(0, finalPaise - paid);
 
+    // Cash counter: kitne diye, kitne wapas kiye (change revenue nahi -- spec 8.5)
+    const tendered = isCredit
+      ? 0
+      : Math.max(0, Math.round(input.tenderedPaisa ?? finalPaise));
+    const changePaisa = !isCredit && tendered > finalPaise ? tendered - finalPaise : 0;
+
     const status = input.status ?? (due > 0 ? (paid > 0 ? "partial" : "credit") : "paid");
 
     const header = run(
       `INSERT INTO sales
         (code, customer_id, user_id, subtotal_paisa, discount_paisa, tax_paisa, round_off_paisa,
-         total_paisa, paid_paisa, due_paisa, status, payment_method, notes)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+         total_paisa, paid_paisa, due_paisa, change_paisa, status, payment_method, notes)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         code,
         input.customerId ?? null,
@@ -188,6 +198,7 @@ export function createSale(
         finalPaise,
         paid,
         due,
+        changePaisa,
         status,
         method,
         input.notes?.trim() || null,
@@ -286,7 +297,7 @@ export function createSale(
       userName: user?.name ?? null,
       entity: "Sale",
       entityId: saleId,
-      details: { code, items: lines.length, total: finalPaise, method, due },
+      details: { code, items: lines.length, total: finalPaise, method, due, changePaisa },
     });
 
     return {
@@ -298,6 +309,8 @@ export function createSale(
       roundOffPaisa: roundOffPaise,
       totalPaisa: finalPaise,
       paidPaisa: paid,
+      tenderedPaisa: isCredit ? 0 : tendered,
+      changePaisa,
       duePaisa: due,
       warnings,
     };
@@ -372,6 +385,7 @@ export type SaleFull = {
     total_paisa: number;
     paid_paisa: number;
     due_paisa: number;
+    change_paisa: number;
     status: string;
     payment_method: string;
     user_name?: string | null;

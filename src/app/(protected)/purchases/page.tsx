@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireShopManagerPage } from "@/lib/page-guard";
 import { listPurchases } from "@/lib/purchases";
 import { peekNextCode } from "@/lib/numbering";
 import { formatPKR } from "@/lib/money";
@@ -7,6 +8,7 @@ import { Plus, Receipt } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function PurchasesPage() {
+  await requireShopManagerPage();
   const purchases = listPurchases({ limit: 100 });
   const nextCode = await peekNextCode("purchase");
 

@@ -135,6 +135,18 @@ export default async function ReceiptPage({
                 </div>
               </>
             )}
+            {(s.change_paisa ?? 0) > 0 && (
+              <>
+                <div className="flex justify-between">
+                  <span>Cash received</span>
+                  <span>{formatAmount(s.total_paisa + s.change_paisa, 2)}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Change returned</span>
+                  <span>{formatAmount(s.change_paisa, 2)}</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mt-2 border-t border-dashed border-black pt-1 text-center font-mono text-[10px]">
