@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import { ensureBootstrap } from "@/lib/bootstrap";
 import { getSettings } from "@/lib/settings";
 import { currentUser } from "@/lib/session";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -12,11 +13,20 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `${s["brand.appName"]} — Pharmacy POS`,
       description: "Smart Pharmacy & Retail POS + Inventory System",
       applicationName: s["brand.appName"],
+      manifest: "/manifest.webmanifest",
+      appleWebApp: { capable: true, title: s["brand.shortName"] || "Area11", statusBarStyle: "default" },
+      icons: { icon: "/icons/icon-192.png", apple: "/icons/icon-192.png" },
     };
   } catch {
     return { title: "Area11 — Pharmacy POS" };
   }
 }
+
+export const viewport: Viewport = {
+  themeColor: "#047857",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default async function RootLayout({
   children,
@@ -40,6 +50,7 @@ export default async function RootLayout({
         />
       </head>
       <body>
+        <ServiceWorkerRegistrar />
         <AppShell
           appName={settings["brand.appName"]}
           shortName={settings["brand.shortName"]}
