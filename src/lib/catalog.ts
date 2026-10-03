@@ -1,0 +1,390 @@
+// ---------------------------------------------------------------------------
+// Area11 - Catalog: products, categories, suppliers, companies
+// ---------------------------------------------------------------------------
+
+import { get, query, run, scalar } from "./db";
+import { toBaseUnits } from "./money";
+import { audit } from "./audit";
+
+// ---------------------------- Types ----------------------------------------
+export type Product = {
+  id: number;
+  name: string;
+  generic: string | null;
+  brand: string | null;
+  barcode: string | null;
+  company_id: number | null;
+  category_id: number | null;
+  rack_no: string | null;
+  pack_size_label: string | null;
+  base_unit: string;
+  box_strips: number;
+  strip_tablets: number;
+  cost_paisa: number;
+  retail_paisa: number;
+  vip_paisa: number;
+  doctor_paisa: number;
+  reorder_level: number;
+  track_expiry: number;
+  active: number;
+  created_at: string;
+  updated_at: string;
+  // joined (optional)
+  category_name?: string | null;
+  company_name?: string | null;
+  stock_base?: number;
+  nearest_expiry?: string | null;
+};
+
+export type Supplier = {
+  id: number;
+  name: string;
+  agency: string | null;
+  phone: string | null;
+  address: string | null;
+  notes: string | null;
+  active: number;
+  balance_paisa: number;
+  created_at: string;
+};
+
+export type Category = {
+  id: number;
+  name: string;
+  parent_id: number | null;
+  sort_order: number;
+  active: number;
+  product_count?: number;
+};
+
+// ---------------------------- Products -------------------------------------
+export function listProducts(opts: {
+  search?: string;
+  categoryId?: number | null;
+  limit?: number;
+  offset?: number;
+  onlyActive?: boolean;
+}): { rows: Product[]; total: number } {
+  const where: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (opts.onlyActive !== false) where.push("p.active = 1");
+  if (opts.search && opts.search.trim()) {
+    const q = `%${opts.search.trim()}%`;
+    where.push("(p.name LIKE ? OR p.generic LIKE ? OR p.brand LIKE ? OR p.barcode LIKE ?)");
+    params.push(q, q, q, q);
+  }
+  if (opts.categoryId) {
+    where.push("p.category_id = ?");
+    params.push(opts.categoryId);
+  }
+
+  const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 500);
+  const offset = Math.max(opts.offset ?? 0, 0);
+
+  const rows = query<Product>(
+    `SELECT p.*, c.name AS category_name, co.name AS company_name,
+            (SELECT COALESCE(SUM(b.qty_base), 0) FROM batches b
+              WHERE b.product_id = p.id AND b.active = 1) AS stock_base,
+            (SELECT MIN(b.expiry_ym) FROM batches b
+              WHERE b.product_id = p.id AND b.active = 1 AND b.qty_base > 0) AS nearest_expiry
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       LEFT JOIN companies  co ON co.id = p.company_id
+       ${whereSql}
+      ORDER BY p.name COLLATE NOCASE
+      LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+
+  const total = scalar<number>(
+    `SELECT COUNT(*) AS c FROM products p ${whereSql}`,
+    params
+  );
+
+  return { rows, total };
+}
+
+export function getProduct(id: number): Product | undefined {
+  return get<Product>(
+    `SELECT p.*, c.name AS category_name, co.name AS company_name
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       LEFT JOIN companies  co ON co.id = p.company_id
+      WHERE p.id = ?`,
+    [id]
+  );
+}
+
+export function findByBarcode(barcode: string): Product | undefined {
+  const b = barcode.trim();
+  if (!b) return undefined;
+  return get<Product>(
+    `SELECT p.*, c.name AS category_name FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+      WHERE p.barcode = ? AND p.active = 1 LIMIT 1`,
+    [b]
+  );
+}
+
+export type ProductInput = {
+  name: string;
+  generic?: string | null;
+  brand?: string | null;
+  barcode?: string | null;
+  companyId?: number | null;
+  categoryId?: number | null;
+  rackNo?: string | null;
+  packSizeLabel?: string | null;
+  baseUnit?: string;
+  boxStrips?: number;
+  stripTablets?: number;
+  costPaisa?: number;
+  retailPaisa?: number;
+  vipPaisa?: number;
+  doctorPaisa?: number;
+  reorderLevel?: number;
+  trackExpiry?: boolean;
+};
+
+export function createProduct(input: ProductInput, user?: { id?: number; name?: string }): number {
+  if (!input.name?.trim()) throw new Error("Product name is required");
+
+  const res = run(
+    `INSERT INTO products
+      (name, generic, brand, barcode, company_id, category_id, rack_no, pack_size_label,
+       base_unit, box_strips, strip_tablets, cost_paisa, retail_paisa, vip_paisa, doctor_paisa,
+       reorder_level, track_expiry)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [
+      input.name.trim(),
+      input.generic?.trim() || null,
+      input.brand?.trim() || null,
+      input.barcode?.trim() || null,
+      input.companyId ?? null,
+      input.categoryId ?? null,
+      input.rackNo?.trim() || null,
+      input.packSizeLabel?.trim() || null,
+      input.baseUnit || "tablet",
+      Math.max(0, Math.round(input.boxStrips ?? 0)),
+      Math.max(0, Math.round(input.stripTablets ?? 0)),
+      Math.max(0, Math.round(input.costPaisa ?? 0)),
+      Math.max(0, Math.round(input.retailPaisa ?? 0)),
+      Math.max(0, Math.round(input.vipPaisa ?? 0)),
+      Math.max(0, Math.round(input.doctorPaisa ?? 0)),
+      Math.max(0, input.reorderLevel ?? 0),
+      input.trackExpiry === false ? 0 : 1,
+    ]
+  );
+
+  void audit({
+    action: "create",
+    userId: user?.id ?? null,
+    userName: user?.name ?? null,
+    entity: "Product",
+    entityId: res.lastInsertRowid,
+    details: { name: input.name },
+  });
+
+  return res.lastInsertRowid;
+}
+
+export function updateProduct(
+  id: number,
+  input: ProductInput,
+  user?: { id?: number; name?: string }
+): void {
+  const before = getProduct(id);
+  if (!before) throw new Error("Product not found");
+
+  run(
+    `UPDATE products SET
+       name = ?, generic = ?, brand = ?, barcode = ?, company_id = ?, category_id = ?,
+       rack_no = ?, pack_size_label = ?, base_unit = ?, box_strips = ?, strip_tablets = ?,
+       cost_paisa = ?, retail_paisa = ?, vip_paisa = ?, doctor_paisa = ?,
+       reorder_level = ?, track_expiry = ?, updated_at = datetime('now','localtime')
+     WHERE id = ?`,
+    [
+      input.name.trim(),
+      input.generic?.trim() || null,
+      input.brand?.trim() || null,
+      input.barcode?.trim() || null,
+      input.companyId ?? null,
+      input.categoryId ?? null,
+      input.rackNo?.trim() || null,
+      input.packSizeLabel?.trim() || null,
+      input.baseUnit || "tablet",
+      Math.max(0, Math.round(input.boxStrips ?? 0)),
+      Math.max(0, Math.round(input.stripTablets ?? 0)),
+      Math.max(0, Math.round(input.costPaisa ?? 0)),
+      Math.max(0, Math.round(input.retailPaisa ?? 0)),
+      Math.max(0, Math.round(input.vipPaisa ?? 0)),
+      Math.max(0, Math.round(input.doctorPaisa ?? 0)),
+      Math.max(0, input.reorderLevel ?? 0),
+      input.trackExpiry === false ? 0 : 1,
+      id,
+    ]
+  );
+
+  // Price change to audit log me (Spec 13.2)
+  if ((input.retailPaisa ?? before.retail_paisa) !== before.retail_paisa) {
+    void audit({
+      action: "price_change",
+      userId: user?.id ?? null,
+      userName: user?.name ?? null,
+      entity: "Product",
+      entityId: id,
+      details: {
+        name: before.name,
+        field: "retail_paisa",
+        from: before.retail_paisa,
+        to: input.retailPaisa,
+      },
+    });
+  }
+
+  void audit({
+    action: "update",
+    userId: user?.id ?? null,
+    userName: user?.name ?? null,
+    entity: "Product",
+    entityId: id,
+    details: { name: input.name },
+  });
+}
+
+export function softDeleteProduct(id: number, user?: { id?: number; name?: string }): void {
+  run("UPDATE products SET active = 0, updated_at = datetime('now','localtime') WHERE id = ?", [id]);
+  void audit({
+    action: "delete",
+    userId: user?.id ?? null,
+    userName: user?.name ?? null,
+    entity: "Product",
+    entityId: id,
+  });
+}
+
+// ---------------------------- Categories -----------------------------------
+export function listCategories(): Category[] {
+  return query<Category>(
+    `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.active = 1) AS product_count
+       FROM categories c
+      WHERE c.active = 1
+      ORDER BY c.sort_order, c.name COLLATE NOCASE`
+  );
+}
+
+export function createCategory(name: string, parentId?: number | null): number {
+  const n = name.trim();
+  if (!n) throw new Error("Category name is required");
+  const exists = get<{ id: number }>("SELECT id FROM categories WHERE name = ?", [n]);
+  if (exists) return exists.id;
+  const res = run("INSERT INTO categories (name, parent_id, sort_order) VALUES (?,?,?)", [
+    n,
+    parentId ?? null,
+    scalar<number>("SELECT COALESCE(MAX(sort_order), 0) + 1 AS c FROM categories"),
+  ]);
+  return res.lastInsertRowid;
+}
+
+export function renameCategory(id: number, name: string): void {
+  run("UPDATE categories SET name = ? WHERE id = ?", [name.trim(), id]);
+}
+
+export function deleteCategory(id: number): void {
+  // Products ko na hatao -- sirf category hata do (data safe rahe)
+  run("UPDATE products SET category_id = NULL WHERE category_id = ?", [id]);
+  run("UPDATE categories SET active = 0 WHERE id = ?", [id]);
+}
+
+// ---------------------------- Suppliers ------------------------------------
+export function listSuppliers(search?: string): Supplier[] {
+  const like = `%${(search ?? "").trim()}%`;
+  return query<Supplier>(
+    `SELECT * FROM suppliers
+      WHERE active = 1 AND (name LIKE ? OR agency LIKE ? OR phone LIKE ?)
+      ORDER BY name COLLATE NOCASE`,
+    [like, like, like]
+  );
+}
+
+export function getSupplier(id: number): Supplier | undefined {
+  return get<Supplier>("SELECT * FROM suppliers WHERE id = ?", [id]);
+}
+
+export function createSupplier(input: {
+  name: string;
+  agency?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  notes?: string | null;
+}): number {
+  const n = input.name.trim();
+  if (!n) throw new Error("Supplier name is required");
+  const res = run(
+    `INSERT INTO suppliers (name, agency, phone, address, notes) VALUES (?,?,?,?,?)`,
+    [n, input.agency?.trim() || null, input.phone?.trim() || null, input.address?.trim() || null, input.notes?.trim() || null]
+  );
+  return res.lastInsertRowid;
+}
+
+export function updateSupplier(
+  id: number,
+  input: { name: string; agency?: string | null; phone?: string | null; address?: string | null; notes?: string | null }
+): void {
+  run(
+    `UPDATE suppliers SET name = ?, agency = ?, phone = ?, address = ?, notes = ? WHERE id = ?`,
+    [
+      input.name.trim(),
+      input.agency?.trim() || null,
+      input.phone?.trim() || null,
+      input.address?.trim() || null,
+      input.notes?.trim() || null,
+      id,
+    ]
+  );
+}
+
+export function softDeleteSupplier(id: number): void {
+  run("UPDATE suppliers SET active = 0 WHERE id = ?", [id]);
+}
+
+// ---------------------------- Companies ------------------------------------
+export function listCompanies() {
+  return query<{ id: number; name: string; product_count: number }>(
+    `SELECT co.id, co.name,
+            (SELECT COUNT(*) FROM products p WHERE p.company_id = co.id AND p.active = 1) AS product_count
+       FROM companies co WHERE co.active = 1 ORDER BY co.name COLLATE NOCASE`
+  );
+}
+
+export function createCompany(name: string): number {
+  const n = name.trim();
+  if (!n) throw new Error("Company name is required");
+  const exists = get<{ id: number }>("SELECT id FROM companies WHERE name = ?", [n]);
+  if (exists) return exists.id;
+  return run("INSERT INTO companies (name) VALUES (?)", [n]).lastInsertRowid;
+}
+
+export function renameCompany(id: number, name: string): void {
+  const n = name.trim();
+  if (!n) throw new Error("Company name is required");
+  run("UPDATE companies SET name = ? WHERE id = ?", [n, id]);
+}
+
+export function deleteCompany(id: number): void {
+  // Products ko na hatao -- sirf company hata do (data safe rahe)
+  run("UPDATE products SET company_id = NULL WHERE company_id = ?", [id]);
+  run("UPDATE companies SET active = 0 WHERE id = ?", [id]);
+}
+
+// ---------------------------- Helpers --------------------------------------
+export function productStock(productId: number): number {
+  return scalar<number>(
+    "SELECT COALESCE(SUM(qty_base), 0) AS s FROM batches WHERE product_id = ? AND active = 1",
+    [productId]
+  );
+}
+
+export { toBaseUnits };
