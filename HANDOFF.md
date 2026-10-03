@@ -52,13 +52,16 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 ## 3. What is DONE
 
-**Where things stand on 2026-10-03:** the app was re-verified in the morning (docs only); in the evening **login + roles** (stage-9) were built, then a follow-up fixed the health version (stage-10), and then **cash-change calculator + stock write-off/adjust + URL-level page guard** (stage-11) — those are the code changes this branch adds on top of PR #2.
+**Where things stand on 2026-10-03 (evening):** the app was re-verified in the morning (docs only). In the evening the whole of **Phase 1 was finished**, one work item per checkpoint:
+`stage-9` login + roles · `stage-10` health version from package.json · `stage-11` cash-change calculator + stock write-off/adjust + URL-level page guard · `stage-12` Excel import (template → dry-run preview → import) · `stage-13` offline mode / PWA (service worker, manifest, icons, offline page) · `stage-14` P1 tail UI (customer edit, category/company rename+delete, purchase sample/bonus tick, free goods excluded from the bill).
+**Phase 1 is now complete** — see §4 for the next phases.
 
 | Check | Result |
 |---|---|
 | `npx tsc --noEmit` | **0 errors** |
-| `npm run build` | **passes**, 37 routes (incl. `/stock`, `/import`, `/offline`, `/api/import/*`) |
+| `npm run build` | **passes** — **44 routes** (26 API + 18 pages: `/pos` `/products` `/purchases` `/purchases/new` `/stock` `/import` `/offline` `/sales` `/customers` `/suppliers` `/cash` `/alerts` `/settings` `/login` `/receipt/[id]` …) |
 | `bash scripts/rules-count.sh` | **SAB THEEK** — phase-two 116 points; INPUT A-49 + Q-19 |
+| Live P1-tail smoke (stage-14) | Customer `PATCH` → `Ali Raza Khan` becomes **vip** limit Rs 8,000 (`800000` paisa) · category rename + delete `200` (products keep existing, only the link is cleared) · company rename `200` · **sample purchase** `PINV-0002` — a 2-strip free/bonus line plus 1 paid strip → `totalPaisa 5000` (only the paid line), sample batch keeps its cost for write-off valuation, product stock 180 → 192 · cashier `PATCH /api/categories` → **403** |
 | Live PWA / offline smoke (stage-13) | `/sw.js` `200` with `Cache-Control: no-cache` + `Service-Worker-Allowed: /` · `/manifest.webmanifest` served (3 icons, `standalone`) · `/offline` `200` (pre-cached by the SW) · `theme-color` + `rel=manifest` in the HTML · POS + import pages unaffected |
 | Live Excel import smoke (stage-12) | Template downloads (`28 KB .xlsx`) · preview on a 7-line test file → Products `2 ok · 1 skip · 1 error`, Customers `2 ok`, Suppliers `1 ok` · commit → `{products:2, customers:2, suppliers:1, batches:2, stockBase:185}`, opening stock 180 tablets on batch `A-77` (expiry 2027-03), customer balance Rs 1,200, supplier payable Rs 25,000 · **re-uploading the same file imports 0** (duplicates auto-skipped) · bad cost (`abc`) rejected as `error` · cashier → `403` |
 | Live API smoke (stage-11) | `{ok:true, database:"connected", version 0.6.1}` · product id 1 · **`PINV-0001`** `totalPaisa 100000` · **`PINV-0001`** re-run OK · stock write-off `2 strip → value 10000, newQty 180` · over-write-off **blocked 400** ("sirf 180 tablet hain") · **`INV-0001`** with change: tender Rs 1000 → `tenderedPaisa 100000`, `changePaisa 94000` · adjustment list shows summary `todayPaisa 10000` · cashier → restricted pages **307 → `/pos`**, `/api/stock/adjust` **403** `{"error":"Owner or Manager only"}` · receipt prints *Cash received* + *Change returned* |
@@ -86,6 +89,9 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 | **Stock write-off / adjust** | `/stock`, `lib/stock.ts`, `api/stock/adjust`, table `stock_adjustments` (migration 003) | Owner/Manager: choose product+batch, direction **out** (expired/damaged/lost/count-correction) or **in** (found/returned), reason + note; writes a `stock_movements` row (`writeoff`/`adjust`), moves the batch and product quantity, values the loss **at cost**, and lists history with today/month write-off totals. Over-writing more than the batch holds is blocked. |
 | **Excel import of old data (Q-19)** | `/import`, `lib/import.ts`, `api/import/{template,preview,commit}` | Owner/manager: download the **template workbook** (Products · Customers · Suppliers + an Instructions sheet with column meanings), fill it, upload → **dry-run preview** per line (`theek` / `skip` / `galat` with reasons, per-sheet counts, filter buttons) → import. No database change happens until you press import; imports run in one transaction (all-or-nothing), write opening batches + `stock_movements` (`import`), set customer credit balances and supplier payables, skip anything that already exists (by name/phone), and log an `Import` audit row. Rates are typed in **rupees**, the app converts to paisa. |
 | **Offline mode / PWA (P1)** | `public/sw.js`, `public/manifest.webmanifest`, `public/icons/*`, `src/app/offline/page.tsx`, `src/components/ServiceWorkerRegistrar.tsx` | UI shell stays alive without internet: hashed `/_next/static/*` files are cache-first, pages are network-first (3 s timeout → cache → **offline page**), `/api/*` is **never** cached (data must be live), old caches are dropped on version change (bump `VERSION` in `sw.js` when the shell changes). Installable on Android/Windows (emerald + white-cross icon set, incl. maskable), theme colour `#047857`. An amber strip appears on the counter when the browser reports no internet ("Internet nahi hai — app chal rahi hai"). |
+| **Customer edit** | `/customers`, `api/customers` (`PATCH` already existed) | Edit button on each row → inline row opens (name, phone, normal/vip/doctor, credit limit) → Save; writes an `update` audit row. Balance is never edited by hand (it only changes through bills/payments). |
+| **Category / company rename + delete** | `/products` (side cards), `api/categories`, `api/companies` (`PATCH` + `DELETE` added for companies) | Pencil / bin on each chip: rename in place (Enter = save, Esc = cancel) or delete with a confirm that spells out the consequence. Deleting **never deletes products** — it only clears the link (`category_id`/`company_id` → NULL, row goes `active = 0`). Both audited. |
+| **Sample / bonus in purchases** | `/purchases/new` (Free tick), `lib/purchases.ts` | A **Free** checkbox per purchase line: qty still enters stock, the **bill and the supplier payable are not increased** (`lineTotal = 0`), the batch keeps the entered cost so write-off value/haulage stays correct, and the stock movement is written as type `sample` with the note "Sample / bonus (0 cost)". |
 | **Page guard (roles, URL level)** | `lib/page-guard.ts` | Hiding a nav item is not enough: cashier opening `/products`, `/purchases`, `/suppliers`, `/cash`, `/settings` or `/stock` directly is redirected to `/pos` (owner/manager only). |
 | **Login reset script** | `scripts/reset-login.mjs` | `--list`, `--owner "new-password"`, `--user "Name" --pin 1234` — also writes an audit row. |
 | Dev tooling | `scripts/ckpt.sh`, `rules-count.sh`, `sync-spec.sh`, `reset-login.mjs` | checkpoint/rollback, numbering check, spec copy, login reset. |
@@ -97,18 +103,20 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 2. **After the merge, check the Netlify project** `marea11` still builds (`https://marea11.netlify.app`). See §10 for the base-directory caveat.
 3. **Decide where the real app will actually run** (shop PC `npm start` is the simplest; a Node host with a persistent disk is the alternative). Static/serverless hosting **cannot** hold the SQLite file (§10).
 
-### P1 · finish Phase 1 / blockers for real use
+### P1 · finish Phase 1 — ✅ **COMPLETE (2026-10-03, stages 9–14)**
 1. ~~**Login + roles** (Q-13, Q-18)~~ — **DONE 2026-10-03** (see §3). Still open from that item: a visible role switcher when several people share one counter (today you log out/in), and per-user "shift" reporting.
 2. ~~**Cash change calculator** at counter~~ — **DONE 2026-10-03 (stage-11)**: tender + quick cash buttons + live change + receipt line; change is not revenue.
 3. ~~**Unit-level stock write-off / adjustment**~~ — **DONE 2026-10-03 (stage-11)**: `/stock` page (owner/manager), direction out/in, reason, value at cost, movement row, over-write-off blocked.
 4. ~~**Excel import of old data** (Q-19)~~ — **DONE 2026-10-03 (stage-12)**: template download, dry-run preview per line, transactional import of products (+ opening batches/expiry), customers (with udhaar) and suppliers (with payable); duplicates skipped by name/phone; SheetJS `xlsx` added.
 5. ~~**Offline hardening**~~ — **DONE 2026-10-03 (stage-13)**: service worker (static cache-first, pages network-first → `/offline` fallback, API never cached), PWA manifest + icon set (installable "Add to Home Screen"), offline banner at the counter. Server still runs on the shop PC, so the DB is local (SW only keeps the UI alive).
-6. Small UI gaps: customer edit (API `PATCH /api/customers` exists), category rename/delete (API exists), supplier-purchase "sample/bonus" checkbox. ~~product stock adjust screen~~ ✅ done (`/stock`), ~~receipt cost columns owner-only~~ ✅ done.
+6. ~~Small UI gaps~~ — **all done (stage-14)**: ~~customer edit~~ ✅ · ~~category rename/delete~~ ✅ (also companies) · ~~sample/bonus checkbox on purchases~~ ✅. Earlier in the same list: ~~product stock adjust screen~~ ✅ (`/stock`) · ~~receipt cost columns owner-only~~ ✅.
+
+> **P1 has no open items.** Next work starts at P2 (see below).
 
 ### P2 · Phase 2 remainder (spec §9, §14)
 * Persisted **shift open/close** with opening float & variance (`shifts` table exists; `/cash` computes expected cash only) — port ideas from `legacy-demo-vite/src/domain/cash.ts`.
 * **Provisional ("rush-time") returns** and lost-bill lookup by phone/medicine/date; role-gated restock (cashier cannot restock) — see `legacy-demo-vite/src/domain/returns.ts`.
-* Discount safety rules end-to-end (never below cost, per-role limits).
+* ~~Discount safety rules end-to-end (never below cost, per-role limits)~~ ✅ **done stage-9/10** (server-side, settings-driven: cashier 5 % · manager 20 % · owner unlimited + hard block below purchase cost).
 
 ### P3 · Phase 3 (spec §6, §10.2, §11.2, §11.3)
 Supplier ledger & **supplier returns**, bonus/sample stock UI, reorder list → **WhatsApp order text** (free `wa.me` link, Q-11), daily report via WhatsApp, expiry-return to supplier flow.
