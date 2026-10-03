@@ -9,7 +9,13 @@
 import { get, query, run, tx } from "./db";
 import { audit } from "./audit";
 
-type U = { id?: number; name?: string } | null | undefined;
+type U = { id?: number; name?: string; role?: string } | null | undefined;
+
+/** Sirf owner/manager maal stock me wapas daal sakta hai (cashier sirf QUARANTINE) */
+function canRestock(user?: U): boolean {
+  if (!user?.role) return true; // internal calls (tests/scripts)
+  return user.role === "owner" || user.role === "manager";
+}
 
 export type SaleItemReturnInfo = {
   id: number; product_id: number; batch_id: number | null; name: string;
@@ -41,6 +47,7 @@ export function returnSaleItems(
   const wanted = lines.filter((l) => Number(l.qtyBase) > 0);
   if (!wanted.length) throw new Error("Enter a return quantity for at least one item.");
 
+  let quarantinedForRole = false;
   return tx(() => {
     let refundTotal = 0;
     for (const l of wanted) {
@@ -58,7 +65,8 @@ export function returnSaleItems(
       if (lastPart) refund = Math.max(refund, Math.floor(data.sale.total_paisa * share) - it.refunded_paisa);
       refund = Math.max(0, refund);
 
-      const restock = !!l.restock && !!it.batch_id;
+      const restock = !!l.restock && !!it.batch_id && canRestock(user);
+      if (l.restock && !restock && it.batch_id) quarantinedForRole = true;
       run(`INSERT INTO sale_returns (sale_id, sale_item_id, product_id, batch_id, qty_base, refund_paisa, restock, reason, user_id)
            VALUES (?,?,?,?,?,?,?,?,?)`,
         [saleId, it.id, it.product_id, it.batch_id, qty, refund, restock ? 1 : 0, reason?.trim() || null, user?.id ?? null]);
@@ -83,8 +91,14 @@ export function returnSaleItems(
         [-cashBack, saleId, data.sale.customer_id, user?.id ?? null, `Refund ${data.sale.code}`]);
     }
     void audit({ action: "return", userId: user?.id ?? null, userName: user?.name ?? null, entity: "Sale", entityId: saleId,
-      details: { code: data.sale.code, refundTotal, cashBack, reason } });
-    return { refundPaisa: refundTotal, cashBackPaisa: cashBack, creditReducedPaisa: refundTotal - cashBack };
+      details: { code: data.sale.code, refundTotal, cashBack, reason, restockBlocked: quarantinedForRole } });
+    return {
+      refundPaisa: refundTotal,
+      cashBackPaisa: cashBack,
+      creditReducedPaisa: refundTotal - cashBack,
+      // cashier ne restock maanga tha to app ne QUARANTINE hi rakha
+      restockBlocked: quarantinedForRole,
+    };
   });
 }
 

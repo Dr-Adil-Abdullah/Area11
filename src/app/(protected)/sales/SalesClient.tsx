@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Ban, Receipt, Search, Undo2 } from "lucide-react";
 import { formatPKR } from "@/lib/money";
+import ProvisionalCard from "./ProvisionalCard";
 
 type Sale = { id: number; code: string; date: string; customer_name: string | null; items: number; total_paisa: number; status: string; payment_method: string; profit_paisa: number };
 type Item = { id: number; name: string; qty_base: number; returned_qty: number };
 
-export default function SalesClient({ sales, from, to, q }: { sales: Sale[]; from: string; to: string; q: string }) {
+type Prov = { pending: number; returns: Parameters<typeof ProvisionalCard>[0]["initial"]["returns"] };
+
+export default function SalesClient({ sales, from, to, q, provisional }: { sales: Sale[]; from: string; to: string; q: string; provisional: Prov }) {
   const router = useRouter();
   const [open, setOpen] = useState<number | null>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -37,7 +40,14 @@ export default function SalesClient({ sales, from, to, q }: { sales: Sale[]; fro
   async function doReturn(id: number) {
     const lines = items.map((i) => ({ saleItemId: i.id, qtyBase: Number(qty[i.id]) || 0, restock })).filter((l) => l.qtyBase > 0);
     const r = await post(`/api/sales/${id}/return`, { lines, reason });
-    if (r) { setOpen(null); alert(`Refund ${formatPKR(r.refundPaisa)} (cash back ${formatPKR(r.cashBackPaisa)}, credit reduced ${formatPKR(r.creditReducedPaisa)})`); router.refresh(); }
+    if (r) {
+      setOpen(null);
+      alert(
+        `Refund ${formatPKR(r.refundPaisa)} (cash back ${formatPKR(r.cashBackPaisa)}, credit reduced ${formatPKR(r.creditReducedPaisa)})` +
+        (r.restockBlocked ? "\n\nNote: stock me wapas daalne ka ikhtiyar sirf owner/manager ke paas hai — maal QUARANTINE me rakha gaya." : "")
+      );
+      router.refresh();
+    }
   }
   async function doVoid(s: Sale) {
     const why = prompt(`Void ${s.code}? Stock will be restored and money refunded.\nReason:`);
@@ -48,6 +58,7 @@ export default function SalesClient({ sales, from, to, q }: { sales: Sale[]; fro
 
   return (
     <div className="space-y-4">
+      <ProvisionalCard initial={provisional} />
       <div>
         <h1 className="text-xl font-semibold text-slate-800">Sales history</h1>
         <p className="text-sm text-slate-500">Find any bill, reprint it, return items or void it. Originals are never edited.</p>

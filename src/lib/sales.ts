@@ -207,6 +207,20 @@ export function createSale(
     const saleId = header.lastInsertRowid;
 
     for (const l of lines) {
+      // Batch resolve: agar batch nahi diya gaya (API/manual), to FEFO se sab se
+      // nazdeek expiry wala batch khud pakro -- warna batches aur stock_movements
+      // ka hisaab alag ho jata hai.
+      if (!l.batchId) {
+        const fefo = get<{ id: number }>(
+          `SELECT id FROM batches
+            WHERE product_id = ? AND active = 1 AND qty_base > 0
+            ORDER BY (expiry_ym IS NULL), expiry_ym ASC, id ASC
+            LIMIT 1`,
+          [l.productId]
+        );
+        if (fefo) l.batchId = fefo.id;
+      }
+
       run(
         `INSERT INTO sale_items
           (sale_id, product_id, batch_id, name_snapshot, qty_base, unit_sold, qty_entered,
@@ -227,7 +241,7 @@ export function createSale(
         ]
       );
 
-      // Stock minus
+      // Stock minus (batch qty)
       if (l.batchId) {
         run("UPDATE batches SET qty_base = qty_base - ? WHERE id = ?", [l.qtyBase, l.batchId]);
       }
@@ -432,8 +446,13 @@ export function getSale(id: number): SaleFull | null {
 
 export function listSales(opts: { search?: string; limit?: number; from?: string; to?: string } = {}) {
   const like = `%${(opts.search ?? "").trim()}%`;
-  const where: string[] = ["(s.code LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)"];
-  const params: (string | number)[] = [like, like, like];
+  // Bill code / gahak ka naam / phone / YA kisi dawa ka naam (spec 9.2.1: khoa hua bill)
+  const where: string[] = [
+    `(s.code LIKE ? OR c.name LIKE ? OR c.phone LIKE ?
+      OR EXISTS (SELECT 1 FROM sale_items i JOIN products p ON p.id = i.product_id
+                  WHERE i.sale_id = s.id AND (p.name LIKE ? OR p.generic LIKE ?)))`,
+  ];
+  const params: (string | number)[] = [like, like, like, like, like];
 
   if (opts.from) {
     where.push("date(s.date) >= date(?)");
