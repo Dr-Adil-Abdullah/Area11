@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guard, SHOP_ROLES } from "@/lib/api";
 import { createProduct, listProducts, type ProductInput } from "@/lib/catalog";
 import { currentUser } from "@/lib/session";
 import { ensureBootstrap } from "@/lib/bootstrap";
@@ -6,6 +7,8 @@ import { ensureBootstrap } from "@/lib/bootstrap";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   await ensureBootstrap();
   const url = new URL(req.url);
   const search = url.searchParams.get("q") ?? "";
@@ -30,6 +33,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const denied = await guard(SHOP_ROLES);
+  if (denied) return denied;
   await ensureBootstrap();
   const user = await currentUser();
   try {

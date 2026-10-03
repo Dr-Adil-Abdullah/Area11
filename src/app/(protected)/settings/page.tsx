@@ -1,4 +1,7 @@
 import { getSettings } from "@/lib/settings";
+import { currentUser } from "@/lib/session";
+import { listUsers } from "@/lib/users";
+import StaffCard from "./StaffCard";
 import { Save } from "lucide-react";
 import { saveSettingsAction } from "./actions";
 
@@ -67,10 +70,13 @@ function Check({
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; staffSaved?: string; staffError?: string }>;
 }) {
   const s = await getSettings();
-  const sp = await searchParams;
+  const me = await currentUser();
+  const isOwner = me?.role === "owner";
+  const sp = (await searchParams) ?? {};
+  const staffUsers = isOwner ? listUsers() : [];
   const levels = s["expiry.levels"] ?? [];
   const lvl = (i: number) => levels.find((l) => l.level === i) ?? { days: 0, color: "blue", label: "" };
   const methods = s["payment.methods"] ?? [];
@@ -297,12 +303,16 @@ export default async function SettingsPage({
           <Field label="Auto-lock after (minutes of no use)">
             <input type="number" name="security.autoLockMinutes" defaultValue={s["security.autoLockMinutes"]} className="input" min={0} max={240} />
           </Field>
+          <Field label="Login stays valid for (hours)" hint="After this time the app asks for the password/PIN again (security.sessionHours).">
+            <input type="number" name="security.sessionHours" defaultValue={s["security.sessionHours"]} className="input" min={1} max={72} />
+          </Field>
           <div className="md:col-span-2">
             <Check name="security.requireLogin" label="Require login before billing" defaultChecked={s["security.requireLogin"]} />
             <p className="mt-2 text-[11px] text-slate-500">
-              The login screen and PIN pad arrive with Phase 1. Until then the app runs as the
-              owner account (<code className="rounded bg-slate-100 px-1">area11</code> — change
-              this before real billing).
+              Login is now active: owner logs in with the password, staff with name + PIN. Default
+              owner password is <code className="rounded bg-slate-100 px-1">area11</code> — change
+              it right away from the Staff card below. Switching this off lets the app run as the
+              owner without a login (not recommended).
             </p>
           </div>
         </Section>
@@ -334,6 +344,15 @@ export default async function SettingsPage({
           </button>
         </div>
       </form>
+
+      {isOwner && (
+        <StaffCard
+          users={staffUsers}
+          pinLength={Number(s["security.pinLength"]) || 4}
+          message={sp.staffSaved}
+          error={sp.staffError}
+        />
+      )}
     </div>
   );
 }

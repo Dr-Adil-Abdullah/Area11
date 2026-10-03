@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { setSettings } from "@/lib/settings";
+import { getSettings, setSettings } from "@/lib/settings";
 import { audit } from "@/lib/audit";
 import { currentUser } from "@/lib/session";
+import { createUser, updateUser } from "@/lib/users";
 
 function str(fd: FormData, key: string, fallback = ""): string {
   const v = fd.get(key);
@@ -51,6 +52,7 @@ async function saveAll(fd: FormData) {
     "discount.mode": str(fd, "discount.mode", "margin"),
     "discount.maxPercentCashier": num(fd, "discount.maxPercentCashier", 5),
     "discount.maxPercentManager": num(fd, "discount.maxPercentManager", 20),
+    "discount.blockBelowCost": bool(fd, "discount.blockBelowCost"),
 
     // Expiry levels
     "expiry.levels": [1, 2, 3].map((lvl) => ({
@@ -87,6 +89,7 @@ async function saveAll(fd: FormData) {
     // Security
     "security.pinLength": num(fd, "security.pinLength", 4),
     "security.autoLockMinutes": num(fd, "security.autoLockMinutes", 15),
+    "security.sessionHours": num(fd, "security.sessionHours", 12),
     "security.requireLogin": bool(fd, "security.requireLogin"),
   };
 
@@ -108,4 +111,80 @@ async function saveAll(fd: FormData) {
 export async function saveSettingsAction(fd: FormData): Promise<void> {
   await saveAll(fd);
   redirect("/settings?saved=1");
+}
+
+// ---------------------------------------------------------------------------
+// Staff accounts (sirf owner) -- Settings page ke Staff card se aate hain
+// ---------------------------------------------------------------------------
+
+export async function addUserAction(fd: FormData): Promise<void> {
+  const actor = await currentUser();
+  if (actor?.role !== "owner") {
+    redirect("/settings?staffError=" + encodeURIComponent("Only the owner can manage staff"));
+  }
+  const settings = await getSettings();
+  const pinLength = Number(settings["security.pinLength"]) || 4;
+  let error = "";
+  try {
+    const id = createUser(
+      {
+        name: str(fd, "name"),
+        role: str(fd, "role", "cashier"),
+        pin: str(fd, "pin"),
+        password: str(fd, "password"),
+        active: true,
+      },
+      pinLength
+    );
+    await audit({
+      action: "create",
+      userId: actor?.id,
+      userName: actor?.name,
+      entity: "User",
+      entityId: id,
+      details: { name: str(fd, "name"), role: str(fd, "role", "cashier") },
+    });
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Could not add account";
+  }
+  revalidatePath("/settings");
+  if (error) redirect("/settings?staffError=" + encodeURIComponent(error));
+  redirect("/settings?staffSaved=" + encodeURIComponent("Account added"));
+}
+
+export async function updateUserAction(fd: FormData): Promise<void> {
+  const actor = await currentUser();
+  if (actor?.role !== "owner") {
+    redirect("/settings?staffError=" + encodeURIComponent("Only the owner can manage staff"));
+  }
+  const settings = await getSettings();
+  const pinLength = Number(settings["security.pinLength"]) || 4;
+  const id = Number(fd.get("id"));
+  let error = "";
+  try {
+    updateUser(
+      id,
+      {
+        name: str(fd, "name"),
+        role: str(fd, "role"),
+        pin: str(fd, "pin"),
+        password: str(fd, "password"),
+        active: bool(fd, "active"),
+      },
+      pinLength
+    );
+    await audit({
+      action: "update",
+      userId: actor?.id,
+      userName: actor?.name,
+      entity: "User",
+      entityId: id,
+      details: { name: str(fd, "name"), role: str(fd, "role"), active: bool(fd, "active") },
+    });
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Could not save account";
+  }
+  revalidatePath("/settings");
+  if (error) redirect("/settings?staffError=" + encodeURIComponent(error));
+  redirect("/settings?staffSaved=" + encodeURIComponent("Account saved"));
 }

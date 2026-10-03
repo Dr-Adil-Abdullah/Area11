@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getSale } from "@/lib/sales";
 import { getPurchase } from "@/lib/purchases";
 import { getSettings } from "@/lib/settings";
+import { currentUser } from "@/lib/session";
 import { formatAmount, formatPKR } from "@/lib/money";
 import ReceiptActions from "./ReceiptActions";
 
@@ -21,6 +22,9 @@ export default async function ReceiptPage({
   if (!saleId) notFound();
 
   const settings = await getSettings();
+  const user = await currentUser();
+  // Cost columns sirf owner ko (setting + role dono)
+  const showCost = !!settings["receipt.showCostColumns"] && user?.role === "owner";
   const width = settings["printer.width"] === "80" ? "80mm" : settings["printer.width"] === "58" ? "58mm" : "80mm";
 
   const header = {
@@ -173,7 +177,7 @@ export default async function ReceiptPage({
             <tr className="border-b border-dashed border-black">
               <th className="py-0.5 text-left">Item</th>
               <th className="py-0.5 text-right">Qty</th>
-              <th className="py-0.5 text-right">Cost</th>
+              {showCost && <th className="py-0.5 text-right">Cost</th>}
               <th className="py-0.5 text-right">Amount</th>
             </tr>
           </thead>
@@ -190,7 +194,9 @@ export default async function ReceiptPage({
                   </div>
                 </td>
                 <td className="py-0.5 text-right">{it.qty_base}</td>
-                <td className="py-0.5 text-right">{formatAmount(it.cost_paisa, 2)}</td>
+                {showCost && (
+                  <td className="py-0.5 text-right">{formatAmount(it.cost_paisa, 2)}</td>
+                )}
                 <td className="py-0.5 text-right">{formatAmount(it.line_total_paisa, 2)}</td>
               </tr>
             ))}

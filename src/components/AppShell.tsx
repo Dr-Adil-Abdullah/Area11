@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Receipt,
   LayoutDashboard,
@@ -18,6 +18,8 @@ import {
   Menu,
   X,
   Store,
+  LogOut,
+  Lock,
 } from "lucide-react";
 
 type NavItem = {
@@ -26,20 +28,22 @@ type NavItem = {
   icon: React.ElementType;
   ready: boolean;
   phase?: string;
+  /** kaun dekh sakta hai (khaali = sab) */
+  roles?: string[];
 };
 
 const NAV: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, ready: true },
   { href: "/pos", label: "Counter / Billing", icon: ShoppingCart, ready: true },
-  { href: "/purchases", label: "Purchases (Stock-In)", icon: PackagePlus, ready: true },
-  { href: "/products", label: "Products", icon: Pill, ready: true },
+  { href: "/purchases", label: "Purchases (Stock-In)", icon: PackagePlus, ready: true, roles: ["owner", "manager"] },
+  { href: "/products", label: "Products", icon: Pill, ready: true, roles: ["owner", "manager"] },
   { href: "/sales", label: "Sales history / Returns", icon: Receipt, ready: true },
   { href: "/customers", label: "Customers & Credit", icon: Users, ready: true },
   { href: "/alerts", label: "Expiry & Stock alerts", icon: CalendarClock, ready: true },
-  { href: "/cash", label: "Cash & Day-end", icon: Boxes, ready: true },
-  { href: "/suppliers", label: "Suppliers", icon: Truck, ready: true },
+  { href: "/cash", label: "Cash & Day-end", icon: Boxes, ready: true, roles: ["owner", "manager"] },
+  { href: "/suppliers", label: "Suppliers", icon: Truck, ready: true, roles: ["owner", "manager"] },
   { href: "/reports", label: "Reports", icon: BarChart3, ready: false, phase: "Phase 5" },
-  { href: "/settings", label: "Settings", icon: SettingsIcon, ready: true },
+  { href: "/settings", label: "Settings", icon: SettingsIcon, ready: true, roles: ["owner", "manager"] },
 ];
 
 export default function AppShell({
@@ -50,6 +54,8 @@ export default function AppShell({
   logoDataUrl,
   userName,
   userRole,
+  isAuthed,
+  autoLockMinutes,
 }: {
   children: React.ReactNode;
   appName: string;
@@ -58,11 +64,59 @@ export default function AppShell({
   logoDataUrl: string;
   userName: string;
   userRole: string;
+  isAuthed: boolean;
+  autoLockMinutes: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const lock = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // network na ho to bhi login screen par bhej do
+    }
+    window.location.href = "/login";
+  }, []);
+
+  // ---- Auto lock (security.autoLockMinutes) ----
+  useEffect(() => {
+    if (!isAuthed || !autoLockMinutes || autoLockMinutes <= 0) return;
+    const ms = autoLockMinutes * 60 * 1000;
+
+    const reset = () => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        void lock();
+      }, ms);
+    };
+
+    const events: (keyof WindowEventMap)[] = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "touchstart",
+      "scroll",
+    ];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset();
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, reset));
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [isAuthed, autoLockMinutes, lock]);
 
   const initials = (shortName || appName || "A11").slice(0, 3).toUpperCase();
+
+  // Login screen: bina sidebar ke
+  if (!isAuthed) {
+    return <>{children}</>;
+  }
+
+  const items = NAV.filter((item) => !item.roles || item.roles.includes(userRole));
 
   return (
     <div className="flex min-h-screen">
@@ -94,7 +148,7 @@ export default function AppShell({
         </div>
 
         <nav className="flex flex-col gap-1 p-3">
-          {NAV.map((item) => {
+          {items.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
             if (!item.ready) {
@@ -135,6 +189,22 @@ export default function AppShell({
               <div className="truncate text-xs font-medium text-slate-700">{userName}</div>
               <div className="text-[11px] capitalize text-slate-500">{userRole}</div>
             </div>
+            <button
+              onClick={() => void lock()}
+              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200"
+              title="Lock now"
+              aria-label="Lock now"
+            >
+              <Lock className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => void lock()}
+              className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200"
+              title="Log out"
+              aria-label="Log out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>
@@ -167,7 +237,10 @@ export default function AppShell({
               })}
             </div>
           </div>
-          <span className="ml-auto badge-green">Offline ready</span>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="badge-slate hidden sm:inline-flex capitalize">{userRole}</span>
+            <span className="badge-green">Offline ready</span>
+          </div>
         </header>
 
         <main className="flex-1 p-4 lg:p-6">{children}</main>

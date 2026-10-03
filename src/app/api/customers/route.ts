@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guard } from "@/lib/api";
 import { createCustomer, findCustomers, listCustomers, updateCustomer } from "@/lib/customers";
 import { ensureBootstrap } from "@/lib/bootstrap";
 import { currentUser } from "@/lib/session";
@@ -7,6 +8,8 @@ import { audit } from "@/lib/audit";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   await ensureBootstrap();
   const url = new URL(req.url);
   const q = url.searchParams.get("q") ?? "";
@@ -16,6 +19,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   const user = await currentUser();
   try {
     const body = (await req.json()) as {
@@ -48,6 +53,8 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   const user = await currentUser();
   try {
     const b = (await req.json()) as { id?: number; name?: string; phone?: string | null; category?: string; creditLimitPaisa?: number; notes?: string | null };

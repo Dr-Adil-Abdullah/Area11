@@ -17,6 +17,7 @@ import { takeNextCode } from "./numbering";
 import { applyRoundWithCostGuard, toBaseUnits, marginDiscount, retailDiscount, percentOf } from "./money";
 import { getSettings } from "./settings";
 import { audit } from "./audit";
+import { checkDiscountLimit, maxDiscountPercent } from "./roles";
 
 export type CartLineInput = {
   productId: number;
@@ -51,7 +52,10 @@ export type SaleResult = {
   warnings: string[];
 };
 
-export function createSale(input: SaleInput, user?: { id?: number; name?: string }): SaleResult {
+export function createSale(
+  input: SaleInput,
+  user?: { id?: number; name?: string; role?: string }
+): SaleResult {
   if (!input.items?.length) throw new Error("Cart is empty");
 
   // Settings transaction se pehle padh lo (async)
@@ -94,6 +98,16 @@ export function createSale(input: SaleInput, user?: { id?: number; name?: string
       const discount = Math.max(0, Math.round(it.discountPaisa ?? 0));
       const lineTotal = Math.max(0, gross - discount);
 
+      // Spec 7.3: discount se line apni purchase cost se neeche nahi ja sakti
+      const lineCost = qtyBase * costPaisa;
+      if (settingsSnapshot.discount.blockBelowCost && gross >= lineCost && lineTotal < lineCost) {
+        throw new Error(
+          `${product.name}: this discount takes the line below its purchase cost (Rs ${(
+            lineCost / 100
+          ).toFixed(2)}). Reduce the discount.`
+        );
+      }
+
       return {
         ...it,
         product,
@@ -107,6 +121,35 @@ export function createSale(input: SaleInput, user?: { id?: number; name?: string
 
     const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
     const billDiscount = Math.max(0, Math.round(input.billDiscountPaisa ?? 0));
+
+    // Discount limit (role ke hisaab se) -- Spec 7.3 / Q-08
+    if (settingsSnapshot.discount.enabled) {
+      const grossTotal = lines.reduce((s, l) => s + l.gross, 0);
+      const totalDiscount = lines.reduce((s, l) => s + l.discount, 0) + billDiscount;
+      const limit = maxDiscountPercent(user?.role, {
+        cashier: settingsSnapshot.discount.cashier,
+        manager: settingsSnapshot.discount.manager,
+        owner: 100,
+      });
+      const check = checkDiscountLimit(totalDiscount, grossTotal, limit);
+      if (!check.allowed) {
+        throw new Error(
+          `Discount ${check.percent}% is above your limit (${check.limit}%). Ask the owner or manager.`
+        );
+      }
+    }
+
+    // Spec 7.3: bill discount bhi kul purchase cost se neeche nahi le ja sakti
+    if (settingsSnapshot.discount.blockBelowCost && billDiscount > 0) {
+      const grossAll = lines.reduce((s, l) => s + l.gross, 0);
+      const costAll = lines.reduce((s, l) => s + l.qtyBase * l.costPaisa, 0);
+      if (grossAll >= costAll && subtotal - billDiscount < costAll) {
+        throw new Error(
+          `This bill discount takes the invoice below purchase cost (Rs ${(costAll / 100).toFixed(2)}). Reduce the discount.`
+        );
+      }
+    }
+
     const afterDiscount = Math.max(0, subtotal - billDiscount);
     const taxPaisa = settingsSnapshot.tax.enabled
       ? percentOf(afterDiscount, settingsSnapshot.tax.percent)
@@ -268,6 +311,7 @@ type SyncSettings = {
   tax: { enabled: boolean; percent: number };
   roundMode: string;
   roundTo: number;
+  discount: { enabled: boolean; cashier: number; manager: number; blockBelowCost: boolean };
   loyalty: { enabled: boolean; rupeesPerPoint: number; vipThreshold: number };
 };
 
@@ -275,6 +319,8 @@ function getSyncSettings(): SyncSettings {
   const rows = query<{ key: string; value: string }>(
     `SELECT key, value FROM settings
       WHERE key IN ('tax.enabled','tax.percent','bill.roundMode','bill.roundTo',
+                    'discount.enabled','discount.maxPercentCashier','discount.maxPercentManager',
+                    'discount.blockBelowCost',
                     'loyalty.enabled','loyalty.rupeesPerPoint','loyalty.vipThreshold')`
   );
   const map = new Map(rows.map((r) => [r.key, r.value]));
@@ -294,6 +340,12 @@ function getSyncSettings(): SyncSettings {
     },
     roundMode: j("bill.roundMode", "down10"),
     roundTo: Number(j("bill.roundTo", 10)) || 10,
+    discount: {
+      enabled: j("discount.enabled", true),
+      cashier: Number(j("discount.maxPercentCashier", 5)) || 0,
+      manager: Number(j("discount.maxPercentManager", 20)) || 0,
+      blockBelowCost: j("discount.blockBelowCost", true),
+    },
     loyalty: {
       enabled: j("loyalty.enabled", false),
       rupeesPerPoint: Number(j("loyalty.rupeesPerPoint", 100)) || 100,

@@ -43,6 +43,7 @@ export const SETTING_DEFAULTS = {
   "discount.mode": "margin", // margin | retail
   "discount.maxPercentCashier": 5,
   "discount.maxPercentManager": 20,
+  "discount.blockBelowCost": true, // Spec 7.3: rupay se neeche discount kisi role ko nahi
 
   // ---- Expiry alerts (user: settings se chunenge) ----
   "expiry.levels": [
@@ -84,6 +85,7 @@ export const SETTING_DEFAULTS = {
   // ---- Security (user: PIN for staff, password for owner) ----
   "security.pinLength": 4,
   "security.autoLockMinutes": 15,
+  "security.sessionHours": 12,
   "security.requireLogin": true,
 
   // ---- Cloud sync (Supabase) - spec Phase 5 ----

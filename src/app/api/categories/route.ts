@@ -7,17 +7,29 @@ import {
 } from "@/lib/catalog";
 import { ensureBootstrap } from "@/lib/bootstrap";
 import { audit } from "@/lib/audit";
-import { currentUser } from "@/lib/session";
+import { requireUser, requireShopManager } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   await ensureBootstrap();
+  try {
+    await requireUser();
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return NextResponse.json({ ok: false, error: err.message ?? "failed" }, { status: err.status ?? 400 });
+  }
   return NextResponse.json({ ok: true, categories: listCategories() });
 }
 
 export async function POST(req: Request) {
-  const user = await currentUser();
+  let user;
+  try {
+    user = await requireShopManager();
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return NextResponse.json({ ok: false, error: err.message ?? "failed" }, { status: err.status ?? 400 });
+  }
   try {
     const body = (await req.json()) as { name?: string; parentId?: number | null };
     const id = createCategory(String(body.name ?? ""), body.parentId ?? null);
@@ -39,7 +51,13 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const user = await currentUser();
+  let user;
+  try {
+    user = await requireShopManager();
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return NextResponse.json({ ok: false, error: err.message ?? "failed" }, { status: err.status ?? 400 });
+  }
   try {
     const body = (await req.json()) as { id?: number; name?: string };
     if (!body.id || !body.name) throw new Error("id and name required");
@@ -62,7 +80,13 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const user = await currentUser();
+  let user;
+  try {
+    user = await requireShopManager();
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return NextResponse.json({ ok: false, error: err.message ?? "failed" }, { status: err.status ?? 400 });
+  }
   try {
     const url = new URL(req.url);
     const id = Number(url.searchParams.get("id"));

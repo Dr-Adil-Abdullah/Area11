@@ -1,13 +1,15 @@
 {
   "name": "area11",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "description": "Area11 - Smart Pharmacy & Retail POS + Inventory System",
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 3000",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
-    "check": "node -e \"const{DatabaseSync}=require('node:sqlite');console.log('sqlite ok')\""
+    "check": "node -e \"const{DatabaseSync}=require('node:sqlite');console.log('sqlite ok')\"",
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts",
+    "test:watch": "node --experimental-strip-types --test --watch src/lib/*.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

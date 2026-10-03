@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guard } from "@/lib/api";
 import { createSale, listSales, todaySummary, type SaleInput } from "@/lib/sales";
 import { currentUser } from "@/lib/session";
 import { ensureBootstrap } from "@/lib/bootstrap";
@@ -7,6 +8,8 @@ import { peekNextCode } from "@/lib/numbering";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   await ensureBootstrap();
   const url = new URL(req.url);
   return NextResponse.json({
@@ -22,6 +25,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   await ensureBootstrap();
   const user = await currentUser();
   try {

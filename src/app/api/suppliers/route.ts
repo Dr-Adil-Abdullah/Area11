@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guard, SHOP_ROLES } from "@/lib/api";
 import {
   createSupplier,
   listSuppliers,
@@ -12,12 +13,16 @@ import { currentUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const denied = await guard();
+  if (denied) return denied;
   await ensureBootstrap();
   const url = new URL(req.url);
   return NextResponse.json({ ok: true, suppliers: listSuppliers(url.searchParams.get("q") ?? "") });
 }
 
 export async function POST(req: Request) {
+  const denied = await guard(SHOP_ROLES);
+  if (denied) return denied;
   const user = await currentUser();
   try {
     const body = (await req.json()) as { name?: string };
@@ -40,6 +45,8 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
+  const denied = await guard(SHOP_ROLES);
+  if (denied) return denied;
   const user = await currentUser();
   try {
     const body = (await req.json()) as { id?: number; name?: string };
@@ -63,6 +70,8 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const denied = await guard(SHOP_ROLES);
+  if (denied) return denied;
   const user = await currentUser();
   try {
     const url = new URL(req.url);

@@ -4,9 +4,16 @@ import os from "node:os";
 import path from "node:path";
 import { db } from "@/lib/db";
 import { audit } from "@/lib/audit";
+import { requireOwner } from "@/lib/session";
+import { jsonError } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  try {
+    await requireOwner();
+  } catch (e) {
+    return jsonError(e);
+  }
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
   const tmp = path.join(os.tmpdir(), `area11-backup-${stamp}-${process.pid}.db`);
   try {

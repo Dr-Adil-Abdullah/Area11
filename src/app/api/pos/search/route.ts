@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { searchForPos, type ExpiryLevels } from "@/lib/pos";
 import { getSettings } from "@/lib/settings";
 import { ensureBootstrap } from "@/lib/bootstrap";
+import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export async function GET(req: Request) {
   if (!q.trim()) return NextResponse.json({ ok: true, products: [] });
 
   try {
+    await requireUser();
     const s = await getSettings();
     const products = searchForPos(q, (s["expiry.levels"] ?? []) as ExpiryLevels, limit);
     return NextResponse.json({ ok: true, products });

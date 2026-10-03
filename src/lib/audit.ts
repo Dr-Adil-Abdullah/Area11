@@ -6,6 +6,7 @@ import { run } from "./db";
 
 export type AuditAction =
   | "login"
+  | "login_failed"
   | "logout"
   | "create"
   | "update"

@@ -45,8 +45,10 @@ export default async function RootLayout({
           shortName={settings["brand.shortName"]}
           storeName={settings["store.name"]}
           logoDataUrl={settings["brand.logoDataUrl"]}
-          userName={user?.name ?? "Owner"}
-          userRole={user?.role ?? "owner"}
+          userName={user?.name ?? ""}
+          userRole={user?.role ?? "cashier"}
+          isAuthed={!!user}
+          autoLockMinutes={Number(settings["security.autoLockMinutes"]) || 0}
         >
           {children}
         </AppShell>

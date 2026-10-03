@@ -2,7 +2,7 @@
 
 > **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں — **کام کرتا ہوا اور آج (2026-10-03) دوبارہ verify شدہ**۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** اگلا کام "§4 REMAINING" میں ہے (سب سے پہلے: **PR #3 merge** اور login+roles)۔ ہر کام کے بعد یہ فائل اپ ڈیٹ کریں۔
 
-Last updated: **2026-10-03** · App version **0.6.0 (Phase 1 done + Phase 2 essentials)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: `stage-8` (`stage-1 … stage-7` = earlier history).
+Last updated: **2026-10-03 (evening)** · App version **0.6.1 (Phase 1 done + Phase 2 essentials + login/roles)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: see `git tag` (`stage-1 … stage-8` + this work).
 
 ---
 
@@ -12,7 +12,8 @@ Last updated: **2026-10-03** · App version **0.6.0 (Phase 1 done + Phase 2 esse
 |---|---|
 | **Product** | "Smart Pharmacy & Retail POS / Inventory Management" — web app (PWA-ready) for one pharmacy: 2 counters + owner's phone on the shop LAN, **100 % usable without internet**. |
 | **Single source of truth (spec)** | [`complete_numbered_master_specs (1).md`](./complete_numbered_master_specs%20%281%29.md) — 16 sections, 5 phases, built **strictly in order**. Copy verbatim in `INPUT-INFORMATION.md` Part 1. |
-| **Real app** | **Repo root** — Next.js 15 (App Router) + TypeScript + Tailwind + **`node:sqlite`** (Node's built-in SQLite, zero DB dependency). 19 tables, 31 routes. |
+| **Real app** | **Repo root** — Next.js 15 (App Router) + TypeScript + Tailwind + **`node:sqlite`** (Node's built-in SQLite, zero DB dependency). 19 tables, 33 routes. |
+| **Login** | **Live since 2026-10-03**: owner = password, staff = name + 4-digit PIN, roles Owner/Manager/Cashier. Default owner password `area11` — change it in Settings → Staff. Forgot it? `node scripts/reset-login.mjs --owner "new-password"`. |
 | **Reference only** | [`legacy-demo-vite/`](./legacy-demo-vite) — a *different* browser-only Vite demo (phases 1-3, sample data, 212 unit tests, docs) from an earlier session. **Do not merge into root.** Mine it for logic/tests (see §7). It is also the only thing currently published to the public web (§10). |
 | **This branch** | `arena/01a10395-area11` — contains everything from `arena/01a0f0cf-area11` (fast-forwarded 2026-10-03) **plus** this memory rewrite. PR #3 carries it into `main`. |
 | **Language / currency** | UI **English**; money **PKR**, stored as **integer paisa** (`*_paisa`). Dates local time (Asia/Karachi). |
@@ -40,7 +41,9 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 ```
 
 * DB file: `data/area11.db` (**git-ignored**, created + migrated automatically on first request; owner account + 5 categories + settings seeded by `src/lib/bootstrap.ts`).
-* **First login values:** owner password `area11`, PIN `1111` (from `.env`; dashboard warns until changed). *There is no login screen yet* — see REMAINING P1-1.
+* **First login:** owner password `area11` (from `.env`). Staff accounts are added by the owner in **Settings → Staff** (name + PIN). **Change the owner password on day one.**
+* **Locked out?** `node scripts/reset-login.mjs --list` · `node scripts/reset-login.mjs --owner "new-password"` · `node scripts/reset-login.mjs --user "Bilal" --pin 1234` (works while the app is running).
+* **Tests:** `npm test` (Node's built-in runner, no extra library) covers password/PIN hashing, session-token signing/expiry/tampering and the discount-limit maths. `npm run test:watch` for continuous runs.
 * `node_modules/`, `data/`, `.next/` are **not** in git. A fresh sandbox needs `npm install` again.
 * Health check: `GET /api/health` → `{ok:true, database:"connected", ...}`.
 * Backup: Cash page → **Download database backup** (`GET /api/backup`, uses `VACUUM INTO`, safe while running). Restore = stop app, replace `data/area11.db`.
@@ -49,7 +52,7 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 ## 3. What is DONE
 
-**Verified again on 2026-10-03 by this session (no code changed — docs/memory only):**
+**Where things stand on 2026-10-03:** the app was re-verified in the morning (docs only), then **login + roles were built in the evening** — that is the code change this branch adds on top of PR #2.
 
 | Check | Result |
 |---|---|
@@ -75,7 +78,10 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 | **Cash & day-end** | `/cash`, `lib/cash.ts` | day summary (sales, credit, returns, profit, cash in/out), expected cash vs counted, expenses, owner drawings, backup button. |
 | **Expiry & stock alerts** | `/alerts`, `lib/alerts.ts` | windows from Settings; expired value at cost; reorder list from per-product reorder level. |
 | Audit log (write side) | `lib/audit.ts` → `audit_logs` | create/update/delete/price_change/void/return/settings_change/backup. **No viewer yet.** |
-| Dev tooling | `scripts/ckpt.sh`, `rules-count.sh`, `sync-spec.sh` | checkpoint/rollback, numbering check, spec copy. |
+| **Login & roles** | `/login`, `lib/session.ts`, `lib/auth.ts`, `lib/users.ts`, `lib/roles.ts`, `api/auth/*`, `api/users*` | HMAC-signed HttpOnly cookie (secret from `.env` or auto-generated in the DB), owner password / staff PIN, 5-try throttle, audit `login`/`login_failed`/`logout`, idle auto-lock (`security.autoLockMinutes`, default 15), session lifetime (`security.sessionHours`, default 12). Protected page group `src/app/(protected)/` + `guard()` on every API route. Role limits: cashier cannot create products/purchases/suppliers/supplier payments; Settings → Staff (owner only). |
+| **Discount guard (spec 7.3)** | `lib/sales.ts`, `lib/roles.ts`, `lib/settings.ts` | Server-side: percent limit per role (**cashier 5% · manager 20% · owner unlimited** — editable in Settings) **and** a hard block on any discount that would take a line or the bill below purchase cost (`discount.blockBelowCost`, default ON). |
+| **Login reset script** | `scripts/reset-login.mjs` | `--list`, `--owner "new-password"`, `--user "Name" --pin 1234` — also writes an audit row. |
+| Dev tooling | `scripts/ckpt.sh`, `rules-count.sh`, `sync-spec.sh`, `reset-login.mjs` | checkpoint/rollback, numbering check, spec copy, login reset. |
 
 ## 4. REMAINING — in priority order
 
@@ -85,7 +91,7 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 3. **Decide where the real app will actually run** (shop PC `npm start` is the simplest; a Node host with a persistent disk is the alternative). Static/serverless hosting **cannot** hold the SQLite file (§10).
 
 ### P1 · finish Phase 1 / blockers for real use
-1. **Login + roles** (Q-13, Q-18): owner = password, staff = 4-digit PIN; roles Owner/Manager/Cashier (owner-only first). Today `lib/session.ts` returns the owner for everybody. `lib/auth.ts` already has scrypt hash/verify; `users` table + `security.*` settings exist. Needs: login page, signed cookie session, route protection, role switcher (spec Phase 1), enforce discount limits `discount.maxPercentCashier/Manager`, hide cost columns for non-owners (`receipt.showCostColumns`).
+1. ~~**Login + roles** (Q-13, Q-18)~~ — **DONE 2026-10-03** (see §3). Still open from that item: a visible role switcher when several people share one counter (today you log out/in), and per-user "shift" reporting.
 2. **Cash change calculator** at counter (tendered → change; spec Phase 1) — not revenue.
 3. **Unit-level stock edit / write-off / adjustment** (expired write-off, count correction) using `stock_movements` types `adjust`/`writeoff`.
 4. **Excel import of old data** (Q-19) with SheetJS (`xlsx`): products, batches, customers, supplier balances; dry-run preview first.
@@ -116,6 +122,10 @@ Customer profiles/stars/**loyalty** (structure exists, OFF), multi-tier rates (V
 * Never pass raw DB rows with null prototypes to client components (already fixed in `db.ts`).
 * After `npm run dev` code changes, hot reload is enough; a new migration applies on next request.
 * Typecheck: `npx tsc --noEmit` (root `tsconfig.json` excludes `legacy-demo-vite`). Keep it at **0 errors**.
+* **Auth gotchas:** `cookies()` is async; cookies can only be *set* in route handlers/server actions. Pages under `src/app/(protected)/` are login-gated by their layout; every API route must call `guard()` (or `handle()`/`handleOwner()`). `guard(SHOP_ROLES)` = owner/manager only.
+* The session secret lives in the `settings` table under `security.sessionSecret` (not in `SETTING_DEFAULTS`, so the Settings page never shows it); `.env`'s `SESSION_SECRET` overrides it.
+* Tests use Node's built-in runner with **type stripping**: `npm test` runs `node --experimental-strip-types --test src/lib/*.test.ts`. Test files import with explicit `.ts` extensions (hence `allowImportingTsExtensions` in `tsconfig.json`).
+* A **fresh clone has no `data/area11.db`** — the first request creates it with the default owner (`area11`) and 5 categories, and no products.
 * **Two package.json files exist**: root = the real Next.js app; `legacy-demo-vite/package.json` = the old demo. Install/run them separately; don't mix their `node_modules` assumptions.
 * **The root of the repo is not a static site any more.** `/` serves the Next.js app; the Vite demo now builds only from `legacy-demo-vite/` (`npm run build` → `legacy-demo-vite/dist`). Any hosting config that still points at the repo root will therefore build the wrong thing (§10).
 
