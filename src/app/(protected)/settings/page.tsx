@@ -3,6 +3,7 @@ import { requireShopManagerPage } from "@/lib/page-guard";
 import { currentUser } from "@/lib/session";
 import { listUsers } from "@/lib/users";
 import StaffCard from "./StaffCard";
+import CustomFieldsCard from "./CustomFieldsCard";
 import { Save } from "lucide-react";
 import { saveSettingsAction } from "./actions";
 
@@ -320,6 +321,8 @@ export default async function SettingsPage({
         </Section>
 
         {/* ---------------- Cloud sync ---------------- */}
+        <CustomFieldsCard />
+
         <Section
           title="Cloud Backup (Supabase)"
           desc="You chose Supabase. The sync engine is Phase 5 of the master spec — this section will hold the connection when we reach it."

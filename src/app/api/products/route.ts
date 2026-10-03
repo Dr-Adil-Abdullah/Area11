@@ -1,3 +1,4 @@
+import { setCustomValues, validateCustomValues } from "@/lib/custom-fields";
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
 import { createProduct, listProducts, type ProductInput } from "@/lib/catalog";
@@ -38,8 +39,10 @@ export async function POST(req: Request) {
   await ensureBootstrap();
   const user = await currentUser();
   try {
-    const body = (await req.json()) as ProductInput;
+    const body = (await req.json()) as ProductInput & { custom?: Record<string, unknown> };
+    if (body.custom) validateCustomValues("product", body.custom); // pehle janch, phir likhna
     const id = createProduct(body, user ?? undefined);
+    if (body.custom) setCustomValues("product", id, body.custom, user ?? undefined);
     return NextResponse.json({ ok: true, id });
   } catch (e) {
     return NextResponse.json(

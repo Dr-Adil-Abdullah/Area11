@@ -1,19 +1,36 @@
 "use client";
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { HandCoins, Pencil, Plus, Save, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
+import type { CustomField } from "@/lib/custom-fields-shared";
 
 type C = { id: number; name: string; phone: string | null; category: string; balance_paisa: number; credit_limit_paisa: number };
 
-export default function CustomersClient({ initial }: { initial: C[] }) {
+export default function CustomersClient({
+  initial,
+  initialCustom,
+}: {
+  initial: C[];
+  initialCustom?: Record<string, Record<string, string>>;
+}) {
   const router = useRouter();
   const [rows, setRows] = useState(initial);
   const [f, setF] = useState({ name: "", phone: "", category: "normal", limit: "" });
   const [pay, setPay] = useState<{ id: number; amt: string } | null>(null);
   const [edit, setEdit] = useState<{ id: number; name: string; phone: string; category: string; limit: string } | null>(null);
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [newCustom, setNewCustom] = useState<Record<string, string>>({});
+  const [editCustom, setEditCustom] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState("");
   const owed = rows.reduce((a, c) => a + Math.max(0, c.balance_paisa), 0);
+
+  useEffect(() => {
+    void (async () => {
+      const r = await (await fetch("/api/custom-fields?entity=customer", { cache: "no-store" })).json();
+      if (r.ok) setCustomFields(r.fields);
+    })();
+  }, []);
 
   async function reload() { const r = await (await fetch("/api/customers", { cache: "no-store" })).json(); if (r.ok) setRows(r.customers); router.refresh(); }
   async function call(url: string, body: unknown) {
@@ -24,7 +41,11 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
   }
   async function add() {
     if (!f.name.trim()) return setMsg("Name is required.");
-    if (await call("/api/customers", { name: f.name, phone: f.phone || null, category: f.category, creditLimitPaisa: toPaisa(f.limit || 0) })) { setF({ name: "", phone: "", category: "normal", limit: "" }); reload(); }
+    if (await call("/api/customers", { name: f.name, phone: f.phone || null, category: f.category, creditLimitPaisa: toPaisa(f.limit || 0), custom: newCustom })) {
+      setF({ name: "", phone: "", category: "normal", limit: "" });
+      setNewCustom({});
+      reload();
+    }
   }
   async function saveEdit() {
     if (!edit) return;
@@ -39,6 +60,7 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
         phone: edit.phone.trim() || null,
         category: edit.category,
         creditLimitPaisa: toPaisa(edit.limit || 0),
+        custom: editCustom,
       }),
     })).json();
     if (!r.ok) return setMsg(r.error ?? "Update failed.");
@@ -61,13 +83,40 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
         <select className="select" value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })}><option value="normal">Normal</option><option value="vip">VIP</option><option value="doctor">Doctor</option></select>
         <input className="input" placeholder="Credit limit Rs (0 = none)" value={f.limit} onChange={(e) => setF({ ...f, limit: e.target.value })} />
         <button className="btn-primary" onClick={add}><Plus className="h-4 w-4" /> Add customer</button>
+        {customFields.length > 0 && (
+          <div className="md:col-span-5 grid gap-3 md:grid-cols-3">
+            {customFields.map((cf) => (
+              <div key={cf.id}>
+                <label className="label">{cf.label}{cf.required ? " *" : ""}</label>
+                {cf.type === "select" ? (
+                  <select className="select" value={newCustom[String(cf.id)] ?? ""} onChange={(e) => setNewCustom({ ...newCustom, [String(cf.id)]: e.target.value })}>
+                    <option value="">— chunein —</option>
+                    {cf.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : cf.type === "check" ? (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={(newCustom[String(cf.id)] ?? "") === "1"} onChange={(e) => setNewCustom({ ...newCustom, [String(cf.id)]: e.target.checked ? "1" : "0" })} /> Haan
+                  </label>
+                ) : (
+                  <input
+                    className="input"
+                    type={cf.type === "number" ? "number" : cf.type === "date" ? "date" : "text"}
+                    value={newCustom[String(cf.id)] ?? ""}
+                    onChange={(e) => setNewCustom({ ...newCustom, [String(cf.id)]: e.target.value })}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         {msg && <div className="md:col-span-5 text-sm text-rose-600">{msg}</div>}
       </div>
       <div className="card overflow-auto">
         <table className="tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Type</th><th className="text-right">Limit</th><th className="text-right">Owes</th><th></th></tr></thead>
           <tbody>
-            {rows.map((c) =>
-              edit?.id === c.id ? (
+            {rows.map((c) => (
+              <Fragment key={c.id}>
+              {edit?.id === c.id ? (
                 <tr key={c.id} className="bg-amber-50">
                   <td>
                     <input
@@ -109,8 +158,37 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
                     </span>
                   </td>
                 </tr>
-              ) : (
-              <tr key={c.id}>
+              ) : null}
+              {edit?.id === c.id && customFields.length > 0 ? (
+                <tr key={`${c.id}-custom`} className="bg-amber-50">
+                  <td colSpan={6} className="grid gap-3 md:grid-cols-3">
+                    {customFields.map((cf) => (
+                      <div key={cf.id}>
+                        <label className="label">{cf.label}{cf.required ? " *" : ""}</label>
+                        {cf.type === "select" ? (
+                          <select className="select" value={editCustom[String(cf.id)] ?? ""} onChange={(e) => setEditCustom({ ...editCustom, [String(cf.id)]: e.target.value })}>
+                            <option value="">— chunein —</option>
+                            {cf.options.map((o) => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ) : cf.type === "check" ? (
+                          <label className="flex items-center gap-2 text-sm">
+                            <input type="checkbox" checked={(editCustom[String(cf.id)] ?? "") === "1"} onChange={(e) => setEditCustom({ ...editCustom, [String(cf.id)]: e.target.checked ? "1" : "0" })} /> Haan
+                          </label>
+                        ) : (
+                          <input
+                            className="input"
+                            type={cf.type === "number" ? "number" : cf.type === "date" ? "date" : "text"}
+                            value={editCustom[String(cf.id)] ?? ""}
+                            onChange={(e) => setEditCustom({ ...editCustom, [String(cf.id)]: e.target.value })}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </td>
+                </tr>
+              ) : null}
+              {edit?.id === c.id ? null : (
+              <tr>
                 <td className="font-medium">{c.name}</td><td>{c.phone ?? "—"}</td><td className="text-xs">{c.category}</td>
                 <td className="text-right text-xs">{c.credit_limit_paisa ? formatPKR(c.credit_limit_paisa) : "—"}</td>
                 <td className={`text-right font-medium ${c.balance_paisa > 0 ? "text-rose-600" : ""}`}>{formatPKR(c.balance_paisa)}</td>
@@ -128,7 +206,10 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
                       <button
                         className="btn-ghost !py-1"
                         title="Gahak ki tafseel badlein"
-                        onClick={() => setEdit({ id: c.id, name: c.name, phone: c.phone ?? "", category: c.category, limit: c.credit_limit_paisa ? String(c.credit_limit_paisa / 100) : "" })}
+                        onClick={() => {
+                          setEdit({ id: c.id, name: c.name, phone: c.phone ?? "", category: c.category, limit: c.credit_limit_paisa ? String(c.credit_limit_paisa / 100) : "" });
+                          setEditCustom({ ...(initialCustom?.[String(c.id)] ?? {}) });
+                        }}
                       >
                         <Pencil className="h-4 w-4" /> Edit
                       </button>
@@ -136,7 +217,9 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
                   )}
                 </td>
               </tr>
-              ))}
+              )}
+              </Fragment>
+            ))}
             {rows.length === 0 && <tr><td colSpan={6} className="py-10 text-center text-sm text-slate-500">No customers yet.</td></tr>}
           </tbody></table>
       </div>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil, Search, Trash2, X, Save, Pill, Package } from "lucide-react";
 import { toPaisa, formatPKR, fromBaseUnits } from "@/lib/money";
+import type { CustomField } from "@/lib/custom-fields-shared";
 
 type Product = {
   id: number;
@@ -80,6 +81,8 @@ export default function ProductsClient({
   const [editCat, setEditCat] = useState<{ id: number; name: string } | null>(null);
   const [editComp, setEditComp] = useState<{ id: number; name: string } | null>(null);
   const [listMsg, setListMsg] = useState("");
+  const [customFields, setCustomFields] = useState<CustomField[]>([]);
+  const [custom, setCustom] = useState<Record<string, string>>({});
   const [newCompany, setNewCompany] = useState("");
 
   const filtered = useMemo(() => {
@@ -105,8 +108,15 @@ export default function ProductsClient({
 
   function openNew() {
     setForm(emptyForm);
+    setCustom({});
     setError("");
     setShowForm(true);
+  }
+
+  async function loadCustomFor(id: number) {
+    const r = await (await fetch(`/api/products/${id}`, { cache: "no-store" })).json();
+    if (r.ok && r.custom) setCustom(r.custom as Record<string, string>);
+    else setCustom({});
   }
 
   function openEdit(p: Product) {
@@ -130,6 +140,8 @@ export default function ProductsClient({
       reorderLevel: p.reorder_level ? String(p.reorder_level) : "",
       trackExpiry: !!p.track_expiry,
     });
+    setCustom({});
+    void loadCustomFor(p.id);
     setError("");
     setShowForm(true);
   }
@@ -160,6 +172,7 @@ export default function ProductsClient({
         doctorPaisa: toPaisa(form.doctor || 0),
         reorderLevel: Number(form.reorderLevel) || 0,
         trackExpiry: form.trackExpiry,
+        custom,
       };
 
       const res = await fetch(form.id ? `/api/products/${form.id}` : "/api/products", {
@@ -188,6 +201,13 @@ export default function ProductsClient({
       setBusy(false);
     }
   }
+
+  useEffect(() => {
+    void (async () => {
+      const r = await (await fetch("/api/custom-fields?entity=product", { cache: "no-store" })).json();
+      if (r.ok) setCustomFields(r.fields);
+    })();
+  }, []);
 
   async function refreshLists() {
     const [rc, ro] = await Promise.all([
