@@ -367,6 +367,18 @@ export function createCompany(name: string): number {
   return run("INSERT INTO companies (name) VALUES (?)", [n]).lastInsertRowid;
 }
 
+export function renameCompany(id: number, name: string): void {
+  const n = name.trim();
+  if (!n) throw new Error("Company name is required");
+  run("UPDATE companies SET name = ? WHERE id = ?", [n, id]);
+}
+
+export function deleteCompany(id: number): void {
+  // Products ko na hatao -- sirf company hata do (data safe rahe)
+  run("UPDATE products SET company_id = NULL WHERE company_id = ?", [id]);
+  run("UPDATE companies SET active = 0 WHERE id = ?", [id]);
+}
+
 // ---------------------------- Helpers --------------------------------------
 export function productStock(productId: number): number {
   return scalar<number>(

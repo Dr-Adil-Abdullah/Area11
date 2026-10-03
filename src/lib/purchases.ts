@@ -126,7 +126,9 @@ export function createPurchase(
 
       const qtyBase = toBaseUnits(Number(it.qty) || 0, it.unit, product.box_strips, product.strip_tablets);
       const cost = Math.max(0, Math.round(it.costPaisa ?? 0));
-      const lineTotal = Math.round(qtyBase * cost);
+      // Sample / bonus = free goods -> bill (aur supplier payable) me 0 judta hai.
+      // Cost batch par rehta hai taake nuqsan ki qeemat (write-off value) theek nikle.
+      const lineTotal = it.isSample ? 0 : Math.round(qtyBase * cost);
       return { ...it, product, qtyBase, cost, lineTotal };
     });
 

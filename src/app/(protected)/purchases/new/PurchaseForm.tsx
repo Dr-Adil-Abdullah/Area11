@@ -136,7 +136,7 @@ export default function PurchaseForm({
     return unitToBase(Number(r.qty) || 0, r.unit, boxStrips, stripTablets);
   }
 
-  const subtotal = rows.reduce((s, r) => s + toPaisa(r.cost || 0) * rowBase(r), 0);
+  const subtotal = rows.reduce((s, r) => s + (r.isSample ? 0 : toPaisa(r.cost || 0) * rowBase(r)), 0);
   const discountPaisa = toPaisa(discount || 0);
   const total = Math.max(0, subtotal - discountPaisa);
   const paidPaisa = paid === "" ? total : Math.min(toPaisa(paid || 0), total);
@@ -347,6 +347,7 @@ export default function PurchaseForm({
                 <th className="w-32">Expiry</th>
                 <th className="w-28">Cost</th>
                 <th className="w-28">Retail</th>
+                <th className="w-20" title="Sample / bonus (free) — bill me nahi judta">Free</th>
                 <th className="text-right">Line total</th>
                 <th></th>
               </tr>
@@ -380,8 +381,16 @@ export default function PurchaseForm({
                   <td>
                     <input type="number" step="0.01" className="input !py-1 !text-xs" value={r.retail} onChange={(e) => setRow(r.key, { retail: e.target.value })} />
                   </td>
+                  <td className="text-center">
+                    <input
+                      type="checkbox"
+                      title="Sample / bonus — mufat maal, bill me nahi judta"
+                      checked={r.isSample}
+                      onChange={(e) => setRow(r.key, { isSample: e.target.checked })}
+                    />
+                  </td>
                   <td className="text-right text-sm text-slate-700">
-                    {formatPKR(toPaisa(r.cost || 0) * rowBase(r))}
+                    {r.isSample ? <span className="font-medium text-emerald-700">FREE</span> : formatPKR(toPaisa(r.cost || 0) * rowBase(r))}
                     <div className="text-[11px] text-slate-400">{rowBase(r)} {r.unit === "base" ? "units" : "base units"}</div>
                   </td>
                   <td>
@@ -393,7 +402,7 @@ export default function PurchaseForm({
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="py-10 text-center text-sm text-slate-500">
+                  <td colSpan={10} className="py-10 text-center text-sm text-slate-500">
                     Search above and click a medicine to add it here.
                   </td>
                 </tr>

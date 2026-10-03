@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { HandCoins, Plus } from "lucide-react";
+import { HandCoins, Pencil, Plus, Save, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
 
 type C = { id: number; name: string; phone: string | null; category: string; balance_paisa: number; credit_limit_paisa: number };
@@ -11,6 +11,7 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
   const [rows, setRows] = useState(initial);
   const [f, setF] = useState({ name: "", phone: "", category: "normal", limit: "" });
   const [pay, setPay] = useState<{ id: number; amt: string } | null>(null);
+  const [edit, setEdit] = useState<{ id: number; name: string; phone: string; category: string; limit: string } | null>(null);
   const [msg, setMsg] = useState("");
   const owed = rows.reduce((a, c) => a + Math.max(0, c.balance_paisa), 0);
 
@@ -25,6 +26,26 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
     if (!f.name.trim()) return setMsg("Name is required.");
     if (await call("/api/customers", { name: f.name, phone: f.phone || null, category: f.category, creditLimitPaisa: toPaisa(f.limit || 0) })) { setF({ name: "", phone: "", category: "normal", limit: "" }); reload(); }
   }
+  async function saveEdit() {
+    if (!edit) return;
+    if (!edit.name.trim()) return setMsg("Name is required.");
+    setMsg("");
+    const r = await (await fetch("/api/customers", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: edit.id,
+        name: edit.name.trim(),
+        phone: edit.phone.trim() || null,
+        category: edit.category,
+        creditLimitPaisa: toPaisa(edit.limit || 0),
+      }),
+    })).json();
+    if (!r.ok) return setMsg(r.error ?? "Update failed.");
+    setEdit(null);
+    reload();
+  }
+
   async function receive() {
     if (!pay) return;
     if (await call("/api/customers/pay", { customerId: pay.id, amountPaisa: toPaisa(pay.amt || 0) })) { setPay(null); reload(); }
@@ -45,7 +66,50 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
       <div className="card overflow-auto">
         <table className="tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Type</th><th className="text-right">Limit</th><th className="text-right">Owes</th><th></th></tr></thead>
           <tbody>
-            {rows.map((c) => (
+            {rows.map((c) =>
+              edit?.id === c.id ? (
+                <tr key={c.id} className="bg-amber-50">
+                  <td>
+                    <input
+                      autoFocus
+                      className="input-sm"
+                      value={edit.name}
+                      onChange={(e) => setEdit({ ...edit, name: e.target.value })}
+                      onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      className="input-sm"
+                      placeholder="Phone"
+                      value={edit.phone}
+                      onChange={(e) => setEdit({ ...edit, phone: e.target.value })}
+                    />
+                  </td>
+                  <td>
+                    <select className="select !py-1 !text-xs" value={edit.category} onChange={(e) => setEdit({ ...edit, category: e.target.value })}>
+                      <option value="normal">normal</option>
+                      <option value="vip">vip</option>
+                      <option value="doctor">doctor</option>
+                    </select>
+                  </td>
+                  <td className="text-right">
+                    <input
+                      className="input-sm w-24 text-right"
+                      placeholder="Rs"
+                      value={edit.limit}
+                      onChange={(e) => setEdit({ ...edit, limit: e.target.value })}
+                    />
+                  </td>
+                  <td className={`text-right font-medium ${c.balance_paisa > 0 ? "text-rose-600" : ""}`}>{formatPKR(c.balance_paisa)}</td>
+                  <td className="text-right">
+                    <span className="inline-flex gap-1">
+                      <button className="btn-primary !py-1" onClick={saveEdit}><Save className="h-4 w-4" /> Save</button>
+                      <button className="btn-ghost !py-1" onClick={() => setEdit(null)}><X className="h-4 w-4" /></button>
+                    </span>
+                  </td>
+                </tr>
+              ) : (
               <tr key={c.id}>
                 <td className="font-medium">{c.name}</td><td>{c.phone ?? "—"}</td><td className="text-xs">{c.category}</td>
                 <td className="text-right text-xs">{c.credit_limit_paisa ? formatPKR(c.credit_limit_paisa) : "—"}</td>
@@ -54,9 +118,25 @@ export default function CustomersClient({ initial }: { initial: C[] }) {
                   {pay?.id === c.id ? (
                     <span className="inline-flex gap-1"><input autoFocus className="input-sm w-28" placeholder="Rs" value={pay.amt} onChange={(e) => setPay({ id: c.id, amt: e.target.value })} />
                       <button className="btn-primary !py-1" onClick={receive}>Receive</button><button className="btn-ghost" onClick={() => setPay(null)}>×</button></span>
-                  ) : c.balance_paisa > 0 && <button className="btn-secondary !py-1" onClick={() => setPay({ id: c.id, amt: String(c.balance_paisa / 100) })}><HandCoins className="h-4 w-4" /> Receive payment</button>}
+                  ) : (
+                    <span className="inline-flex gap-1">
+                      {c.balance_paisa > 0 && (
+                        <button className="btn-secondary !py-1" onClick={() => setPay({ id: c.id, amt: String(c.balance_paisa / 100) })}>
+                          <HandCoins className="h-4 w-4" /> Receive payment
+                        </button>
+                      )}
+                      <button
+                        className="btn-ghost !py-1"
+                        title="Gahak ki tafseel badlein"
+                        onClick={() => setEdit({ id: c.id, name: c.name, phone: c.phone ?? "", category: c.category, limit: c.credit_limit_paisa ? String(c.credit_limit_paisa / 100) : "" })}
+                      >
+                        <Pencil className="h-4 w-4" /> Edit
+                      </button>
+                    </span>
+                  )}
                 </td>
-              </tr>))}
+              </tr>
+              ))}
             {rows.length === 0 && <tr><td colSpan={6} className="py-10 text-center text-sm text-slate-500">No customers yet.</td></tr>}
           </tbody></table>
       </div>

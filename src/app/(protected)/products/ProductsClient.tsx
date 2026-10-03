@@ -70,13 +70,16 @@ export default function ProductsClient({
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [companies] = useState<Company[]>(initialCompanies);
+  const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [newCategory, setNewCategory] = useState("");
+  const [editCat, setEditCat] = useState<{ id: number; name: string } | null>(null);
+  const [editComp, setEditComp] = useState<{ id: number; name: string } | null>(null);
+  const [listMsg, setListMsg] = useState("");
   const [newCompany, setNewCompany] = useState("");
 
   const filtered = useMemo(() => {
@@ -184,6 +187,59 @@ export default function ProductsClient({
     } finally {
       setBusy(false);
     }
+  }
+
+  async function refreshLists() {
+    const [rc, ro] = await Promise.all([
+      fetch("/api/categories", { cache: "no-store" }),
+      fetch("/api/companies", { cache: "no-store" }),
+    ]);
+    const dc = await rc.json();
+    const dco = await ro.json();
+    if (dc.ok) setCategories(dc.categories);
+    if (dco.ok) setCompanies(dco.companies);
+  }
+
+  async function renameCatRow(id: number, name: string) {
+    setListMsg("");
+    const r = await (await fetch("/api/categories", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name }),
+    })).json();
+    if (!r.ok) { setListMsg(r.error ?? "rename failed"); return; }
+    setEditCat(null); await refreshLists(); router.refresh();
+  }
+
+  async function removeCatRow(id: number, name: string, count: number) {
+    if (!confirm(
+      count > 0
+        ? `"${name}" hata dein? Is ke ${count} products category khali ho jayenge (products delete NAHI honge).`
+        : `"${name}" hata dein?`
+    )) return;
+    setListMsg("");
+    const r = await (await fetch(`/api/categories?id=${id}`, { method: "DELETE" })).json();
+    if (!r.ok) { setListMsg(r.error ?? "delete failed"); return; }
+    await refreshLists(); router.refresh();
+  }
+
+  async function renameCompRow(id: number, name: string) {
+    setListMsg("");
+    const r = await (await fetch("/api/companies", {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name }),
+    })).json();
+    if (!r.ok) { setListMsg(r.error ?? "rename failed"); return; }
+    setEditComp(null); await refreshLists(); router.refresh();
+  }
+
+  async function removeCompRow(id: number, name: string, count: number) {
+    if (!confirm(
+      count > 0
+        ? `"${name}" hata dein? Is ke ${count} products company khali ho jayenge (products delete NAHI honge).`
+        : `"${name}" hata dein?`
+    )) return;
+    setListMsg("");
+    const r = await (await fetch(`/api/companies?id=${id}`, { method: "DELETE" })).json();
+    if (!r.ok) { setListMsg(r.error ?? "delete failed"); return; }
+    await refreshLists(); router.refresh();
   }
 
   async function addCategory() {
@@ -466,13 +522,50 @@ export default function ProductsClient({
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
+              {listMsg && <div className="text-xs text-rose-600">{listMsg}</div>}
               <ul className="space-y-1">
-                {categories.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                    <span className="text-slate-700">{c.name}</span>
-                    <span className="text-xs text-slate-500">{c.product_count ?? 0}</span>
-                  </li>
-                ))}
+                {categories.map((c) =>
+                  editCat?.id === c.id ? (
+                    <li key={c.id} className="flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1">
+                      <input
+                        autoFocus
+                        className="input-sm flex-1"
+                        value={editCat.name}
+                        onChange={(e) => setEditCat({ id: c.id, name: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") renameCatRow(c.id, editCat.name);
+                          if (e.key === "Escape") setEditCat(null);
+                        }}
+                      />
+                      <button className="btn-primary !px-2 !py-1" onClick={() => renameCatRow(c.id, editCat.name)}><Save className="h-3.5 w-3.5" /></button>
+                      <button className="btn-ghost !px-1" onClick={() => setEditCat(null)}><X className="h-3.5 w-3.5" /></button>
+                    </li>
+                  ) : (
+                    <li key={c.id} className="group flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
+                      <span className="text-slate-700">{c.name}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">{c.product_count ?? 0}</span>
+                        <button
+                          className="text-slate-400 hover:text-slate-700"
+                          title="Naam badlein"
+                          onClick={() => setEditCat({ id: c.id, name: c.name })}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          className="text-slate-400 hover:text-rose-600"
+                          title="Hata dein"
+                          onClick={() => removeCatRow(c.id, c.name, c.product_count ?? 0)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </li>
+                  )
+                )}
+                {categories.length === 0 && (
+                  <li className="text-xs text-slate-500">No categories yet.</li>
+                )}
               </ul>
             </div>
           </div>
@@ -496,12 +589,45 @@ export default function ProductsClient({
                 </button>
               </div>
               <ul className="space-y-1">
-                {companies.map((c) => (
-                  <li key={c.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                    <span className="text-slate-700">{c.name}</span>
-                    <span className="text-xs text-slate-500">{c.product_count}</span>
-                  </li>
-                ))}
+                {companies.map((c) =>
+                  editComp?.id === c.id ? (
+                    <li key={c.id} className="flex items-center gap-1 rounded-lg bg-amber-50 px-2 py-1">
+                      <input
+                        autoFocus
+                        className="input-sm flex-1"
+                        value={editComp.name}
+                        onChange={(e) => setEditComp({ id: c.id, name: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") renameCompRow(c.id, editComp.name);
+                          if (e.key === "Escape") setEditComp(null);
+                        }}
+                      />
+                      <button className="btn-primary !px-2 !py-1" onClick={() => renameCompRow(c.id, editComp.name)}><Save className="h-3.5 w-3.5" /></button>
+                      <button className="btn-ghost !px-1" onClick={() => setEditComp(null)}><X className="h-3.5 w-3.5" /></button>
+                    </li>
+                  ) : (
+                    <li key={c.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
+                      <span className="text-slate-700">{c.name}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">{c.product_count}</span>
+                        <button
+                          className="text-slate-400 hover:text-slate-700"
+                          title="Naam badlein"
+                          onClick={() => setEditComp({ id: c.id, name: c.name })}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          className="text-slate-400 hover:text-rose-600"
+                          title="Hata dein"
+                          onClick={() => removeCompRow(c.id, c.name, c.product_count ?? 0)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    </li>
+                  )
+                )}
                 {companies.length === 0 && (
                   <li className="flex items-center gap-2 text-xs text-slate-500">
                     <Package className="h-4 w-4" /> No companies yet.
