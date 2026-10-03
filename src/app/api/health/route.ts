@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbPath, scalar } from "@/lib/db";
+import pkg from "../../../../package.json"; // version hamesha package.json se (stale na ho)
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       app: "Area11",
-      version: "0.6.0",
+      version: pkg.version,
       database: "connected",
       databaseFile: dbPath(),
       products,
