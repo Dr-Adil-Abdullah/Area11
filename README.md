@@ -6,19 +6,21 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-14**
+## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-15**
 
-**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 44 routes · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
+**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 45 routes · `npm test` 11/11 · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
 | Stage | Work | State |
 |---|---|---|
 | Stone 0 / 0.5 | Repo, checkpoints, spec, 116 numbered rules, app foundation, editable Settings | ✅ |
 | **Phase 1** | Products + pack formula, suppliers, purchases (PINV, batch/expiry), counter billing (FEFO, Box/Strip/Tab, hold cart, round-off **with cost guard**), **cash tendered → change calculator** (quick cash buttons, receipt line), **stock write-off/adjust page** (expired/damaged/count correction, value at cost), **Excel import of old data** (template → dry-run preview → import, opening stock/batches, customer udhaar, supplier payable), thermal receipt, **login + roles (owner password / staff PIN) + URL-level page guard**, **offline/PWA shell** (installable app, offline page, internet-off banner) | ✅ **COMPLETE (stages 9–14)** |
-| **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup | ✅ |
+| **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup, **cash shifts (galla): opening float → live expected cash → close with counted cash + variance + history** | ✅ (provisional returns still open) |
 | **Discount guard (spec 7.3)** | Role percent limits (cashier 5 · manager 20 · owner unlimited) **and** no discount below purchase cost — both server-side and editable in Settings | ✅ |
 | Phase 2 rest, 3, 4, 5 | provisional returns, shifts, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, Supabase sync … | ⏳ see `HANDOFF.md` §4 |
 
-**Latest changes (stage-14):** P1 finished — **customer edit** (inline row), **category & company rename/delete** (deleting only unlinks products, never deletes them), and a **Free / sample-bonus tick** on purchase lines that puts the goods into stock without adding them to the bill or the supplier payable.
+**Latest changes (stage-15):** **cash shift (galla)** — open the drawer with an opening float, the screen keeps showing the expected cash as billing/expenses happen, and closing asks for the counted cash and stores the difference (short/excess) in a shift history list. The counter shows a small reminder while no shift is open. The auto-created empty shift at first start is gone.
+
+**Stage-14:** P1 finished — **customer edit** (inline row), **category & company rename/delete** (deleting only unlinks products, never deletes them), and a **Free / sample-bonus tick** on purchase lines that puts the goods into stock without adding them to the bill or the supplier payable.
 
 **Stage-13:** works offline — the app can be installed on the shop tablet/PC ("Add to Home Screen"), shows a small amber bar when the internet is down, `/api` is never cached so billing data is always live. Static UI files are cached so the counter does not go blank if the internet drops.
 
