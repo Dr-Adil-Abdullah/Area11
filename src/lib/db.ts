@@ -36,8 +36,40 @@ function open(): DatabaseSync {
 // Migration flag -- AHEM: yeh `db` se PEHLE hona zaroori hai (warna TDZ error)
 let migrated = false;
 
-export const db: DatabaseSync = g.__area11db ?? open();
-if (process.env.NODE_ENV !== "production") g.__area11db = db;
+// Asli handle yahan -- `db` neechay isi ka Proxy hai.
+// Proxy is liye: RESTORE ke waqt hum file badal kar handle dobara khol dete hain,
+// aur poore app ka purana import bhi nayi DB ki taraf ho jata hai (restart zaroori nahi).
+let current: DatabaseSync = g.__area11db ?? open();
+g.__area11db = current;
+
+export const db: DatabaseSync = new Proxy({} as DatabaseSync, {
+  get(_t, prop) {
+    const target = current as unknown as Record<string | symbol, unknown>;
+    const v = target[prop];
+    return typeof v === "function" ? (v as (...a: unknown[]) => unknown).bind(target) : v;
+  },
+  set(_t, prop, value) {
+    (current as unknown as Record<string | symbol, unknown>)[prop] = value;
+    return true;
+  },
+});
+
+/** Backup RESTORE ke baad nayi file ko dobara kholo (purani handle band kar ke) */
+export function reopenDb(): void {
+  try {
+    current.close();
+  } catch {
+    /* pehle hi band thi to koi baat nahi */
+  }
+  g.__area11db = undefined;
+  migrated = false;
+  current = open();
+  g.__area11db = current;
+}
+
+export function getDbPath(): string {
+  return DB_PATH;
+}
 
 // ---------------------------------------------------------------------------
 // Migration runner (schema versioning -- data kabhi zaya nahi hota)

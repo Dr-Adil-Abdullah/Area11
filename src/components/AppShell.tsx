@@ -3,26 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Receipt,
-  LayoutDashboard,
-  ShoppingCart,
-  PackagePlus,
-  Pill,
-  Boxes,
-  CalendarClock,
-  Users,
-  Truck,
-  PackageMinus,
-  FileSpreadsheet,
-  BarChart3,
-  Settings as SettingsIcon,
-  Menu,
-  X,
-  Store,
-  LogOut,
-  Lock,
-} from "lucide-react";
+import { Receipt, LayoutDashboard, ShoppingCart, PackagePlus, Pill, Boxes, CalendarClock, Users, Truck, PackageMinus, FileSpreadsheet, BarChart3, Settings as SettingsIcon, Menu, X, Store, LogOut, Lock, ShieldCheck } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -46,6 +27,7 @@ const NAV: NavItem[] = [
   { href: "/alerts", label: "Expiry & Stock alerts", icon: CalendarClock, ready: true },
   { href: "/cash", label: "Cash & Day-end", icon: Boxes, ready: true, roles: ["owner", "manager"] },
   { href: "/suppliers", label: "Suppliers", icon: Truck, ready: true, roles: ["owner", "manager"] },
+  { href: "/audit", label: "Black box / Backup", icon: ShieldCheck, ready: true, roles: ["owner", "manager"] },
   { href: "/reports", label: "Reports", icon: BarChart3, ready: false, phase: "Phase 5" },
   { href: "/settings", label: "Settings", icon: SettingsIcon, ready: true, roles: ["owner", "manager"] },
 ];
