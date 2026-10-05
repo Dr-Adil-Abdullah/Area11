@@ -65,6 +65,29 @@ export type SaleResult = {
   warnings: string[];
 };
 
+/**
+ * Bill ka total aur itemon ka jor HAMESHA barabar hone chahiye.
+ * Round-off / loyalty ki chhoot bill par lagti hai -- is liye woh farq
+ * yahan har line me us ke hissay ke mutabiq baant diya jata hai
+ * (aakhri line rounding ka bacha hua le leti hai).
+ */
+function reconcileItemTotals(
+  lines: { lineTotal: number }[],
+  target: number
+): void {
+  if (lines.length === 0) return;
+  const current = lines.reduce((n, l) => n + l.lineTotal, 0);
+  const delta = target - current;
+  if (delta === 0 || current <= 0) return;
+  let left = delta;
+  lines.forEach((l, idx) => {
+    const share =
+      idx === lines.length - 1 ? left : Math.round((l.lineTotal / current) * delta);
+    l.lineTotal = Math.max(0, l.lineTotal + share);
+    left -= share;
+  });
+}
+
 export function createSale(
   input: SaleInput,
   user?: { id?: number; name?: string; role?: string }
@@ -195,7 +218,10 @@ export function createSale(
         finalPaise -= redeemPaisa;
         warnings.push(`Loyalty points istemal hue: ${redeemedPoints} (-${(redeemPaisa / 100).toFixed(0)} Rs).`);
       }
+
     }
+
+    reconcileItemTotals(lines, finalPaise - taxPaisa);
 
     // ---------- Split payment (spec 8.5) ----------
     // Pehle splits theek karo: manfi/0 hatao, aur total ke barabar lao

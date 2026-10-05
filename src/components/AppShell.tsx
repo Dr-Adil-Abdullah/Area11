@@ -28,7 +28,7 @@ const NAV: NavItem[] = [
   { href: "/cash", label: "Cash & Day-end", icon: Boxes, ready: true, roles: ["owner", "manager"] },
   { href: "/suppliers", label: "Suppliers", icon: Truck, ready: true, roles: ["owner", "manager"] },
   { href: "/audit", label: "Black box / Backup", icon: ShieldCheck, ready: true, roles: ["owner", "manager"] },
-  { href: "/reports", label: "Reports", icon: BarChart3, ready: false, phase: "Phase 5" },
+  { href: "/reports", label: "Reports", icon: BarChart3, ready: true },
   { href: "/settings", label: "Settings", icon: SettingsIcon, ready: true, roles: ["owner", "manager"] },
 ];
 
