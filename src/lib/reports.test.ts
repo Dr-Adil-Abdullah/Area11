@@ -71,3 +71,39 @@ test("report ka margin sahi nikalta hai", () => {
   assert.equal(profit, 2000);
   assert.equal(margin, 22.2);
 });
+
+// --- Ginti (stock-take) ka hisab ------------------------------------------
+function diffOf(system: number, counted: number, cost: number) {
+  const diff = Math.round((counted - system) * 1000) / 1000;
+  if (diff === 0) return { diff: 0, valuePaisa: 0, reason: "same" as const };
+  return {
+    diff,
+    valuePaisa: Math.round(Math.abs(diff) * Math.max(0, cost)),
+    reason: (diff < 0 ? "count_short" : "count_extra") as "count_short" | "count_extra",
+  };
+}
+
+test("ginti me kami = nuqsan (count_short)", () => {
+  const r = diffOf(30, 25, 300);
+  assert.equal(r.diff, -5);
+  assert.equal(r.valuePaisa, 1500); // 5 x Rs 3
+  assert.equal(r.reason, "count_short");
+});
+
+test("ginti me ziyada = count_extra, qeemat cost par", () => {
+  const r = diffOf(-9, 5, 400); // kitab me manfi stock, haath me 5 mile
+  assert.equal(r.diff, 14);
+  assert.equal(r.valuePaisa, 5600);
+  assert.equal(r.reason, "count_extra");
+});
+
+test("ginti bilkul mil gayi to koi farq nahi", () => {
+  const r = diffOf(12, 12, 500);
+  assert.equal(r.reason, "same");
+  assert.equal(r.valuePaisa, 0);
+});
+
+test("manfi qeemat se kabhi nuqsan nahi banta", () => {
+  const r = diffOf(10, 4, -50);
+  assert.equal(r.valuePaisa, 0);
+});

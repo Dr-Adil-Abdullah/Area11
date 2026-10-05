@@ -10,7 +10,8 @@ function keysFor(kind: BillKind): [string, string] {
   if (kind === "sale") return ["bill.salePrefix", "bill.nextSaleNo"];
   if (kind === "purchase") return ["bill.purchasePrefix", "bill.nextPurchaseNo"];
   if (kind === "provisional") return ["bill.provisionalPrefix", "bill.nextProvisionalNo"];
-  return ["bill.supplierReturnPrefix", "bill.nextSupplierReturnNo"];
+  if (kind === "supplierReturn") return ["bill.supplierReturnPrefix", "bill.nextSupplierReturnNo"];
+  return ["bill.stockTakePrefix", "bill.nextStockTakeNo"];
 }
 
 function codeParts(kind: BillKind, s: AppSettings): [string, number] {
@@ -20,7 +21,7 @@ function codeParts(kind: BillKind, s: AppSettings): [string, number] {
   return [prefix, no];
 }
 
-export type BillKind = "sale" | "purchase" | "supplierReturn" | "provisional";
+export type BillKind = "sale" | "purchase" | "supplierReturn" | "provisional" | "stockTake";
 
 /** Agla bill number nikalo (settings se) */
 export async function peekNextCode(kind: BillKind): Promise<string> {

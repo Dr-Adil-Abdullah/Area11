@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Receipt, LayoutDashboard, ShoppingCart, PackagePlus, Pill, Boxes, CalendarClock, Users, Truck, PackageMinus, FileSpreadsheet, BarChart3, Settings as SettingsIcon, Menu, X, Store, LogOut, Lock, ShieldCheck } from "lucide-react";
+import { Receipt, LayoutDashboard, ShoppingCart, PackagePlus, Pill, Boxes, CalendarClock, Users, Truck, PackageMinus, FileSpreadsheet, BarChart3, Settings as SettingsIcon, Menu, X, Store, LogOut, Lock, ShieldCheck, ClipboardCheck } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -22,6 +22,7 @@ const NAV: NavItem[] = [
   { href: "/products", label: "Products", icon: Pill, ready: true, roles: ["owner", "manager"] },
   { href: "/sales", label: "Sales history / Returns", icon: Receipt, ready: true },
   { href: "/stock", label: "Stock adjust / Write-off", icon: PackageMinus, ready: true, roles: ["owner", "manager"] },
+  { href: "/stock-take", label: "Ginti (Stock-take)", icon: ClipboardCheck, ready: true, roles: ["owner", "manager"] },
   { href: "/import", label: "Import old data (Excel)", icon: FileSpreadsheet, ready: true, roles: ["owner", "manager"] },
   { href: "/customers", label: "Customers & Credit", icon: Users, ready: true },
   { href: "/alerts", label: "Expiry & Stock alerts", icon: CalendarClock, ready: true },
