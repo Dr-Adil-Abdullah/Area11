@@ -23,7 +23,7 @@ const NAV: NavItem[] = [
   { href: "/sales", label: "Sales history / Returns", icon: Receipt, ready: true },
   { href: "/stock", label: "Stock adjust / Write-off", icon: PackageMinus, ready: true, roles: ["owner", "manager"] },
   { href: "/stock-take", label: "Ginti (Stock-take)", icon: ClipboardCheck, ready: true, roles: ["owner", "manager"] },
-  { href: "/import", label: "Import old data (Excel)", icon: FileSpreadsheet, ready: true, roles: ["owner", "manager"] },
+  { href: "/import", label: "Data (Excel — import / update)", icon: FileSpreadsheet, ready: true, roles: ["owner", "manager"] },
   { href: "/customers", label: "Customers & Credit", icon: Users, ready: true },
   { href: "/alerts", label: "Expiry & Stock alerts", icon: CalendarClock, ready: true },
   { href: "/cash", label: "Cash & Day-end", icon: Boxes, ready: true, roles: ["owner", "manager"] },

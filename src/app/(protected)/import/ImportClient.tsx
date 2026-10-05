@@ -59,9 +59,9 @@ export default function ImportClient() {
     : [];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 p-4">
+    <section className="rounded-lg border border-gray-200 bg-white p-4">
       <div>
-        <h1 className="text-xl font-bold">Import old data (Excel)</h1>
+        <h2 className="text-lg font-semibold">Naya data Excel se laayein</h2>
         <p className="mt-1 text-sm text-gray-600">
           Purani dawaon ki list, gahak aur supplier — sab Excel se aa jayenge. Pehle <b>Preview</b> dikhega,
           aap ki ijazat ke baghair database me kuch nahi jayega.
@@ -237,14 +237,14 @@ export default function ImportClient() {
         </section>
       )}
 
-      <section className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600">
-        <h2 className="font-semibold text-gray-800">Yaad rakhein</h2>
+      <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600">
+        <h3 className="font-semibold text-gray-800">Yaad rakhein</h3>
         <ul className="mt-2 list-inside list-disc space-y-1">
           <li>Rate <b>rupey</b> me likhein (6.75) — app khud paisa bana legi.</li>
           <li>Jo naam pehle se app me hain woh <b>skip</b> ho jate hain — purana data dobara nahi banta.</li>
           <li>Import ki tafseel audit log me bhi likhi jati hai.</li>
         </ul>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
