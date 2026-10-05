@@ -107,8 +107,13 @@ export const SETTING_DEFAULTS = {
   "backup.keep": 7, // kitne backups rakhein (purane kaat diye jayenge)
 
   // ---- Cloud sync (Supabase) - spec Phase 5 ----
+  // Local SQLite hamesha ASAL rahega; Supabase sirf aina (mirror) hai.
   "sync.enabled": false,
   "sync.provider": "supabase",
+  "sync.url": "",       // masalan https://xxxx.supabase.co
+  "sync.key": "",       // anon / service key
+  "sync.table": "area11_sync",
+  "sync.shopId": "shop-1",
   "sync.status": "not_configured",
   "sync.lastSyncAt": "",
 

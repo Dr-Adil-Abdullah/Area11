@@ -262,6 +262,30 @@ export default async function SettingsPage({
           </div>
         </Section>
 
+        {/* ---------------- Cloud sync (Supabase) ---------------- */}
+        <Section
+          title="Cloud sync (Supabase)"
+          desc="Dukan ka data Supabase par bhej kar ghar se dekh sakte hain. Local database hamesha asal rahega — sync sirf aina (mirror) hai."
+        >
+          <Check name="sync.enabled" label="Sync on" defaultChecked={s["sync.enabled"]} />
+          <Field label="Shop id (ek dukan = ek id)">
+            <input name="sync.shopId" defaultValue={s["sync.shopId"]} className="input" />
+          </Field>
+          <Field label="Project URL">
+            <input name="sync.url" defaultValue={s["sync.url"]} placeholder="https://xxxx.supabase.co" className="input" />
+          </Field>
+          <Field label="API key (anon/service)">
+            <input type="password" name="sync.key" defaultValue={s["sync.key"]} className="input" />
+          </Field>
+          <Field label="Table name">
+            <input name="sync.table" defaultValue={s["sync.table"]} className="input" />
+          </Field>
+          <p className="text-xs text-slate-500 md:col-span-2">
+            Pehle Supabase me table banayein — SQL aur tafseel <code>docs/SUPABASE.md</code> me hai.
+            Haal dekhne aur bhejne/lane ke liye <a className="underline" href="/sync">/sync</a> safha dekhein.
+          </p>
+        </Section>
+
         {/* ---------------- Backup ---------------- */}
         <Section
           title="Backup (mehfooz copy)"

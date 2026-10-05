@@ -86,6 +86,13 @@ async function saveAll(fd: FormData) {
     ),
     "payment.default": str(fd, "payment.default", "cash"),
 
+    // Cloud sync (Supabase)
+    "sync.enabled": bool(fd, "sync.enabled"),
+    "sync.url": str(fd, "sync.url"),
+    "sync.key": str(fd, "sync.key"),
+    "sync.table": str(fd, "sync.table", "area11_sync"),
+    "sync.shopId": str(fd, "sync.shopId", "shop-1"),
+
     // Backup (khud-b-khud, photos ke sath)
     "backup.autoEnabled": bool(fd, "backup.autoEnabled"),
     "backup.everyHours": num(fd, "backup.everyHours", 24),
