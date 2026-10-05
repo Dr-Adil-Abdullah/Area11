@@ -341,9 +341,20 @@ export function createSale(
         [input.customerId]
       );
       if (cust && cust.credit_limit_paisa > 0 && cust.balance_paisa + due > cust.credit_limit_paisa) {
-        warnings.push(
-          `${cust.name}: credit limit (${(cust.credit_limit_paisa / 100).toFixed(0)} Rs) cross ho raha hai.`
-        );
+        const msg =
+          `${cust.name}: credit limit (${(cust.credit_limit_paisa / 100).toFixed(0)} Rs) cross ho raha hai. ` +
+          `Purana udhaar ${(cust.balance_paisa / 100).toFixed(0)} + is bill ke ${(due / 100).toFixed(0)} = ` +
+          `${((cust.balance_paisa + due) / 100).toFixed(0)} Rs.`;
+
+        // Settings ON ho to ROK do (owner hamesha de sakta hai,
+        // manager sirf tab jab managerCanOverride ON ho).
+        if (settingsSnapshot.credit.blockOverLimit) {
+          const canOverride = user?.role === "owner" || (user?.role === "manager" && settingsSnapshot.credit.managerCanOverride);
+          if (!canOverride) throw new Error(msg + " Limit ke upar udhaar band hai (Settings).");
+          warnings.push(msg + " (aap ijazat ke sath aage barh rahe hain)");
+        } else {
+          warnings.push(msg);
+        }
       }
       run("UPDATE customers SET balance_paisa = balance_paisa + ? WHERE id = ?", [
         due,
@@ -443,6 +454,7 @@ type SyncSettings = {
   roundTo: number;
   discount: { enabled: boolean; cashier: number; manager: number; blockBelowCost: boolean };
   loyalty: { enabled: boolean; rupeesPerPoint: number; vipThreshold: number };
+  credit: { blockOverLimit: boolean; managerCanOverride: boolean };
 };
 
 function getSyncSettings(): SyncSettings {
@@ -451,7 +463,8 @@ function getSyncSettings(): SyncSettings {
       WHERE key IN ('tax.enabled','tax.percent','bill.roundMode','bill.roundTo',
                     'discount.enabled','discount.maxPercentCashier','discount.maxPercentManager',
                     'discount.blockBelowCost',
-                    'loyalty.enabled','loyalty.rupeesPerPoint','loyalty.vipThreshold')`
+                    'loyalty.enabled','loyalty.rupeesPerPoint','loyalty.vipThreshold',
+                    'credit.blockOverLimit','credit.managerCanOverride')`
   );
   const map = new Map(rows.map((r) => [r.key, r.value]));
   const j = <T,>(key: string, fallback: T): T => {
@@ -467,6 +480,10 @@ function getSyncSettings(): SyncSettings {
     tax: {
       enabled: j("tax.enabled", false),
       percent: Number(j("tax.percent", 0)) || 0,
+    },
+    credit: {
+      blockOverLimit: j("credit.blockOverLimit", false),
+      managerCanOverride: j("credit.managerCanOverride", true),
     },
     roundMode: j("bill.roundMode", "down10"),
     roundTo: Number(j("bill.roundTo", 10)) || 10,

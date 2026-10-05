@@ -262,6 +262,27 @@ export default async function SettingsPage({
           </div>
         </Section>
 
+        {/* ---------------- Udhaar (credit) ---------------- */}
+        <Section
+          title="Udhaar (Credit) ki hadd"
+          desc="Har customer ki apni limit hoti hai (customer page par set karein). Yahan tay karein ke hadd poori hone par kya ho."
+        >
+          <Check
+            name="credit.blockOverLimit"
+            label="Limit poori ho to udhaar BAND kar do (warna sirf warning)"
+            defaultChecked={s["credit.blockOverLimit"]}
+          />
+          <Check
+            name="credit.managerCanOverride"
+            label="Manager limit ke upar bhi udhaar de sakta hai (owner ko hamesha ijazat hai)"
+            defaultChecked={s["credit.managerCanOverride"]}
+          />
+          <p className="text-xs text-slate-500 md:col-span-2">
+            Band hone par bill banta hi nahi — counter par saaf paishani aa jati hai. Sirf warning ke sath
+            bill ban jata hai aur baqi ka cash lena parta hai.
+          </p>
+        </Section>
+
         {/* ---------------- Printer ---------------- */}
         <Section
           title="Printer &amp; Receipt"

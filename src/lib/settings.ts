@@ -86,6 +86,13 @@ export const SETTING_DEFAULTS = {
   "payment.methods": ["cash", "credit"] as string[],
   "payment.default": "cash",
 
+  // ---- Udhaar (khata) ki hadd ----
+  // blockOverLimit OFF  = sirf warning (pehle jaisa)
+  // blockOverLimit ON   = hadd cross karne wali udhaar bikri RUK jaye
+  // managerCanOverride = manager hadd ke upar bhi udhaar de sakta hai (owner to hamesha)
+  "credit.blockOverLimit": false,
+  "credit.managerCanOverride": true,
+
   // ---- Security (user: PIN for staff, password for owner) ----
   "security.pinLength": 4,
   "security.autoLockMinutes": 15,

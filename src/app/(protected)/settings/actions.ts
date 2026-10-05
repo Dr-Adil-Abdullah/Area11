@@ -86,6 +86,10 @@ async function saveAll(fd: FormData) {
     ),
     "payment.default": str(fd, "payment.default", "cash"),
 
+    // Udhaar (credit) ki hadd
+    "credit.blockOverLimit": bool(fd, "credit.blockOverLimit"),
+    "credit.managerCanOverride": bool(fd, "credit.managerCanOverride"),
+
     // Security
     "security.pinLength": num(fd, "security.pinLength", 4),
     "security.autoLockMinutes": num(fd, "security.autoLockMinutes", 15),
