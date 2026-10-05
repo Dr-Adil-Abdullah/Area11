@@ -2,6 +2,8 @@ import { expiryAlerts, stockAlerts } from "@/lib/alerts";
 import { getSettings } from "@/lib/settings";
 import type { ExpiryLevels } from "@/lib/pos";
 import { formatPKR } from "@/lib/money";
+import { reorderList } from "@/lib/whatsapp";
+import WhatsAppCard from "./WhatsAppCard";
 export const dynamic = "force-dynamic";
 
 const badge: Record<string, string> = { expired: "badge-red", very_near: "badge-red", near: "badge-amber", ok: "badge-green" };
@@ -13,6 +15,7 @@ export default async function AlertsPage() {
   const exp = expiryAlerts(levels);
   const low = stockAlerts();
   const loss = exp.filter((e) => e.status === "expired").reduce((a, e) => a + e.lossPaisa, 0);
+  const reorder = reorderList();
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold text-slate-800">Expiry &amp; stock alerts</h1>
@@ -30,6 +33,8 @@ export default async function AlertsPage() {
             {low.length === 0 && <tr><td colSpan={3} className="py-8 text-center text-sm text-slate-500">All products are above their reorder level. (Set “Reorder level” on a product to track it.)</td></tr>}
           </tbody></table></div></div>
       </div>
+
+      <WhatsAppCard initial={JSON.parse(JSON.stringify(reorder))} />
     </div>
   );
 }
