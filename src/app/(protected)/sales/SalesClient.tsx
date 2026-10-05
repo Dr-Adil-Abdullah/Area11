@@ -11,7 +11,14 @@ type Item = { id: number; name: string; qty_base: number; returned_qty: number }
 
 type Prov = { pending: number; returns: Parameters<typeof ProvisionalCard>[0]["initial"]["returns"] };
 
-export default function SalesClient({ sales, from, to, q, provisional }: { sales: Sale[]; from: string; to: string; q: string; provisional: Prov }) {
+export default function SalesClient({ sales, from, to, q, filters, provisional }: {
+  sales: Sale[];
+  from: string;
+  to: string;
+  q: string;
+  filters: { method: string; status: string; margin: string; min: string; sort: string; all: boolean };
+  provisional: Prov;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState<number | null>(null);
   const [items, setItems] = useState<Item[]>([]);
@@ -66,7 +73,35 @@ export default function SalesClient({ sales, from, to, q, provisional }: { sales
       <form className="card card-body flex flex-wrap items-end gap-3" method="get">
         <div><label className="label">From</label><input type="date" name="from" defaultValue={from} className="input" /></div>
         <div><label className="label">To</label><input type="date" name="to" defaultValue={to} className="input" /></div>
-        <div className="flex-1 min-w-48"><label className="label">Bill no / customer / phone</label><input name="q" defaultValue={q} className="input" placeholder="INV-0001" /></div>
+        <div className="flex-1 min-w-48"><label className="label">Bill no / customer / phone / dawa</label><input name="q" defaultValue={q} className="input" placeholder="INV-0001 ya Panadol" /></div>
+        <div>
+          <label className="label">Payment</label>
+          <select name="method" defaultValue={filters.method} className="select">
+            <option value="all">Sab</option><option value="cash">Cash</option><option value="credit">Udhaar</option>
+          </select>
+        </div>
+        <div>
+          <label className="label">Halat</label>
+          <select name="status" defaultValue={filters.status} className="select">
+            <option value="all">Sab</option><option value="paid">Paid</option><option value="due">Baqaya</option>
+            <option value="void">Cancelled</option><option value="returned">Wapas hua</option>
+          </select>
+        </div>
+        <div>
+          <label className="label">Munafa</label>
+          <select name="margin" defaultValue={filters.margin} className="select">
+            <option value="all">Sab</option><option value="profit">Munafa wale</option><option value="loss">Nuqsan wale</option>
+          </select>
+        </div>
+        <div><label className="label">Kam se kam Rs</label><input name="min" defaultValue={filters.min} className="input w-28" placeholder="0" /></div>
+        <div>
+          <label className="label">Tarteeb</label>
+          <select name="sort" defaultValue={filters.sort} className="select">
+            <option value="recent">Naye pehle</option><option value="oldest">Purane pehle</option>
+            <option value="biggest">Bare bill pehle</option><option value="profit">Zyada munafa pehle</option>
+          </select>
+        </div>
+        <label className="flex items-center gap-2 pb-2 text-sm"><input type="checkbox" name="all" value="1" defaultChecked={filters.all} /> Poori tarikh</label>
         <button className="btn-primary"><Search className="h-4 w-4" /> Show</button>
       </form>
       <div className="grid grid-cols-3 gap-3">

@@ -6,6 +6,7 @@ import { ensureBootstrap } from "@/lib/bootstrap";
 import { currentUser } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { setCustomValues, validateCustomValues } from "@/lib/custom-fields";
+import { savePhoto } from "@/lib/photos";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,16 @@ export async function GET(req: Request) {
   const q = url.searchParams.get("q") ?? "";
   const phone = url.searchParams.get("phone") ?? "";
   if (phone) return NextResponse.json({ ok: true, customers: findCustomers(phone) });
-  return NextResponse.json({ ok: true, customers: listCustomers(q) });
+  const cat = url.searchParams.get("category") ?? "all";
+  const bal = url.searchParams.get("balance") ?? "all";
+  const sort = url.searchParams.get("sort") ?? "name";
+  const customers = listCustomers({
+    search: q,
+    category: (["all", "normal", "vip", "doctor"] as const).includes(cat as never) ? (cat as never) : "all",
+    balance: (["all", "due", "clear"] as const).includes(bal as never) ? (bal as never) : "all",
+    sort: (["name", "due", "recent", "spent", "newest"] as const).includes(sort as never) ? (sort as never) : "name",
+  });
+  return NextResponse.json({ ok: true, customers });
 }
 
 export async function POST(req: Request) {
@@ -41,9 +51,8 @@ export async function POST(req: Request) {
       creditLimitPaisa: body.creditLimitPaisa ?? 0,
     });
     if (typeof body.photo === "string" && body.photo) {
-      // data-URL ya URL -- 400KB se bara ho to mana kar do
-      if (body.photo.length > 400_000) throw new Error("Photo bohat bari hai — chhoti photo chunein.");
-      run("UPDATE customers SET photo = ? WHERE id = ?", [body.photo, id]);
+      const file = savePhoto({ entity: "customer", id, dataUrl: body.photo });
+      run("UPDATE customers SET photo = ? WHERE id = ?", [file, id]);
     }
     if (body.custom) setCustomValues("customer", id, body.custom, user ?? undefined);
     void audit({
@@ -73,8 +82,8 @@ export async function PATCH(req: Request) {
     if (b.custom) validateCustomValues("customer", b.custom);
     updateCustomer(b.id, b);
     if (typeof b.photo === "string") {
-      if (b.photo.length > 400_000) throw new Error("Photo bohat bari hai — chhoti photo chunein.");
-      run("UPDATE customers SET photo = ? WHERE id = ?", [b.photo || null, b.id]);
+      const file = b.photo ? savePhoto({ entity: "customer", id: b.id, dataUrl: b.photo }) : null;
+      run("UPDATE customers SET photo = ? WHERE id = ?", [file, b.id]);
     }
     if (b.custom) setCustomValues("customer", b.id, b.custom, user ?? undefined);
     void audit({ action: "update", userId: user?.id, userName: user?.name, entity: "Customer", entityId: b.id, details: { name: b.name } });

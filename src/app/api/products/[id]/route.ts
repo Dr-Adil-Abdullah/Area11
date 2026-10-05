@@ -1,5 +1,6 @@
 import { run } from "@/lib/db";
 import { setCustomValues, validateCustomValues } from "@/lib/custom-fields";
+import { savePhoto } from "@/lib/photos";
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
 import { getProduct, softDeleteProduct, updateProduct, type ProductInput } from "@/lib/catalog";
@@ -27,8 +28,8 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     if (body.custom) validateCustomValues("product", body.custom); // pehle janch
     updateProduct(Number(id), body, user ?? undefined);
     if (typeof body.photo === "string") {
-      if (body.photo.length > 400_000) throw new Error("Photo bohat bari hai — chhoti photo chunein.");
-      run("UPDATE products SET photo = ? WHERE id = ?", [body.photo || null, Number(id)]);
+      const file = body.photo ? savePhoto({ entity: "product", id: Number(id), dataUrl: body.photo }) : null;
+      run("UPDATE products SET photo = ? WHERE id = ?", [file, Number(id)]);
     }
     if (body.custom) setCustomValues("product", Number(id), body.custom, user ?? undefined);
     return NextResponse.json({ ok: true });

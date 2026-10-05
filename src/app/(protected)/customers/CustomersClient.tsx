@@ -6,7 +6,11 @@ import { HandCoins, Pencil, Plus, Save, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
 import type { CustomField } from "@/lib/custom-fields-shared";
 
-type C = { id: number; name: string; phone: string | null; category: string; balance_paisa: number; credit_limit_paisa: number };
+type C = {
+  id: number; name: string; phone: string | null; category: string;
+  balance_paisa: number; credit_limit_paisa: number;
+  last_bill_at?: string | null; bills?: number;
+};
 
 export default function CustomersClient({
   initial,
@@ -24,7 +28,27 @@ export default function CustomersClient({
   const [newCustom, setNewCustom] = useState<Record<string, string>>({});
   const [editCustom, setEditCustom] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState("");
+  const [search, setSearch] = useState("");
+  const [fCat, setFCat] = useState("all");
+  const [fBal, setFBal] = useState("all");
+  const [fSort, setFSort] = useState("name");
   const owed = rows.reduce((a, c) => a + Math.max(0, c.balance_paisa), 0);
+
+  /** Server se filtered list (search + type + baqaya + tarteeb) */
+  async function loadFiltered() {
+    const p = new URLSearchParams();
+    if (search.trim()) p.set("q", search.trim());
+    if (fCat !== "all") p.set("category", fCat);
+    if (fBal !== "all") p.set("balance", fBal);
+    if (fSort !== "name") p.set("sort", fSort);
+    const r = await (await fetch(`/api/customers?${p}`, { cache: "no-store" })).json();
+    if (r.ok) setRows(r.customers);
+  }
+  useEffect(() => {
+    const t = setTimeout(() => { void loadFiltered(); }, 250);
+    return () => clearTimeout(t);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [search, fCat, fBal, fSort]);
 
   useEffect(() => {
     void (async () => {
@@ -33,7 +57,7 @@ export default function CustomersClient({
     })();
   }, []);
 
-  async function reload() { const r = await (await fetch("/api/customers", { cache: "no-store" })).json(); if (r.ok) setRows(r.customers); router.refresh(); }
+  async function reload() { await loadFiltered(); router.refresh(); }
   async function call(url: string, body: unknown) {
     setMsg("");
     const r = await (await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })).json();
@@ -113,6 +137,31 @@ export default function CustomersClient({
         {msg && <div className="md:col-span-5 text-sm text-rose-600">{msg}</div>}
       </div>
       <div className="card overflow-auto">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 p-2 text-xs">
+          <input className="input-sm w-56" placeholder="Naam, phone ya note dhoondhein" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <select className="select !py-1 !text-xs" value={fCat} onChange={(e) => setFCat(e.target.value)}>
+            <option value="all">Sab qism</option>
+            <option value="normal">Normal</option>
+            <option value="vip">VIP</option>
+            <option value="doctor">Doctor</option>
+          </select>
+          <select className="select !py-1 !text-xs" value={fBal} onChange={(e) => setFBal(e.target.value)}>
+            <option value="all">Sab hisaab</option>
+            <option value="due">Sirf baqaya wale</option>
+            <option value="clear">Baqaya nahi</option>
+          </select>
+          <select className="select !py-1 !text-xs" value={fSort} onChange={(e) => setFSort(e.target.value)}>
+            <option value="name">Naam</option>
+            <option value="due">Zyada baqaya pehle</option>
+            <option value="recent">Jo abhi aaye</option>
+            <option value="spent">Sab se zyada kharch karne wale</option>
+            <option value="newest">Naye pehle</option>
+          </select>
+          <span className="text-slate-500">{rows.length} gahak</span>
+          {(search || fCat !== "all" || fBal !== "all") && (
+            <button className="rounded bg-slate-100 px-2 py-1 hover:bg-slate-200" onClick={() => { setSearch(""); setFCat("all"); setFBal("all"); }}>✕ Saaf karein</button>
+          )}
+        </div>
         <table className="tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Type</th><th className="text-right">Limit</th><th className="text-right">Owes</th><th></th></tr></thead>
           <tbody>
             {rows.map((c) => (

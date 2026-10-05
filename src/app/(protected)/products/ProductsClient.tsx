@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Pencil, Search, Trash2, X, Save, Pill, Package } from "lucide-react";
@@ -16,6 +16,8 @@ type Product = {
   company_id: number | null;
   category_id: number | null;
   rack_no: string | null;
+  room?: string | null;
+  photo?: string | null;
   pack_size_label: string | null;
   base_unit: string;
   box_strips: number;
@@ -44,6 +46,7 @@ const emptyForm = {
   companyId: "",
   categoryId: "",
   rackNo: "",
+  room: "",
   packSizeLabel: "",
   baseUnit: "tablet",
   boxStrips: "",
@@ -85,21 +88,44 @@ export default function ProductsClient({
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [custom, setCustom] = useState<Record<string, string>>({});
   const [newCompany, setNewCompany] = useState("");
+  const [rooms, setRooms] = useState<string[]>([]);
+  const [fCat, setFCat] = useState("");
+  const [fComp, setFComp] = useState("");
+  const [fRoom, setFRoom] = useState("");
+  const [fStock, setFStock] = useState("all");
+  const [fSort, setFSort] = useState("name");
+  const [groupBy, setGroupBy] = useState<"none" | "category" | "company" | "room">("none");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return products;
     return products.filter((p) =>
-      [p.name, p.generic, p.brand, p.barcode, p.rack_no, p.category_name]
+      [p.name, p.generic, p.brand, p.barcode, p.rack_no, p.room, p.category_name, p.company_name]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     );
   }, [products, search]);
 
-  async function reload() {
-    const res = await fetch("/api/products?limit=300", { cache: "no-store" });
+  /** Filters ke mutabiq server se list mangwao (server hi sort karta hai) */
+  async function loadFiltered() {
+    const p = new URLSearchParams({ limit: "300" });
+    if (search.trim()) p.set("q", search.trim());
+    if (fCat) p.set("categoryId", fCat);
+    if (fComp) p.set("companyId", fComp);
+    if (fRoom) p.set("room", fRoom);
+    if (fStock !== "all") p.set("stock", fStock);
+    if (fSort !== "name") p.set("sort", fSort);
+    const res = await fetch(`/api/products?${p}`, { cache: "no-store" });
     const data = await res.json();
-    if (data.ok) setProducts(data.products);
+    if (data.ok) {
+      setProducts(data.products);
+      if (data.rooms) setRooms(data.rooms);
+    }
+  }
+
+  async function reload() {
+    await loadFiltered();
     router.refresh();
   }
 
@@ -130,6 +156,7 @@ export default function ProductsClient({
       companyId: p.company_id ? String(p.company_id) : "",
       categoryId: p.category_id ? String(p.category_id) : "",
       rackNo: p.rack_no ?? "",
+      room: p.room ?? "",
       packSizeLabel: p.pack_size_label ?? "",
       baseUnit: p.base_unit,
       boxStrips: p.box_strips ? String(p.box_strips) : "",
@@ -163,6 +190,7 @@ export default function ProductsClient({
         companyId: form.companyId ? Number(form.companyId) : null,
         categoryId: form.categoryId ? Number(form.categoryId) : null,
         rackNo: form.rackNo || null,
+        room: form.room || null,
         packSizeLabel: form.packSizeLabel || null,
         baseUnit: form.baseUnit,
         boxStrips: Number(form.boxStrips) || 0,
@@ -209,6 +237,31 @@ export default function ProductsClient({
       if (r.ok) setCustomFields(r.fields);
     })();
   }, []);
+
+  // Filter/sort badalte hi list dobara lao (thodi der ruk kar -- har harf par request na jaye)
+  useEffect(() => {
+    const t = setTimeout(() => { void loadFiltered(); }, 250);
+    return () => clearTimeout(t);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [search, fCat, fComp, fRoom, fStock, fSort]);
+
+  /** Groups: category / company / room ke hisaab se band-o-basta */
+  const groups = useMemo(() => {
+    if (groupBy === "none") return null;
+    const key = (p: Product) =>
+      groupBy === "category" ? (p.category_name ?? "Bina category")
+      : groupBy === "company" ? (p.company_name ?? "Bina company")
+      : (p.room?.trim() || "Bina kamra");
+    const map = new Map<string, Product[]>();
+    for (const p of filtered) {
+      const k = key(p);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(p);
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [filtered, groupBy]);
+
 
   async function refreshLists() {
     const [rc, ro] = await Promise.all([
@@ -425,6 +478,13 @@ export default function ProductsClient({
               <label className="label">Rack / shelf no</label>
               <input className="input" placeholder="Rack B-12" value={form.rackNo} onChange={(e) => set("rackNo", e.target.value)} />
             </div>
+            <div>
+              <label className="label">Kamra / Almari (room)</label>
+              <input className="input" placeholder="jaise: Hall, Store, Fridge" value={form.room} onChange={(e) => set("room", e.target.value)} list="room-list" />
+              <datalist id="room-list">
+                {rooms.map((r) => <option key={r} value={r} />)}
+              </datalist>
+            </div>
 
             <div className="md:col-span-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
               <div className="mb-2 text-xs font-semibold text-slate-600">Packing formula (base unit = smallest unit)</div>
@@ -492,16 +552,62 @@ export default function ProductsClient({
       <div className="grid gap-4 lg:grid-cols-4">
         {/* List */}
         <div className="card lg:col-span-3">
-          <div className="card-head">
-            <div className="card-title">Product list</div>
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                className="input-sm w-64 pl-8"
-                placeholder="Search name, salt, barcode, rack…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          <div className="card-head flex-col !items-stretch gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="card-title">Product list ({filtered.length})</div>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  className="input-sm w-64 pl-8"
+                  placeholder="Search name, salt, barcode, rack, room…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <select className="select !py-1 !text-xs" value={fCat} onChange={(e) => setFCat(e.target.value)}>
+                <option value="">Sab categories</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <select className="select !py-1 !text-xs" value={fComp} onChange={(e) => setFComp(e.target.value)}>
+                <option value="">Sab companies</option>
+                {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <select className="select !py-1 !text-xs" value={fRoom} onChange={(e) => setFRoom(e.target.value)}>
+                <option value="">Sab kamre</option>
+                {rooms.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <select className="select !py-1 !text-xs" value={fStock} onChange={(e) => setFStock(e.target.value)}>
+                <option value="all">Sab stock</option>
+                <option value="low">Kam stock (reorder se neeche)</option>
+                <option value="out">Bilkul khatam</option>
+                <option value="expiring">Jaldi expire</option>
+              </select>
+              <select className="select !py-1 !text-xs" value={fSort} onChange={(e) => setFSort(e.target.value)}>
+                <option value="name">Naam ke hisaab se</option>
+                <option value="stock">Kam stock pehle</option>
+                <option value="expiry">Expiry jaldi wale pehle</option>
+                <option value="margin">Zyada munafa pehle</option>
+                <option value="sold">Sab se zyada bikne wali</option>
+                <option value="newest">Nayi pehle</option>
+              </select>
+              <span className="mx-1 h-4 w-px bg-slate-200" />
+              <select className="select !py-1 !text-xs" value={groupBy} onChange={(e) => setGroupBy(e.target.value as never)}>
+                <option value="none">Koi group nahi</option>
+                <option value="category">Group: category</option>
+                <option value="company">Group: company</option>
+                <option value="room">Group: kamra</option>
+              </select>
+              {(fCat || fComp || fRoom || fStock !== "all" || search) && (
+                <button
+                  className="rounded bg-slate-100 px-2 py-1 hover:bg-slate-200"
+                  onClick={() => { setFCat(""); setFComp(""); setFRoom(""); setFStock("all"); setSearch(""); }}
+                >
+                  ✕ Saaf karein
+                </button>
+              )}
             </div>
           </div>
           <div className="max-h-[70vh] overflow-auto">
@@ -518,7 +624,17 @@ export default function ProductsClient({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => (
+                {(groups ?? [["", filtered] as [string, Product[]]]).map(([gname, list]) => (
+                <Fragment key={gname || "__all"}>
+                {groups && (
+                  <tr className="cursor-pointer bg-slate-50" onClick={() => setCollapsed((c) => ({ ...c, [gname]: !c[gname] }))}>
+                    <td colSpan={7} className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                      <span className="mr-1">{collapsed[gname] ? "▸" : "▾"}</span>
+                      {gname} <span className="font-normal normal-case text-slate-400">({list.length})</span>
+                    </td>
+                  </tr>
+                )}
+                {(collapsed[gname] ? [] : list).map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50">
                     <td>
                       <div className="flex items-center gap-2">
@@ -526,7 +642,7 @@ export default function ProductsClient({
                         <div>
                           <Link href={`/products/${p.id}`} className="font-medium text-slate-800 hover:underline">{p.name}</Link>
                           <div className="text-[11px] text-slate-500">
-                            {[p.generic, p.brand, p.category_name, p.rack_no].filter(Boolean).join(" • ") || "—"}
+                            {[p.generic, p.brand, p.category_name, p.rack_no, p.room ? `kamra: ${p.room}` : null].filter(Boolean).join(" • ") || "—"}
                           </div>
                         </div>
                       </div>
@@ -560,10 +676,14 @@ export default function ProductsClient({
                     </td>
                   </tr>
                 ))}
+                </Fragment>
+                ))}
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
-                      No products yet. Click “Add product” to create your first one.
+                      {search || fCat || fComp || fRoom || fStock !== "all"
+                        ? "Is filter me koi dawa nahi mili."
+                        : "No products yet. Click “Add product” to create your first one."}
                     </td>
                   </tr>
                 )}

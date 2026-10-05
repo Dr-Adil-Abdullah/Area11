@@ -37,6 +37,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
     vip: p.vip_paisa ? String(p.vip_paisa / 100) : "",
     doctor: p.doctor_paisa ? String(p.doctor_paisa / 100) : "",
     rack: p.rack_no ?? "",
+    room: p.room ?? "",
     reorder: p.reorder_level ? String(p.reorder_level) : "",
     barcode: p.barcode ?? "",
   });
@@ -53,6 +54,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
         body: JSON.stringify({
           name: p.name, generic: p.generic, brand: p.brand, barcode: f.barcode || null,
           companyId: p.company_id, categoryId: p.category_id, rackNo: f.rack || null,
+          room: f.room || null,
           baseUnit: p.base_unit, boxStrips: p.box_strips, stripTablets: p.strip_tablets,
           costPaisa: toPaisa(f.cost || 0), retailPaisa: toPaisa(f.retail || 0),
           vipPaisa: toPaisa(f.vip || 0), doctorPaisa: toPaisa(f.doctor || 0),
@@ -75,7 +77,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: p.name, generic: p.generic, brand: p.brand, barcode: p.barcode,
-          companyId: p.company_id, categoryId: p.category_id, rackNo: p.rack_no,
+          companyId: p.company_id, categoryId: p.category_id, rackNo: p.rack_no, room: p.room,
           baseUnit: p.base_unit, boxStrips: p.box_strips, stripTablets: p.strip_tablets,
           costPaisa: p.cost_paisa, retailPaisa: p.retail_paisa, vipPaisa: p.vip_paisa,
           doctorPaisa: p.doctor_paisa, reorderLevel: p.reorder_level, trackExpiry: !!p.track_expiry,
@@ -115,7 +117,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
             <div className="text-sm">
               <div className="text-slate-500">{p.generic ?? "—"}</div>
               <div>{p.brand ?? ""} {p.company_name ? `• ${p.company_name}` : ""}</div>
-              <div className="text-xs text-slate-500">{p.category_name ?? "no category"} • {p.rack_no ? `rack ${p.rack_no}` : "no rack"}</div>
+              <div className="text-xs text-slate-500">{p.category_name ?? "no category"} • {p.rack_no ? `rack ${p.rack_no}` : "no rack"} • {p.room ? `kamra ${p.room}` : "no room"}</div>
               <div className="mt-1 rounded bg-slate-100 px-2 py-0.5 text-xs">
                 1 Box = {p.box_strips || 1} Strip = {(p.box_strips || 1) * (p.strip_tablets || 1)} {p.base_unit}
               </div>
@@ -124,7 +126,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
 
           {edit ? (
             <div className="grid grid-cols-2 gap-2">
-              {([["cost", "Cost Rs"], ["retail", "Retail Rs"], ["vip", "VIP Rs"], ["doctor", "Doctor Rs"], ["rack", "Rack"], ["reorder", "Reorder level"], ["barcode", "Barcode"]] as const).map(([k, label]) => (
+              {([["cost", "Cost Rs"], ["retail", "Retail Rs"], ["vip", "VIP Rs"], ["doctor", "Doctor Rs"], ["rack", "Rack"], ["room", "Kamra / Almari"], ["reorder", "Reorder level"], ["barcode", "Barcode"]] as const).map(([k, label]) => (
                 <div key={k} className={k === "barcode" ? "col-span-2" : ""}>
                   <label className="label">{label}</label>
                   <input className="input" value={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.value })} />

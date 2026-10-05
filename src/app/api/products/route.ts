@@ -1,7 +1,7 @@
 import { setCustomValues, validateCustomValues } from "@/lib/custom-fields";
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
-import { createProduct, listProducts, type ProductInput } from "@/lib/catalog";
+import { createProduct, listProducts, listRooms, type ProductFilter, type ProductInput } from "@/lib/catalog";
 import { currentUser } from "@/lib/session";
 import { ensureBootstrap } from "@/lib/bootstrap";
 
@@ -16,15 +16,26 @@ export async function GET(req: Request) {
   const limit = Number(url.searchParams.get("limit") ?? 50);
   const offset = Number(url.searchParams.get("offset") ?? 0);
   const categoryId = url.searchParams.get("categoryId");
+  const companyId = url.searchParams.get("companyId");
+  const room = url.searchParams.get("room");
+  const stockRaw = url.searchParams.get("stock") ?? "all";
+  const sortRaw = url.searchParams.get("sort") ?? "name";
+  const stock = (["all", "low", "out", "expiring"] as const).includes(stockRaw as never)
+    ? (stockRaw as ProductFilter["stock"])
+    : "all";
+  const sort = (["name", "stock", "expiry", "margin", "sold", "newest"] as const).includes(sortRaw as never)
+    ? (sortRaw as ProductFilter["sort"])
+    : "name";
 
   try {
     const { rows, total } = listProducts({
-      search,
-      limit,
-      offset,
+      search, limit, offset,
       categoryId: categoryId ? Number(categoryId) : null,
+      companyId: companyId ? Number(companyId) : null,
+      room: room || null,
+      stock, sort,
     });
-    return NextResponse.json({ ok: true, products: rows, total });
+    return NextResponse.json({ ok: true, products: rows, total, rooms: listRooms() });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: e instanceof Error ? e.message : "failed" },

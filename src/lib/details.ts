@@ -8,6 +8,7 @@
 
 import { get, query } from "./db";
 import { getCustomValues } from "./custom-fields";
+import { photoSrc } from "./photos";
 
 export type CustomerBill = {
   id: number;
@@ -28,6 +29,7 @@ export function getCustomerDetail(id: number) {
     active: number; created_at: string; photo: string | null;
   }>("SELECT * FROM customers WHERE id = ?", [id]);
   if (!customer) return null;
+  customer.photo = photoSrc(customer.photo);
 
   const bills = query<CustomerBill>(
     `SELECT s.id, s.code, s.date,
@@ -92,7 +94,8 @@ export function getProductDetail(id: number) {
     base_unit: string; box_strips: number; strip_tablets: number;
     cost_paisa: number; retail_paisa: number; vip_paisa: number; doctor_paisa: number;
     reorder_level: number; track_expiry: number; active: number; created_at: string;
-    photo: string | null; category_name?: string | null; company_name?: string | null;
+    photo: string | null; room: string | null;
+    category_name?: string | null; company_name?: string | null;
   }>(
     `SELECT p.*, c.name AS category_name, co.name AS company_name
        FROM products p
@@ -102,6 +105,7 @@ export function getProductDetail(id: number) {
     [id]
   );
   if (!product) return null;
+  product.photo = photoSrc(product.photo);
 
   const batches = query<ProductBatchRow>(
     `SELECT b.id, b.batch_no, b.expiry_ym, b.qty_base, b.cost_paisa, b.retail_paisa, b.active,

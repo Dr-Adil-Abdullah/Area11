@@ -14,18 +14,59 @@ export type Customer = {
   loyalty_points: number;
   stars: number;
   notes: string | null;
+  photo: string | null;
   active: number;
   created_at: string;
+  // joined (filter ke liye)
+  last_bill_at?: string | null;
+  bills?: number;
 };
 
-export function listCustomers(search = ""): Customer[] {
-  const like = `%${search.trim()}%`;
+export type CustomerFilter = {
+  search?: string;
+  category?: "all" | "normal" | "vip" | "doctor";
+  /** "due" = baqaya wale  · "clear" = kisi ka kuch nahi dena */
+  balance?: "all" | "due" | "clear";
+  sort?: "name" | "due" | "recent" | "spent" | "newest";
+};
+
+const CUST_SORT: Record<NonNullable<CustomerFilter["sort"]>, string> = {
+  name: "c.name COLLATE NOCASE",
+  due: "c.balance_paisa DESC, c.name COLLATE NOCASE",
+  recent: "(last_bill_at IS NULL), last_bill_at DESC",
+  spent: "spent_paisa DESC, c.name COLLATE NOCASE",
+  newest: "c.id DESC",
+};
+
+export function listCustomers(opts: string | CustomerFilter = ""): Customer[] {
+  const f: CustomerFilter = typeof opts === "string" ? { search: opts } : opts;
+  const where: string[] = ["c.active = 1"];
+  const params: (string | number)[] = [];
+
+  if (f.search && f.search.trim()) {
+    const q = `%${f.search.trim()}%`;
+    where.push("(c.name LIKE ? OR IFNULL(c.phone,'') LIKE ? OR IFNULL(c.notes,'') LIKE ?)");
+    params.push(q, q, q);
+  }
+  if (f.category && f.category !== "all") {
+    where.push("c.category = ?");
+    params.push(f.category);
+  }
+  if (f.balance === "due") where.push("c.balance_paisa > 0");
+  if (f.balance === "clear") where.push("c.balance_paisa <= 0");
+
+  const orderSql = CUST_SORT[f.sort ?? "name"] ?? CUST_SORT.name;
+
   return query<Customer>(
-    `SELECT * FROM customers
-      WHERE active = 1 AND (name LIKE ? OR phone LIKE ?)
-      ORDER BY name COLLATE NOCASE
-      LIMIT 200`,
-    [like, like]
+    `SELECT c.*,
+            (SELECT MAX(s.date) FROM sales s WHERE s.customer_id = c.id AND s.status <> 'void') AS last_bill_at,
+            (SELECT COUNT(*) FROM sales s WHERE s.customer_id = c.id AND s.status <> 'void') AS bills,
+            (SELECT COALESCE(SUM(s.total_paisa), 0) FROM sales s WHERE s.customer_id = c.id AND s.status <> 'void') AS spent_paisa
+       FROM customers c
+      WHERE ${where.join(" AND ")}
+      ORDER BY ${orderSql}
+      LIMIT 300`,
+    params
   );
 }
 

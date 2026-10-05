@@ -444,7 +444,20 @@ export function getSale(id: number): SaleFull | null {
   return { header, items };
 }
 
-export function listSales(opts: { search?: string; limit?: number; from?: string; to?: string } = {}) {
+export function listSales(opts: {
+  search?: string;
+  limit?: number;
+  from?: string;
+  to?: string;
+  /** cash | credit | split */
+  method?: "all" | "cash" | "credit";
+  /** all | paid | due | void | returned */
+  status?: string;
+  /** all | profit | loss */
+  margin?: "all" | "profit" | "loss";
+  minTotalPaisa?: number;
+  sort?: "recent" | "oldest" | "biggest" | "profit";
+} = {}) {
   const like = `%${(opts.search ?? "").trim()}%`;
   // Bill code / gahak ka naam / phone / YA kisi dawa ka naam (spec 9.2.1: khoa hua bill)
   const where: string[] = [
@@ -462,6 +475,33 @@ export function listSales(opts: { search?: string; limit?: number; from?: string
     where.push("date(s.date) <= date(?)");
     params.push(opts.to);
   }
+  if (opts.method && opts.method !== "all") {
+    where.push("s.payment_method = ?");
+    params.push(opts.method);
+  }
+  if (opts.status && opts.status !== "all") {
+    if (opts.status === "returned") {
+      where.push("EXISTS (SELECT 1 FROM sale_returns r WHERE r.sale_id = s.id)");
+    } else {
+      where.push("s.status = ?");
+      params.push(opts.status);
+    }
+  }
+  if (opts.minTotalPaisa && opts.minTotalPaisa > 0) {
+    where.push("s.total_paisa >= ?");
+    params.push(opts.minTotalPaisa);
+  }
+  // AHEM: SQLite me HAVING sirf GROUP BY ke sath chalta hai -- is liye WHERE me
+  //       poora sub-query likha gaya hai (alias yahan bhi nahi chalta).
+  const PROFIT_EXPR =
+    "(SELECT COALESCE(SUM(i.line_total_paisa - i.qty_base * i.cost_paisa_at_sale), 0) FROM sale_items i WHERE i.sale_id = s.id)";
+  if (opts.margin === "profit") where.push(`${PROFIT_EXPR} > 0`);
+  if (opts.margin === "loss") where.push(`${PROFIT_EXPR} < 0`);
+  const ORDER =
+    opts.sort === "oldest" ? "s.id ASC"
+    : opts.sort === "biggest" ? "s.total_paisa DESC, s.id DESC"
+    : opts.sort === "profit" ? "profit_paisa DESC, s.id DESC"
+    : "s.id DESC";
 
   return query<{
     id: number;
@@ -483,7 +523,7 @@ export function listSales(opts: { search?: string; limit?: number; from?: string
        FROM sales s
        LEFT JOIN customers c ON c.id = s.customer_id
       WHERE ${where.join(" AND ")}
-      ORDER BY s.id DESC
+      ORDER BY ${ORDER}
       LIMIT ?`,
     [...params, Math.min(opts.limit ?? 100, 500)]
   );

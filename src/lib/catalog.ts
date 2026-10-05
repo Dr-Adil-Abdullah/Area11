@@ -16,6 +16,8 @@ export type Product = {
   company_id: number | null;
   category_id: number | null;
   rack_no: string | null;
+  room: string | null;
+  photo: string | null;
   pack_size_label: string | null;
   base_unit: string;
   box_strips: number;
@@ -58,52 +60,104 @@ export type Category = {
 };
 
 // ---------------------------- Products -------------------------------------
-export function listProducts(opts: {
+export type ProductFilter = {
   search?: string;
   categoryId?: number | null;
+  companyId?: number | null;
+  room?: string | null;              // kis kamre / rack me hai
+  /** "low" = reorder level se kam  · "out" = bilkul khatam  · "expiring" = jaldi expire */
+  stock?: "all" | "low" | "out" | "expiring";
+  sort?: "name" | "stock" | "expiry" | "margin" | "sold" | "newest";
   limit?: number;
   offset?: number;
   onlyActive?: boolean;
-}): { rows: Product[]; total: number } {
+};
+
+const SORT_SQL: Record<NonNullable<ProductFilter["sort"]>, string> = {
+  name: "p.name COLLATE NOCASE",
+  stock: "stock_base ASC, p.name COLLATE NOCASE",
+  expiry: "(nearest_expiry IS NULL), nearest_expiry ASC, p.name COLLATE NOCASE",
+  margin: "(p.retail_paisa - p.cost_paisa) DESC, p.name COLLATE NOCASE",
+  sold: "sold_qty DESC, p.name COLLATE NOCASE",
+  newest: "p.id DESC",
+};
+
+export function listProducts(opts: ProductFilter = {}): { rows: Product[]; total: number } {
   const where: string[] = [];
   const params: (string | number)[] = [];
 
   if (opts.onlyActive !== false) where.push("p.active = 1");
   if (opts.search && opts.search.trim()) {
     const q = `%${opts.search.trim()}%`;
-    where.push("(p.name LIKE ? OR p.generic LIKE ? OR p.brand LIKE ? OR p.barcode LIKE ?)");
-    params.push(q, q, q, q);
+    where.push(`(p.name LIKE ? OR p.generic LIKE ? OR p.brand LIKE ? OR p.barcode LIKE ?
+                 OR p.rack_no LIKE ? OR IFNULL(p.room,'') LIKE ?
+                 OR IFNULL(c.name,'') LIKE ? OR IFNULL(co.name,'') LIKE ?)`);
+    params.push(q, q, q, q, q, q, q, q);
   }
   if (opts.categoryId) {
     where.push("p.category_id = ?");
     params.push(opts.categoryId);
   }
+  if (opts.companyId) {
+    where.push("p.company_id = ?");
+    params.push(opts.companyId);
+  }
+  if (opts.room) {
+    where.push("IFNULL(p.room,'') = ?");
+    params.push(opts.room);
+  }
+  // AHEM: SQLite me SELECT ka alias (stock_base / nearest_expiry) WHERE me nahi chalta --
+  //       is liye yahan poora sub-query likha gaya hai.
+  const STOCK_EXPR =
+    "(SELECT COALESCE(SUM(b.qty_base), 0) FROM batches b WHERE b.product_id = p.id AND b.active = 1)";
+  const NEAREST_EXPR =
+    "(SELECT MIN(b.expiry_ym) FROM batches b WHERE b.product_id = p.id AND b.active = 1 AND b.qty_base > 0)";
+  if (opts.stock === "low") where.push(`${STOCK_EXPR} <= p.reorder_level`);
+  if (opts.stock === "out") where.push(`${STOCK_EXPR} <= 0`);
+  if (opts.stock === "expiring") {
+    where.push(`${NEAREST_EXPR} IS NOT NULL AND ${NEAREST_EXPR} <= strftime('%Y-%m','now','+3 months')`);
+  }
 
+  // HAVING ke baghair: stock/sold ko sub-query me hi rakha hai
   const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 500);
   const offset = Math.max(opts.offset ?? 0, 0);
+  const orderSql = SORT_SQL[opts.sort ?? "name"] ?? SORT_SQL.name;
 
   const rows = query<Product>(
     `SELECT p.*, c.name AS category_name, co.name AS company_name,
             (SELECT COALESCE(SUM(b.qty_base), 0) FROM batches b
               WHERE b.product_id = p.id AND b.active = 1) AS stock_base,
             (SELECT MIN(b.expiry_ym) FROM batches b
-              WHERE b.product_id = p.id AND b.active = 1 AND b.qty_base > 0) AS nearest_expiry
+              WHERE b.product_id = p.id AND b.active = 1 AND b.qty_base > 0) AS nearest_expiry,
+            (SELECT COALESCE(SUM(i.qty_base), 0) FROM sale_items i JOIN sales s ON s.id = i.sale_id
+              WHERE i.product_id = p.id AND s.status <> 'void') AS sold_qty
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
        LEFT JOIN companies  co ON co.id = p.company_id
        ${whereSql}
-      ORDER BY p.name COLLATE NOCASE
+      ORDER BY ${orderSql}
       LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
 
   const total = scalar<number>(
-    `SELECT COUNT(*) AS c FROM products p ${whereSql}`,
+    `SELECT COUNT(*) AS c
+       FROM products p
+       LEFT JOIN categories c ON c.id = p.category_id
+       LEFT JOIN companies  co ON co.id = p.company_id
+       ${whereSql}`,
     params
   );
 
   return { rows, total };
+}
+
+/** Products ke kamre (filters me chunne ke liye) */
+export function listRooms(): string[] {
+  return query<{ room: string }>(
+    "SELECT DISTINCT room FROM products WHERE room IS NOT NULL AND TRIM(room) <> '' AND active = 1 ORDER BY room"
+  ).map((r) => r.room);
 }
 
 export function getProduct(id: number): Product | undefined {
@@ -136,6 +190,7 @@ export type ProductInput = {
   companyId?: number | null;
   categoryId?: number | null;
   rackNo?: string | null;
+  room?: string | null;
   packSizeLabel?: string | null;
   baseUnit?: string;
   boxStrips?: number;
@@ -153,10 +208,10 @@ export function createProduct(input: ProductInput, user?: { id?: number; name?: 
 
   const res = run(
     `INSERT INTO products
-      (name, generic, brand, barcode, company_id, category_id, rack_no, pack_size_label,
+      (name, generic, brand, barcode, company_id, category_id, rack_no, room, pack_size_label,
        base_unit, box_strips, strip_tablets, cost_paisa, retail_paisa, vip_paisa, doctor_paisa,
        reorder_level, track_expiry)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [
       input.name.trim(),
       input.generic?.trim() || null,
@@ -165,6 +220,7 @@ export function createProduct(input: ProductInput, user?: { id?: number; name?: 
       input.companyId ?? null,
       input.categoryId ?? null,
       input.rackNo?.trim() || null,
+      input.room?.trim() || null,
       input.packSizeLabel?.trim() || null,
       input.baseUnit || "tablet",
       Math.max(0, Math.round(input.boxStrips ?? 0)),
@@ -201,7 +257,7 @@ export function updateProduct(
   run(
     `UPDATE products SET
        name = ?, generic = ?, brand = ?, barcode = ?, company_id = ?, category_id = ?,
-       rack_no = ?, pack_size_label = ?, base_unit = ?, box_strips = ?, strip_tablets = ?,
+       rack_no = ?, room = ?, pack_size_label = ?, base_unit = ?, box_strips = ?, strip_tablets = ?,
        cost_paisa = ?, retail_paisa = ?, vip_paisa = ?, doctor_paisa = ?,
        reorder_level = ?, track_expiry = ?, updated_at = datetime('now','localtime')
      WHERE id = ?`,
@@ -213,6 +269,7 @@ export function updateProduct(
       input.companyId ?? null,
       input.categoryId ?? null,
       input.rackNo?.trim() || null,
+      input.room?.trim() || null,
       input.packSizeLabel?.trim() || null,
       input.baseUnit || "tablet",
       Math.max(0, Math.round(input.boxStrips ?? 0)),

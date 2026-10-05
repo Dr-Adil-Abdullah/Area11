@@ -412,4 +412,11 @@ ALTER TABLE customers ADD COLUMN photo TEXT;
 ALTER TABLE products  ADD COLUMN photo TEXT;
 `,
   },
+  {
+    id: "006_product_room",
+    sql: `
+-- Dawa kis KAMRE / ALMARI / RACK me rakhi hai (owner ki marzi ke hisaab se)
+ALTER TABLE products ADD COLUMN room TEXT;
+`,
+  },
 ];
