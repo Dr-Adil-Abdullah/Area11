@@ -30,6 +30,10 @@ export const SETTING_DEFAULTS = {
   "bill.numberPadding": 4,
   "bill.nextPurchaseNo": 1,
   "bill.nextSaleNo": 1,
+  "bill.provisionalPrefix": "PR-",
+  "bill.nextProvisionalNo": 1,
+  "bill.supplierReturnPrefix": "SR-",
+  "bill.nextSupplierReturnNo": 1,
   "bill.roundMode": "down10", // down10 | none
   "bill.roundTo": 10,
 

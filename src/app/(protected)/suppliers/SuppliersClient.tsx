@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Plus, Pencil, Save, Search, Trash2, Truck, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
 
@@ -183,7 +184,7 @@ export default function SuppliersClient({ initialSuppliers }: { initialSuppliers
                   <div className="flex items-center gap-2">
                     <Truck className="h-4 w-4 text-slate-400" />
                     <div>
-                      <div className="font-medium text-slate-800">{s.name}</div>
+                      <Link href={`/suppliers/${s.id}`} className="font-medium text-slate-800 hover:underline">{s.name}</Link>
                       <div className="text-[11px] text-slate-500">{s.agency || s.address || "—"}</div>
                     </div>
                   </div>

@@ -3,15 +3,29 @@
 // ---------------------------------------------------------------------------
 
 import { get, run } from "./db";
-import { getSettings, formatBillCode } from "./settings";
+import { getSettings, formatBillCode, type AppSettings } from "./settings";
 
-export type BillKind = "sale" | "purchase";
+/** Har qism ka prefix + agla number (settings keys) */
+function keysFor(kind: BillKind): [string, string] {
+  if (kind === "sale") return ["bill.salePrefix", "bill.nextSaleNo"];
+  if (kind === "purchase") return ["bill.purchasePrefix", "bill.nextPurchaseNo"];
+  if (kind === "provisional") return ["bill.provisionalPrefix", "bill.nextProvisionalNo"];
+  return ["bill.supplierReturnPrefix", "bill.nextSupplierReturnNo"];
+}
+
+function codeParts(kind: BillKind, s: AppSettings): [string, number] {
+  const [pk, nk] = keysFor(kind);
+  const prefix = String((s as unknown as Record<string, unknown>)[pk] ?? "INV-");
+  const no = Number((s as unknown as Record<string, unknown>)[nk] ?? 1) || 1;
+  return [prefix, no];
+}
+
+export type BillKind = "sale" | "purchase" | "supplierReturn" | "provisional";
 
 /** Agla bill number nikalo (settings se) */
 export async function peekNextCode(kind: BillKind): Promise<string> {
   const s = await getSettings();
-  const prefix = kind === "sale" ? s["bill.salePrefix"] : s["bill.purchasePrefix"];
-  const no = kind === "sale" ? s["bill.nextSaleNo"] : s["bill.nextPurchaseNo"];
+  const [prefix, no] = codeParts(kind, s);
   return formatBillCode(prefix, Number(no) || 1, Number(s["bill.numberPadding"]) || 4);
 }
 
@@ -20,8 +34,7 @@ export async function peekNextCode(kind: BillKind): Promise<string> {
  * Do counter ek hi number na lein -- is liye number foran barha diya jata hai.
  */
 export function takeNextCode(kind: BillKind): string {
-  const prefixKey = kind === "sale" ? "bill.salePrefix" : "bill.purchasePrefix";
-  const noKey = kind === "sale" ? "bill.nextSaleNo" : "bill.nextPurchaseNo";
+  const [prefixKey, noKey] = keysFor(kind);
   const padKey = "bill.numberPadding";
 
   const read = (key: string, fallback: string) =>
