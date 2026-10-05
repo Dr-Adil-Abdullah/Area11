@@ -8,7 +8,11 @@ import type { ShiftFlow, ShiftRow } from "@/lib/shifts";
 
 type S = { day: string; bills: number; voided: number; salesTotal: number; creditGiven: number; returnsTotal: number; profit: number; cashIn: number; cashRefunds: number; supplierPaid: number; expenses: number; drawings: number; expectedCash: number };
 
-type ShiftData = { open: ShiftRow | null; flow: ShiftFlow | null; shifts: ShiftRow[]; todayVariancePaisa: number };
+type ShiftData = {
+  open: ShiftRow | null; flow: ShiftFlow | null; shifts: ShiftRow[];
+  users?: { id: number; name: string; role: string }[];
+  todayVariancePaisa: number;
+};
 
 export default function CashClient({ summary: s, expenses, drawings, shift }: { summary: S; expenses: { id: number; date: string; category: string; title: string; amount_paisa: number }[]; drawings: { id: number; date: string; type: string; amount_paisa: number; note: string | null }[]; shift: ShiftData }) {
   const router = useRouter();
@@ -52,7 +56,13 @@ export default function CashClient({ summary: s, expenses, drawings, shift }: { 
             {diff !== null && <span className={`text-sm font-medium ${diff === 0 ? "text-emerald-700" : "text-rose-600"}`}>{diff === 0 ? "Matches" : diff > 0 ? `Excess ${formatPKR(diff)}` : `Short ${formatPKR(-diff)}`}</span>}</div>
         </div>
         <div className="space-y-4">
-          <ShiftCard open={shift.open} flow={shift.flow} shifts={shift.shifts} todayVariancePaisa={shift.todayVariancePaisa} />
+          <ShiftCard
+            open={shift.open}
+            flow={shift.flow}
+            shifts={shift.shifts}
+            users={shift.users ?? []}
+            todayVariancePaisa={shift.todayVariancePaisa}
+          />
           <div className="card card-body space-y-2"><div className="card-title">Add expense</div>
             <div className="flex flex-wrap gap-2"><input className="input-sm flex-1" placeholder="What for? (rent, tea, electricity…)" value={ex.title} onChange={(e) => setEx({ ...ex, title: e.target.value })} />
               <input className="input-sm w-28" placeholder="Rs" value={ex.amount} onChange={(e) => setEx({ ...ex, amount: e.target.value })} />

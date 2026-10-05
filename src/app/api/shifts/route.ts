@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
 import { requireUser } from "@/lib/session";
-import { closeShift, currentShift, listShifts, openShift, shiftFlow, shiftVarianceToday } from "@/lib/shifts";
+import { closeShift, currentShift, handoverSlip, listShifts, openShift, shiftFlow, shiftUsers, shiftVarianceToday } from "@/lib/shifts";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,7 @@ export async function GET() {
     open: open ?? null,
     flow: open ? shiftFlow(open.id) : null,
     shifts: listShifts(20),
+    users: shiftUsers(),
     todayVariancePaisa: shiftVarianceToday(),
   });
 }
@@ -24,10 +25,13 @@ export async function POST(req: Request) {
   if (denied) return denied;
   try {
     const b = (await req.json()) as {
-      action?: "open" | "close";
+      action?: "open" | "close" | "slip";
+      shiftId?: number;
       openingFloatPaisa?: number;
       actualPaisa?: number;
       note?: string | null;
+      handedToUserId?: number | null;
+      openNext?: boolean;
     };
     const user = await requireUser();
     if (b.action === "open") {
@@ -35,8 +39,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, id: r.id });
     }
     if (b.action === "close") {
-      const r = closeShift(Number(b.actualPaisa ?? 0), b.note ?? null, user);
+      const r = closeShift(
+        {
+          actualPaisa: Number(b.actualPaisa ?? 0),
+          note: b.note ?? null,
+          handedToUserId: b.handedToUserId ?? null,
+          openNext: Boolean(b.openNext),
+        },
+        user
+      );
       return NextResponse.json({ ok: true, ...r });
+    }
+    if (b.action === "slip") {
+      const id = Number(b.shiftId ?? 0);
+      if (!id) throw new Error("shiftId chahiye");
+      return NextResponse.json({ ok: true, slip: handoverSlip(id) });
     }
     throw new Error("action 'open' ya 'close' likhein");
   } catch (e) {

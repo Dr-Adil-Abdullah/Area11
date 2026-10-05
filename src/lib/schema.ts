@@ -498,4 +498,17 @@ CREATE INDEX IF NOT EXISTS idx_stake_items ON stock_take_items(stock_take_id);
 CREATE INDEX IF NOT EXISTS idx_stake_items_p ON stock_take_items(product_id);
 `,
   },
+  {
+    id: "009_shift_handover",
+    sql: `
+-- ======================= SHIFT HANDOVER (galla ka tabadla) =======================
+-- Jab ek cashier ki shift khatam ho aur doosra aye:
+--   * ginta hua cash agle shift ka opening float ban jata hai
+--   * 'kis ne kis ko diya' mehfooz rehta hai
+--   * ek handover parchi (slip) chhap sakte hain
+ALTER TABLE shifts ADD COLUMN handed_to_user_id INTEGER;
+ALTER TABLE shifts ADD COLUMN handed_to_name TEXT;
+ALTER TABLE shifts ADD COLUMN opened_from_shift_id INTEGER;
+`,
+  },
 ];
