@@ -6,7 +6,7 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-18**
+## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-20**
 
 **Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 48 routes · `npm test` 11/11 · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
@@ -18,7 +18,9 @@
 | **Discount guard (spec 7.3)** | Role percent limits (cashier 5 · manager 20 · owner unlimited) **and** no discount below purchase cost — both server-side and editable in Settings | ✅ |
 | Phase 2 rest, 3, 4, 5 | provisional returns, shifts, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, Supabase sync … | ⏳ see `HANDOFF.md` §4 |
 
-**Latest changes (stages 17–18):** everything is now customizable from inside — make **your own fields** for customers/products/suppliers (CNIC, shelf, discount group…; required or optional; switch on/off), **click a customer** to see their photo, khata and every bill/payment/return, **click a product** to see its batches, expiry, sales, price history and full stock ledger, **Settings sections open when clicked**, and a **new category or company can be created right inside the product form**. Photos are resized on the device and stored in the database (offline-friendly).
+**Latest changes (stages 19–20):** the **black box** is now browsable at `/audit` — every action with who/when/what and filters — and **backup/restore** sits right next to it: download the whole database, or drop a `.db` back in (the app validates it, auto-saves the old one and switches over *without a restart*). Photos now go to the **`data/photos/` folder** instead of the database, products have a **room/almari** field, and **filters + sorting** were added to the product, customer and sales lists, with the product list also able to **group by category, company or room** (click a group header to fold it).
+
+**Stages 17–18:** everything is now customizable from inside — make **your own fields** for customers/products/suppliers (CNIC, shelf, discount group…; required or optional; switch on/off), **click a customer** to see their photo, khata and every bill/payment/return, **click a product** to see its batches, expiry, sales, price history and full stock ledger, **Settings sections open when clicked**, and a **new category or company can be created right inside the product form**. Photos are resized on the device and stored in the database (offline-friendly).
 
 **Stage-16:** lost-bill handling — search past bills by **medicine name**, give a customer their money back at rush time without a bill (`PR-xxxx`, goods stay **quarantined**, a red pending badge keeps blinking), then tag the real bill later (optionally putting the goods back in stock). Only owner/manager can put returned goods back into stock; a cashier's return always stays in quarantine. Also fixed: sale lines without an explicit batch now automatically take the nearest-expiry batch, so batch stock and the movement ledger can no longer drift apart.
 
