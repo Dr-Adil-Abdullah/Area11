@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PhotoCapture from "@/components/PhotoCapture";
 import { Camera, HandCoins, Pencil, Receipt, Save, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
 import type { CustomField } from "@/lib/custom-fields-shared";
@@ -22,6 +23,7 @@ async function shrink(file: File, max = 512): Promise<string> {
   c.getContext("2d")!.drawImage(bitmap, 0, 0, w, h);
   return c.toDataURL("image/jpeg", 0.72);
 }
+
 
 export default function CustomerDetailClient({
   detail,
@@ -57,6 +59,21 @@ export default function CustomerDetailClient({
       setEdit(false); router.refresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "save failed");
+    } finally { setBusy(false); }
+  }
+
+  /** Camera ya kahin se bhi mili tasveer (pehle se chhoti) */
+  async function savePhoto(dataUrl: string) {
+    setBusy(true); setMsg("");
+    try {
+      const r = await (await fetch("/api/customers", {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: c.id, photo: dataUrl }),
+      })).json();
+      if (!r || r.ok !== true) throw new Error(r?.error ?? "photo failed");
+      router.refresh();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "photo failed");
     } finally { setBusy(false); }
   }
 
@@ -119,6 +136,19 @@ export default function CustomerDetailClient({
                 onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadPhoto(file); }}
               />
             </label>
+            <div className="mt-1 flex flex-wrap gap-1">
+              <PhotoCapture className="btn-secondary !py-1 text-xs" label="Camera se lein" onCapture={(d) => savePhoto(d)} />
+              <label className="btn-secondary cursor-pointer !py-1 text-xs">
+                File chunein
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadPhoto(file); }} />
+              </label>
+              {c.photo && (
+                <button className="btn-secondary !py-1 text-xs" onClick={() => { if (confirm("Tasveer hata dein?")) void savePhoto(""); }}>
+                  Hata dein
+                </button>
+              )}
+            </div>
+
             <div className="text-sm">
               <div className="text-lg font-semibold">{c.name}</div>
               <div className="text-slate-500">{c.phone ?? "no phone"}</div>

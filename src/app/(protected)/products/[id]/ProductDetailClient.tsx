@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import PhotoCapture from "@/components/PhotoCapture";
 import { Camera, PackageMinus, Pencil, Save, X } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
 import type { CustomField } from "@/lib/custom-fields-shared";
@@ -12,7 +13,11 @@ import type { getProductDetail } from "@/lib/details";
 type Detail = NonNullable<ReturnType<typeof getProductDetail>>;
 
 async function shrink(file: File, max = 640): Promise<string> {
-  const bitmap = await createImageBitmap(file);
+  return shrinkBitmap(await createImageBitmap(file), max);
+}
+
+/** Camera ya file -- dono se mili tasveer ko chhoti JPEG banayein */
+function shrinkBitmap(bitmap: ImageBitmap, max = 640): string {
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
   const h = Math.round(bitmap.height * scale);
@@ -69,10 +74,9 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
     } finally { setBusy(false); }
   }
 
-  async function uploadPhoto(file: File) {
+  async function savePhoto(dataUrl: string) {
     setBusy(true); setMsg("");
     try {
-      const dataUrl = await shrink(file);
       const r = await (await fetch(`/api/products/${p.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,6 +93,11 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "photo failed");
     } finally { setBusy(false); }
+  }
+
+  /** Purana raasta: file chun kar */
+  async function uploadPhoto(file: File) {
+    await savePhoto(shrinkBitmap(await createImageBitmap(file)));
   }
 
   return (
@@ -114,6 +123,25 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
               <span className="absolute bottom-0 right-0 rounded-tl bg-slate-800 p-1 text-white"><Camera className="h-3.5 w-3.5" /></span>
               <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadPhoto(file); }} />
             </label>
+            <div className="mt-1 flex flex-wrap gap-1">
+              <PhotoCapture
+                className="btn-secondary !py-1 text-xs"
+                label="Camera se lein"
+                onCapture={(d) => savePhoto(d)}
+              />
+              <label className="btn-secondary cursor-pointer !py-1 text-xs">
+                File chunein
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) void uploadPhoto(file); }} />
+              </label>
+              {p.photo && (
+                <button
+                  className="btn-secondary !py-1 text-xs"
+                  onClick={() => { if (confirm("Tasveer hata dein?")) void savePhoto(""); }}
+                >
+                  Hata dein
+                </button>
+              )}
+            </div>
             <div className="text-sm">
               <div className="text-slate-500">{p.generic ?? "—"}</div>
               <div>{p.brand ?? ""} {p.company_name ? `• ${p.company_name}` : ""}</div>
