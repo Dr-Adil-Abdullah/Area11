@@ -82,6 +82,8 @@ export default function ProductsClient({
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [newCategory, setNewCategory] = useState("");
+  const [newCatParent, setNewCatParent] = useState(""); // "" = top level
+  const [catTree, setCatTree] = useState<(Category & { depth: number; path: string })[]>([]);
   const [editCat, setEditCat] = useState<{ id: number; name: string } | null>(null);
   const [editComp, setEditComp] = useState<{ id: number; name: string } | null>(null);
   const [listMsg, setListMsg] = useState("");
@@ -235,6 +237,8 @@ export default function ProductsClient({
     void (async () => {
       const r = await (await fetch("/api/custom-fields?entity=product", { cache: "no-store" })).json();
       if (r.ok) setCustomFields(r.fields);
+      const ct = await (await fetch("/api/categories", { cache: "no-store" })).json();
+      if (ct.ok) { setCategories(ct.categories); setCatTree(ct.tree ?? []); }
     })();
   }, []);
 
@@ -264,13 +268,14 @@ export default function ProductsClient({
 
 
   async function refreshLists() {
+    // categories ka tree + companies ek hi dafa
     const [rc, ro] = await Promise.all([
       fetch("/api/categories", { cache: "no-store" }),
       fetch("/api/companies", { cache: "no-store" }),
     ]);
     const dc = await rc.json();
     const dco = await ro.json();
-    if (dc.ok) setCategories(dc.categories);
+    if (dc.ok) { setCategories(dc.categories); setCatTree(dc.tree ?? []); }
     if (dco.ok) setCompanies(dco.companies);
   }
 
@@ -444,8 +449,8 @@ export default function ProductsClient({
                 }}
               >
                 <option value="">— none —</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                {(catTree.length ? catTree : categories.map((c) => ({ ...c, depth: 0, path: c.name }))).map((c) => (
+                  <option key={c.id} value={c.id}>{c.depth ? "— ".repeat(c.depth) : ""}{c.name}</option>
                 ))}
                 <option value="__new">＋ Nayi category…</option>
               </select>
@@ -569,7 +574,9 @@ export default function ProductsClient({
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <select className="select !py-1 !text-xs" value={fCat} onChange={(e) => setFCat(e.target.value)}>
                 <option value="">Sab categories</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {(catTree.length ? catTree : categories.map((c) => ({ ...c, depth: 0, path: c.name }))).map((c) => (
+                  <option key={c.id} value={c.id}>{c.depth ? "— ".repeat(c.depth) : ""}{c.name}</option>
+                ))}
               </select>
               <select className="select !py-1 !text-xs" value={fComp} onChange={(e) => setFComp(e.target.value)}>
                 <option value="">Sab companies</option>
@@ -703,7 +710,7 @@ export default function ProductsClient({
               <div className="flex gap-2">
                 <input
                   className="input-sm flex-1"
-                  placeholder="New category"
+                  placeholder="Nayi category"
                   value={newCategory}
                   onChange={(e) => setNewCategory(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addCategory()}
@@ -712,6 +719,13 @@ export default function ProductsClient({
                   <Plus className="h-4 w-4" />
                 </button>
               </div>
+              <select className="select !py-1 !text-xs" value={newCatParent} onChange={(e) => setNewCatParent(e.target.value)}>
+                <option value="">Top level (sab se upar)</option>
+                {(catTree.length ? catTree : categories.map((c) => ({ ...c, depth: 0, path: c.name })))
+                  .filter((c) => c.depth === 0)
+                  .map((c) => <option key={c.id} value={c.id}>ke neeche: {c.name}</option>)}
+              </select>
+              {newCatParent && <div className="text-[11px] text-slate-500">Ye category us ke neeche banegi (sub-category).</div>}
               {listMsg && <div className="text-xs text-rose-600">{listMsg}</div>}
               <ul className="space-y-1">
                 {categories.map((c) =>
@@ -732,7 +746,12 @@ export default function ProductsClient({
                     </li>
                   ) : (
                     <li key={c.id} className="group flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                      <span className="text-slate-700">{c.name}</span>
+                      <span className="text-slate-700">
+                        {(catTree.find((t) => t.id === c.id)?.depth ?? 0) > 0
+                          ? "— ".repeat(catTree.find((t) => t.id === c.id)?.depth ?? 0)
+                          : ""}
+                        {c.name}
+                      </span>
                       <span className="flex items-center gap-2">
                         <span className="text-xs text-slate-500">{c.product_count ?? 0}</span>
                         <button

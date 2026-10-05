@@ -95,8 +95,10 @@ export function listProducts(opts: ProductFilter = {}): { rows: Product[]; total
     params.push(q, q, q, q, q, q, q, q);
   }
   if (opts.categoryId) {
-    where.push("p.category_id = ?");
-    params.push(opts.categoryId);
+    // Darakht: parent chuna to us ki tamam bachon ki dawayen bhi aayen
+    const ids = categoryWithChildren(opts.categoryId);
+    where.push(`p.category_id IN (${ids.map(() => "?").join(",") || "NULL"})`);
+    params.push(...ids);
   }
   if (opts.companyId) {
     where.push("p.company_id = ?");
@@ -335,14 +337,56 @@ export function listCategories(): Category[] {
 export function createCategory(name: string, parentId?: number | null): number {
   const n = name.trim();
   if (!n) throw new Error("Category name is required");
-  const exists = get<{ id: number }>("SELECT id FROM categories WHERE name = ?", [n]);
-  if (exists) return exists.id;
+  // Ek hi naam do jagah ho sakta hai (masalan "Dard" do alag parents ke neeche)
+  const q = parentId
+    ? get<{ id: number }>("SELECT id FROM categories WHERE name = ? AND IFNULL(parent_id, 0) = ?", [n, parentId])
+    : get<{ id: number }>("SELECT id FROM categories WHERE name = ? AND parent_id IS NULL", [n]);
+  if (q) return q.id;
+  if (parentId) {
+    const parent = get<{ id: number; parent_id: number | null }>(
+      "SELECT id, parent_id FROM categories WHERE id = ?", [parentId]
+    );
+    if (!parent) throw new Error("Parent category nahi mili.");
+    if (parent.parent_id) throw new Error("Zyada gehri category nahi — sirf 2 darje (parent › child).");
+  }
   const res = run("INSERT INTO categories (name, parent_id, sort_order) VALUES (?,?,?)", [
     n,
     parentId ?? null,
     scalar<number>("SELECT COALESCE(MAX(sort_order), 0) + 1 AS c FROM categories"),
   ]);
   return res.lastInsertRowid;
+}
+
+/** Darakht (tree): har category ke sath us ki gehrai (depth) aur poora raasta */
+export function listCategoriesTree(): (Category & { depth: number; path: string })[] {
+  const rows = query<Category & { depth: number; path: string }>(
+    `WITH RECURSIVE tree(id, name, parent_id, sort_order, active, product_count, depth, path) AS (
+       SELECT c.id, c.name, c.parent_id, c.sort_order, c.active,
+              (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.active = 1),
+              0, c.name
+         FROM categories c WHERE c.parent_id IS NULL AND c.active = 1
+       UNION ALL
+       SELECT c.id, c.name, c.parent_id, c.sort_order, c.active,
+              (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.active = 1),
+              t.depth + 1, t.path || ' › ' || c.name
+         FROM categories c JOIN tree t ON c.parent_id = t.id
+        WHERE c.active = 1
+     )
+     SELECT * FROM tree ORDER BY path COLLATE NOCASE`
+  );
+  return rows;
+}
+
+/** Ek category aur us ki SAARI bachon (children) ki ids */
+export function categoryWithChildren(id: number): number[] {
+  const rows = query<{ id: number }>(
+    `WITH RECURSIVE sub(id) AS (
+       SELECT ? UNION ALL SELECT c.id FROM categories c JOIN sub ON c.parent_id = sub.id
+     )
+     SELECT id FROM sub`,
+    [id]
+  );
+  return rows.map((r) => r.id);
 }
 
 export function renameCategory(id: number, name: string): void {

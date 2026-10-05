@@ -3,6 +3,7 @@ import {
   createCategory,
   deleteCategory,
   listCategories,
+  listCategoriesTree,
   renameCategory,
 } from "@/lib/catalog";
 import { ensureBootstrap } from "@/lib/bootstrap";
@@ -19,7 +20,7 @@ export async function GET() {
     const err = e as { status?: number; message?: string };
     return NextResponse.json({ ok: false, error: err.message ?? "failed" }, { status: err.status ?? 400 });
   }
-  return NextResponse.json({ ok: true, categories: listCategories() });
+  return NextResponse.json({ ok: true, categories: listCategories(), tree: listCategoriesTree() });
 }
 
 export async function POST(req: Request) {
