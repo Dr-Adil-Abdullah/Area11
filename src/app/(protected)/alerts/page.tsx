@@ -1,9 +1,12 @@
-import { expiryAlerts, stockAlerts } from "@/lib/alerts";
+import { expiryAlerts, stockAlerts, sampleStock } from "@/lib/alerts";
 import { getSettings } from "@/lib/settings";
 import type { ExpiryLevels } from "@/lib/pos";
 import { formatPKR } from "@/lib/money";
 import { reorderList } from "@/lib/whatsapp";
+import { listSuppliers } from "@/lib/catalog";
+import { query } from "@/lib/db";
 import WhatsAppCard from "./WhatsAppCard";
+import QuickReturnCard from "./QuickReturnCard";
 export const dynamic = "force-dynamic";
 
 const badge: Record<string, string> = { expired: "badge-red", very_near: "badge-red", near: "badge-amber", ok: "badge-green" };
@@ -16,6 +19,23 @@ export default async function AlertsPage() {
   const low = stockAlerts();
   const loss = exp.filter((e) => e.status === "expired").reduce((a, e) => a + e.lossPaisa, 0);
   const reorder = reorderList();
+  const suppliers = listSuppliers();
+  // Expiry ho chuki batches (supplier ke sath, taake seedha wapas bheja ja sake)
+  const expired = query<{
+    batch_id: number; product_id: number; name: string; batch_no: string;
+    expiry_ym: string | null; qty_base: number; cost_paisa: number;
+    supplier_id: number | null; supplier_name: string | null;
+  }>(
+    `SELECT b.id AS batch_id, b.product_id, p.name, b.batch_no, b.expiry_ym, b.qty_base,
+            b.cost_paisa, b.supplier_id, s.name AS supplier_name
+       FROM batches b
+       JOIN products p ON p.id = b.product_id
+       LEFT JOIN suppliers s ON s.id = b.supplier_id
+      WHERE b.active = 1 AND b.qty_base > 0
+        AND b.expiry_ym IS NOT NULL AND b.expiry_ym < strftime('%Y-%m', 'now')
+      ORDER BY b.expiry_ym, p.name`
+  );
+  const samples = sampleStock();
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold text-slate-800">Expiry &amp; stock alerts</h1>
@@ -33,6 +53,12 @@ export default async function AlertsPage() {
             {low.length === 0 && <tr><td colSpan={3} className="py-8 text-center text-sm text-slate-500">All products are above their reorder level. (Set “Reorder level” on a product to track it.)</td></tr>}
           </tbody></table></div></div>
       </div>
+
+      <QuickReturnCard
+        expired={JSON.parse(JSON.stringify(expired))}
+        samples={JSON.parse(JSON.stringify(samples))}
+        suppliers={JSON.parse(JSON.stringify(suppliers))}
+      />
 
       <WhatsAppCard initial={JSON.parse(JSON.stringify(reorder))} />
     </div>

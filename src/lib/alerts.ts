@@ -14,6 +14,23 @@ export function expiryAlerts(levels: ExpiryLevels) {
   return rows.map((r) => ({ ...r, status: expiryStatus(r.expiry_ym, levels), lossPaisa: Math.round(r.qty_base * r.cost_paisa) }));
 }
 
+/** Sample / bonus stock: jo maal muft mila (bills me 0 jura) — ab us ki alag list */
+export function sampleStock() {
+  return query<{
+    batch_id: number; product_id: number; name: string; batch_no: string;
+    expiry_ym: string | null; qty_base: number; supplier: string | null; purchase_code: string | null;
+  }>(
+    `SELECT b.id AS batch_id, b.product_id, p.name, b.batch_no, b.expiry_ym, b.qty_base,
+            s.name AS supplier, pu.code AS purchase_code
+       FROM batches b
+       JOIN products p ON p.id = b.product_id
+       LEFT JOIN suppliers s ON s.id = b.supplier_id
+       LEFT JOIN purchases pu ON pu.id = b.purchase_id
+      WHERE b.active = 1 AND b.is_sample = 1 AND b.qty_base > 0
+      ORDER BY p.name, b.expiry_ym`
+  );
+}
+
 export function stockAlerts() {
   return query<{ id: number; name: string; rack_no: string | null; base_unit: string; reorder_level: number; stock_base: number }>(
     `SELECT p.id, p.name, p.rack_no, p.base_unit, p.reorder_level,
