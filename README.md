@@ -6,7 +6,7 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-05) — v0.6.1, latest checkpoint **stage-27**
+## Status (2026-10-05) — v0.6.1, latest checkpoint **stage-28**
 
 **Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **50 routes** · `npm test` **17/17** · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
@@ -20,7 +20,9 @@
 
 **Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
 
-**Latest changes (stages 26–27):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+**Latest changes (stages 26–28):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+
+**Stage-28:** **udhaar ki hadd ab sakht ho sakti hai** — Settings me "Udhaar (Credit) ki hadd" section: hadd poori hone par udhaar **band** kar do (sirf warning ki jagah), manager ko ijazat do ya na do, owner ko hamesha ijazat. Cashier ko saaf paishani milti hai ke purana udhaar + is bill ka = kul kitna.
 
 **Stages 23–25:** a bill can be paid **part cash, part credit** (or any mix) from a Split pad at the counter; **loyalty points** are now earned *and spent* (1 point = Rs 1, capped at what the customer has); and **categories can have sub-categories** (`Medicines › Dard/Bukhar`) — pick a parent in the filter and all its children come along. Also: expired batches can be ticked on the alerts page and sent back to the supplier in one click, and free/sample stock has its own table.
 
