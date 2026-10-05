@@ -183,6 +183,13 @@ export default function CustomerDetailClient({
           <div className="flex justify-between text-sm"><span className="text-slate-500">Total wasooli</span><span>{formatPKR(detail.stats.paidPaisa)}</span></div>
           <div className="flex justify-between text-sm"><span className="text-slate-500">Refund diye</span><span>{formatPKR(detail.stats.refundedPaisa)}</span></div>
           <div className="flex justify-between text-sm"><span className="text-slate-500">Aakhri visit</span><span>{detail.stats.lastVisit?.slice(0, 10) ?? "—"}</span></div>
+          <div className="flex justify-between text-sm">
+            <span className="text-slate-500">Loyalty points</span>
+            <span className="font-semibold text-amber-700">{detail.customer.loyalty_points ?? 0}</span>
+          </div>
+          {(detail.customer.stars ?? 0) > 0 && (
+            <div className="flex justify-between text-sm"><span className="text-slate-500">Stars</span><span>{"★".repeat(Math.min(5, detail.customer.stars ?? 0))}</span></div>
+          )}
           <div className="mt-2 flex gap-2">
             <input className="input-sm w-28" placeholder="Rs" value={pay} onChange={(e) => setPay(e.target.value)} />
             <button className="btn-primary" onClick={receive} disabled={busy}><HandCoins className="h-4 w-4" /> Receive</button>

@@ -37,8 +37,17 @@ export type SaleInput = {
   tenderedPaisa?: number;
   paymentMethod?: "cash" | "credit" | "online" | "card" | "split";
   paidPaisa?: number;
+  /**
+   * Split payment: ek se zyada tareeqe (spec 8.5).
+   *   [{ method: "cash", amountPaisa: 50000 }, { method: "credit", amountPaisa: 20000 }]
+   * Diya gaya to isi ka jama hona `total` ke barabar hona chahiye.
+   * "credit" wala hissa gahak ke udhaar (khatay) me jata hai.
+   */
+  splits?: { method: "cash" | "credit" | "online" | "card"; amountPaisa: number }[];
   notes?: string | null;
   status?: "paid" | "credit" | "hold";
+  /** Loyalty redeem: kitne points bill se katne hain (settings on hona zaroori) */
+  redeemPoints?: number;
 };
 
 export type SaleResult = {
@@ -160,16 +169,61 @@ export function createSale(
       : 0;
     const beforeRound = afterDiscount + taxPaisa;
     const totalCost = Math.round(lines.reduce((sum, l) => sum + l.qtyBase * l.costPaisa, 0));
-    const { finalPaise, roundOffPaise, guarded } =
+    let { finalPaise, roundOffPaise, guarded } =
       settingsSnapshot.roundMode === "down10"
         ? applyRoundWithCostGuard(beforeRound, settingsSnapshot.roundTo, totalCost)
-        : { finalPaise: beforeRound, roundOffPaise: 0, guarded: false };
+        : { finalPaise: beforeRound, roundOffPaise: 0, guarded: false } as {
+            finalPaise: number; roundOffPaise: number; guarded: boolean;
+          };
     if (guarded) warnings.push("Round-off skipped: it would put the bill below purchase cost.");
     if (finalPaise < totalCost) warnings.push("Bill total is BELOW purchase cost (loss sale). Check discount.");
 
-    const method = input.paymentMethod ?? "cash";
+    // ---------- Loyalty redeem (points se raqam kam karna) ----------
+    let redeemedPoints = 0;
+    let redeemPaisa = 0;
+    if (settingsSnapshot.loyalty.enabled && input.redeemPoints && input.customerId && finalPaise > 0) {
+      const cust = get<{ loyalty_points: number }>(
+        "SELECT loyalty_points FROM customers WHERE id = ?",
+        [input.customerId]
+      );
+      const have = cust?.loyalty_points ?? 0;
+      redeemedPoints = Math.min(Math.floor(input.redeemPoints), have);
+      // 1 point = 1 rupee (owner Settings se rupeesPerPoint badal sakta hai)
+      const valuePerPoint = 100; // paisa
+      redeemPaisa = Math.min(redeemedPoints * valuePerPoint, finalPaise);
+      if (redeemPaisa > 0) {
+        finalPaise -= redeemPaisa;
+        warnings.push(`Loyalty points istemal hue: ${redeemedPoints} (-${(redeemPaisa / 100).toFixed(0)} Rs).`);
+      }
+    }
+
+    // ---------- Split payment (spec 8.5) ----------
+    // Pehle splits theek karo: manfi/0 hatao, aur total ke barabar lao
+    let splits = (input.splits ?? [])
+      .filter((x) => Math.round(x.amountPaisa) > 0)
+      .map((x) => ({ method: x.method, amountPaisa: Math.round(x.amountPaisa) }));
+    if (splits.length > 0) {
+      const sum = splits.reduce((n, x) => n + x.amountPaisa, 0);
+      if (sum !== finalPaise) {
+        // farq ko cash me adjust kar do (sab se aam tareeqa)
+        const diff = finalPaise - sum;
+        const cash = splits.find((x) => x.method === "cash");
+        if (cash) cash.amountPaisa = Math.max(0, cash.amountPaisa + diff);
+        else splits.push({ method: "cash", amountPaisa: Math.max(0, diff) });
+        splits = splits.filter((x) => x.amountPaisa > 0);
+      }
+    }
+
+    const method =
+      splits.length > 1 ? "split"
+      : splits.length === 1 ? splits[0].method
+      : (input.paymentMethod ?? "cash");
     const isCredit = method === "credit";
-    const paid = isCredit
+
+    const creditPart = splits.filter((x) => x.method === "credit").reduce((n, x) => n + x.amountPaisa, 0);
+    const paid = splits.length
+      ? finalPaise - creditPart
+      : isCredit
       ? Math.max(0, Math.min(Math.round(input.paidPaisa ?? 0), finalPaise))
       : Math.max(0, Math.round(input.paidPaisa ?? finalPaise));
     const due = Math.max(0, finalPaise - paid);
@@ -271,8 +325,18 @@ export function createSale(
       ]);
     }
 
-    // Payment record
-    if (paid > 0) {
+    // Payment record(s) — split ho to har tareeqe ki alag row
+    if (splits.length > 0) {
+      for (const sp of splits) {
+        if (sp.method === "credit") continue; // udhaar: khatay me chala gaya (neeche due)
+        run(
+          `INSERT INTO payments (method, amount_paisa, sale_id, customer_id, user_id, note)
+           VALUES (?,?,?,?,?,?)`,
+          [sp.method, sp.amountPaisa, saleId, input.customerId ?? null, user?.id ?? null,
+           splits.length > 1 ? `Split payment (${sp.method})` : "Received at counter"]
+        );
+      }
+    } else if (paid > 0) {
       run(
         `INSERT INTO payments (method, amount_paisa, sale_id, customer_id, user_id, note)
          VALUES (?,?,?,?,?,?)`,
@@ -284,6 +348,19 @@ export function createSale(
           user?.id ?? null,
           "Received at counter",
         ]
+      );
+    }
+
+    // Redeem hue points kat do
+    if (redeemPaisa > 0 && input.customerId) {
+      run("UPDATE customers SET loyalty_points = loyalty_points - ? WHERE id = ?", [
+        redeemedPoints, input.customerId,
+      ]);
+      run(
+        `INSERT INTO payments (method, amount_paisa, sale_id, customer_id, user_id, note)
+         VALUES (?,?,?,?,?,?)`,
+        ["loyalty", -redeemPaisa, saleId, input.customerId, user?.id ?? null,
+         `Loyalty redeem ${redeemedPoints} points`]
       );
     }
 

@@ -15,7 +15,10 @@ import {
   toBaseUnits,
 } from "@/lib/money";
 
-type Customer = { id: number; name: string; phone: string | null; category: string; balance_paisa: number };
+type Customer = {
+  id: number; name: string; phone: string | null; category: string;
+  balance_paisa: number; loyalty_points?: number; credit_limit_paisa?: number;
+};
 
 type PosBatch = {
   id: number;
@@ -142,6 +145,11 @@ export default function PosClient({
   const [showHeld, setShowHeld] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: "", phone: "", category: "normal" });
   const [tendered, setTendered] = useState(""); // grahak ne kitne cash diye
+  // Split payment (spec 8.5): ek se zyada tareeqe — cash + credit waghaira
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitCash, setSplitCash] = useState("");
+  const [splitOther, setSplitOther] = useState("");
+  const [redeem, setRedeem] = useState(""); // loyalty points bill me istemal
   const [showNewCustomer, setShowNewCustomer] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -309,6 +317,9 @@ export default function PosClient({
     setLines([]);
     setBillDiscount("");
     setPaidNow("");
+    setSplitCash("");
+    setSplitOther("");
+    setRedeem("");
     setNote("");
     setCustomerId("");
     setError("");
@@ -360,7 +371,7 @@ export default function PosClient({
       setError("Cart is empty.");
       return;
     }
-    if (paymentMethod === "credit" && !customerId) {
+    if ((paymentMethod === "credit" || (splitMode && toPaisa(splitOther || 0) > 0)) && !customerId) {
       setError("Credit (udhaar) ke liye customer select karein — ya naya customer banayein.");
       return;
     }
@@ -369,9 +380,18 @@ export default function PosClient({
     try {
       const payload = {
         customerId: customerId ? Number(customerId) : null,
-        paymentMethod,
+        paymentMethod: splitMode ? "split" : paymentMethod,
         paidPaisa: paymentMethod === "credit" ? toPaisa(paidNow || 0) : totals.total,
         tenderedPaisa: paymentMethod === "cash" ? (tendered ? toPaisa(tendered) : totals.total) : 0,
+        ...(splitMode
+          ? {
+              splits: [
+                { method: "cash" as const, amountPaisa: toPaisa(splitCash || 0) },
+                { method: "credit" as const, amountPaisa: toPaisa(splitOther || 0) },
+              ],
+            }
+          : {}),
+        ...(Number(redeem) > 0 ? { redeemPoints: Number(redeem) } : {}),
         billDiscountPaisa: totals.billDisc,
         notes: note || null,
         items: lines.map((l) => ({
@@ -753,6 +773,25 @@ export default function PosClient({
                   Previous balance: {formatPKR(customer.balance_paisa)}
                 </div>
               )}
+              {settings.loyaltyEnabled && customer && (customer.loyalty_points ?? 0) > 0 && (
+                <div className="mt-1 flex flex-wrap items-center gap-2 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-900">
+                  <span>{customer.loyalty_points} loyalty points</span>
+                  <input
+                    className="input-sm w-20"
+                    inputMode="numeric"
+                    placeholder="ist."
+                    value={redeem}
+                    onChange={(e) => setRedeem(e.target.value.replace(/[^0-9]/g, ""))}
+                  />
+                  <span>= {formatPKR(toPaisa(redeem || 0))} kam</span>
+                  <button
+                    className="rounded bg-amber-200 px-2 py-0.5"
+                    onClick={() => setRedeem(String(Math.min(customer.loyalty_points ?? 0, Math.floor(totals.total / 100))))}
+                  >
+                    Sab istemal
+                  </button>
+                </div>
+              )}
               {showNewCustomer && (
                 <div className="mt-2 space-y-2 rounded-lg bg-slate-50 p-2">
                   <input
@@ -818,6 +857,45 @@ export default function PosClient({
                   </button>
                 ))}
               </div>
+              {settings.paymentMethods.includes("split") !== false && (
+                <button
+                  className={`mt-2 !py-1.5 !text-xs ${splitMode ? "btn-primary" : "btn-secondary"}`}
+                  onClick={() => setSplitMode((v) => !v)}
+                >
+                  {splitMode ? "Split ON (do tareeqe)" : "Split payment"}
+                </button>
+              )}
+
+              {splitMode && (
+                <div className="mt-2 grid gap-2 rounded bg-slate-50 p-2 md:grid-cols-2">
+                  <div>
+                    <label className="label">Cash (Rs)</label>
+                    <input className="input" inputMode="decimal" value={splitCash} onChange={(e) => setSplitCash(e.target.value)} placeholder="0" />
+                  </div>
+                  <div>
+                    <label className="label">Baqi udhaar / credit (Rs)</label>
+                    <input className="input" inputMode="decimal" value={splitOther} onChange={(e) => setSplitOther(e.target.value)} placeholder="0" />
+                  </div>
+                  <div className="md:col-span-2 flex flex-wrap items-center gap-2 text-xs">
+                    <button className="btn-secondary !px-2 !py-1" onClick={() => { setSplitCash(String(totals.total / 100)); setSplitOther("0"); }}>
+                      Poora cash
+                    </button>
+                    <button className="btn-secondary !px-2 !py-1" onClick={() => { setSplitCash("0"); setSplitOther(String(totals.total / 100)); }}>
+                      Poora udhaar
+                    </button>
+                    <button className="btn-secondary !px-2 !py-1" onClick={() => { setSplitCash(String(Math.floor(totals.total / 200) / 100)); setSplitOther(String((totals.total - Math.floor(totals.total / 200) * 100) / 100)); }}>
+                      Aadha aadha
+                    </button>
+                    <span className="text-slate-600">
+                      Jor: <b>{formatPKR(toPaisa(splitCash || 0) + toPaisa(splitOther || 0))}</b> / bill {formatPKR(totals.total)}
+                    </span>
+                    {toPaisa(splitCash || 0) + toPaisa(splitOther || 0) !== totals.total && (
+                      <span className="text-amber-700">farq cash me adjust ho jayega</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {paymentMethod === "credit" && (
                 <div className="mt-2">
                   <label className="label">Amount received now (Rs)</label>
