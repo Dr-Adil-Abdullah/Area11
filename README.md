@@ -6,7 +6,7 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-22**
+## Status (2026-10-03) — v0.6.1, latest checkpoint **stage-25**
 
 **Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` 48 routes · `npm test` 11/11 · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
@@ -20,7 +20,9 @@
 
 **Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
 
-**Latest changes (stages 21–22):** suppliers are now a full ledger — open a supplier to see every purchase bill, payment and return, pay them from the same screen, and **send goods back** (`SR-0001`, expired / damaged / wrong items) which removes the stock and reduces what you owe (or turns it into a credit note). And the reorder list on **Expiry & stock alerts** became a WhatsApp **order pad**: tick the medicines, set the quantities, add the supplier's number and WhatsApp opens with the text ready — plus a one-tap "today's summary" message. Free `wa.me` links, no API key.
+**Latest changes (stages 23–25):** a bill can be paid **part cash, part credit** (or any mix) from a Split pad at the counter; **loyalty points** are now earned *and spent* (1 point = Rs 1, capped at what the customer has); and **categories can have sub-categories** (`Medicines › Dard/Bukhar`) — pick a parent in the filter and all its children come along. Also: expired batches can be ticked on the alerts page and sent back to the supplier in one click, and free/sample stock has its own table.
+
+**Stages 21–22:** suppliers are now a full ledger — open a supplier to see every purchase bill, payment and return, pay them from the same screen, and **send goods back** (`SR-0001`, expired / damaged / wrong items) which removes the stock and reduces what you owe (or turns it into a credit note). And the reorder list on **Expiry & stock alerts** became a WhatsApp **order pad**: tick the medicines, set the quantities, add the supplier's number and WhatsApp opens with the text ready — plus a one-tap "today's summary" message. Free `wa.me` links, no API key.
 
 **Stages 19–20:** the **black box** is now browsable at `/audit` — every action with who/when/what and filters — and **backup/restore** sits right next to it: download the whole database, or drop a `.db` back in (the app validates it, auto-saves the old one and switches over *without a restart*). Photos now go to the **`data/photos/` folder** instead of the database, products have a **room/almari** field, and **filters + sorting** were added to the product, customer and sales lists, with the product list also able to **group by category, company or room** (click a group header to fold it).
 
