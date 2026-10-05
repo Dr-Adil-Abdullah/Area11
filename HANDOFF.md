@@ -29,6 +29,8 @@ Last updated: **2026-10-03 (evening)** · App version **0.6.1 (Phase 1 done + Ph
 6. **Always checkpoint**: `bash scripts/ckpt.sh save "what changed"` then `bash scripts/ckpt.sh push`. The owner must be able to return to any earlier stage (see §6).
 7. **Every new owner instruction gets a new number** appended in `PHASE-TWO-INFORMATION.md` (short meaning + number), then update the `V` matrix (`rules-count.sh` verifies).
 8. **After each piece of work update this file (§3 status + §4 TODO) and README.**
+9. **Customization First (`U-17`)** — the owner's baseline expectation: on every screen the owner must be able to make **his own fields**, **click any row to open its full detail**, find **small clickable options inside Settings** (each opening its own detail), and use **filters / sorting / groups** on every list. Nothing is hard-coded. Related: `U-18` create-where-you-pick, `U-19` photos in folder, `U-20` discount base switchable, `U-21` room + camera photo, `U-22` filters & groups everywhere.
+10. **Git after every single change (`U-23`)** — code *and* docs must both be on GitHub at all times, so the chat can be closed at any moment. **Finish the app first, then polish (`U-24`)**, one item at a time, keeping the done/remaining list readable inside the repo files.
 
 ## 2. Run it
 
@@ -185,6 +187,19 @@ Its README says "demo only" — that is about *that* build (no real DB, fake aut
 ## 8. Decisions already made by the owner (full list: `INPUT-INFORMATION.md` Q-01…Q-19)
 
 Stack Next.js+TS+SQLite · English UI · expiry levels from settings (365/180/90 → blue/yellow/red) · `PINV-0001` / `INV-0001` · tax OFF (master switch) · round down to 10s **with cost guard** · discount default on margin · 58 + 80 mm printers, USB barcode scanner · reports via free WhatsApp · Supabase later (local SQLite primary) · offline 100 % · loyalty/discount structure only for now · staff PIN + owner password · 1 shop, 2 counters + owner mobile, LAN only · cash + credit payments · owner-only roles first · old data from Excel · app name default "Area11", editable.
+
+### Decisions taken during the build (chat Q&A, 5-Oct-2026 — do NOT re-ask)
+
+| Sawal | Owner ka faisla | Kya bana? |
+|---|---|---|
+| Dawa ke "kamre" se murad? | **Dono** — rack/kamra ka khana **aur** camera se tasveer | ✅ migration `006_product_room` + photo upload (`U-21`) |
+| Discount kis cheez par lage? | **Dono** — malik Settings se chune (profit **ya** retail) | ✅ `discount.mode` = `margin` / `retail` (`U-20`) |
+| Tasveerein kahan rahein? | **Folder me files** (database me na rahein) | ✅ `data/photos/` + `/api/photos` (`U-19`) |
+| Filter kahan chahiye? | **Teeno jagah** — dawaiyan, gahak, bill | ✅ filters + sorting in all three lists (`U-22`) |
+| "Folder barha/kam kar saken" se murad? | **Sadha group** — category/company/kamra ke hisaab se, na ke pedi (tree) | ✅ collapsible groups in the product list (`U-22`) |
+| Agla bara kaam kaunsa? | **Black box (audit) + backup/restore** | ✅ `/audit` page + `api/backup` GET/POST (stage-19) |
+
+Agla bara kaam (owner ki tarjih ke mutabiq, is ke baad): **Phase 3** — supplier ledger + supplier return + WhatsApp order text.
 
 ## 9. Quick verification recipe (≈2 min)
 
