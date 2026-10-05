@@ -3,7 +3,7 @@
 // Area11 - Blackbox: "kis ne, kab, kya kiya" -- owner/manager dekh sakte hain
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Download, RefreshCw, Search, ShieldCheck, Upload } from "lucide-react";
+import { Download, HardDriveDownload, RefreshCw, Save, Search, ShieldCheck, Upload } from "lucide-react";
 
 type Row = {
   id: number; at: string; user_name: string | null; action: string;
@@ -38,7 +38,13 @@ function prettyDetails(raw: string | null): string {
   }
 }
 
-export default function AuditClient({ isOwner }: { isOwner: boolean }) {
+export default function AuditClient({
+  isOwner,
+  autoBackup,
+}: {
+  isOwner: boolean;
+  autoBackup?: { ran: boolean; file?: string } | null;
+}) {
   const [rows, setRows] = useState<Row[]>([]);
   const [entities, setEntities] = useState<string[]>([]);
   const [users, setUsers] = useState<string[]>([]);
@@ -52,6 +58,7 @@ export default function AuditClient({ isOwner }: { isOwner: boolean }) {
   const [to, setTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  const [backups, setBackups] = useState<{ name: string; bytes: number; at: string }[]>([]);
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -71,18 +78,45 @@ export default function AuditClient({ isOwner }: { isOwner: boolean }) {
   }
 
   useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [action, entity, from, to]);
+  useEffect(() => {
+    if (isOwner) void loadBackups();
+    // safha khulte hi jo khud-b-khud backup bana ho, us ki khabar dein
+    if (autoBackup?.ran && autoBackup.file) setMsg(`Khud-b-khud backup ban gaya: ${autoBackup.file}`);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [isOwner]);
 
-  async function downloadBackup() {
+  async function downloadBackup(what: "zip" | "db" = "zip") {
     setMsg("");
-    const r = await fetch("/api/backup", { cache: "no-store" });
+    const r = await fetch(`/api/backup?what=${what}`, { cache: "no-store" });
     if (!r.ok) return setMsg("Backup ban nahi saka — sirf owner kar sakta hai.");
     const blob = await r.blob();
-    const name = (r.headers.get("Content-Disposition") ?? "").match(/filename="(.+?)"/)?.[1] ?? "area11-backup.db";
+    const name = (r.headers.get("Content-Disposition") ?? "").match(/filename="(.+?)"/)?.[1] ?? (what === "zip" ? "area11-backup.zip" : "area11-backup.db");
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = name; a.click();
     URL.revokeObjectURL(url);
     setMsg(`Backup ban gaya: ${name}`);
+  }
+
+  async function runAutoBackup() {
+    setBusy(true); setMsg("");
+    try {
+      const r = await (await fetch("/api/backup/auto", { method: "POST" })).json();
+      if (!r.ok) throw new Error(r.error);
+      setMsg(
+        r.ran
+          ? `Backup ban gaya: ${r.file} (${Math.round(r.bytes / 1024)} KB, ${r.photoCount} tasveer)${r.removed?.length ? ` · purane katay: ${r.removed.length}` : ""}`
+          : (r.reason ?? "Backup nahi bana.")
+      );
+      void loadBackups();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "backup failed");
+    } finally { setBusy(false); }
+  }
+
+  async function loadBackups() {
+    const r = await (await fetch("/api/backup/list", { cache: "no-store" })).json();
+    if (r.ok) setBackups(r.backups ?? []);
   }
 
   async function restore(file: File) {
@@ -118,10 +152,12 @@ export default function AuditClient({ isOwner }: { isOwner: boolean }) {
           <button className="btn-secondary" onClick={load}><RefreshCw className="h-4 w-4" /> Refresh</button>
           {isOwner && (
             <>
-              <button className="btn-primary" onClick={downloadBackup}><Download className="h-4 w-4" /> Backup download</button>
+              <button className="btn-primary" onClick={() => void downloadBackup("zip")}><Download className="h-4 w-4" /> Backup (DB + photos)</button>
+              <button className="btn-secondary" onClick={() => void downloadBackup("db")}><Download className="h-4 w-4" /> Sirf database</button>
+              <button className="btn-secondary" onClick={runAutoBackup} disabled={busy}><Save className="h-4 w-4" /> Abhi mehfooz karo</button>
               <label className={`btn-secondary ${busy ? "opacity-50" : ""}`}>
                 <Upload className="h-4 w-4" /> Restore
-                <input type="file" accept=".db" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void restore(f); }} />
+                <input type="file" accept=".db,.zip" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void restore(f); }} />
               </label>
             </>
           )}
@@ -129,6 +165,34 @@ export default function AuditClient({ isOwner }: { isOwner: boolean }) {
       </div>
 
       {msg && <div className="rounded bg-sky-50 px-3 py-2 text-sm text-sky-800">{msg}</div>}
+
+      {isOwner && backups.length > 0 && (
+        <div className="card">
+          <div className="card-head">
+            <div className="card-title">Mehfooz backups (data/backups)</div>
+            <span className="badge-slate">{backups.length}</span>
+          </div>
+          <div className="card-body overflow-auto">
+            <table className="tbl">
+              <thead><tr><th>File</th><th>Kab</th><th className="text-right">Naap</th><th></th></tr></thead>
+              <tbody>
+                {backups.map((b) => (
+                  <tr key={b.name}>
+                    <td className="font-medium">{b.name}</td>
+                    <td className="text-xs text-slate-500">{String(b.at).slice(0, 16).replace("T", " ")}</td>
+                    <td className="text-right text-xs">{Math.round(b.bytes / 1024)} KB</td>
+                    <td className="text-right">
+                      <a className="btn-link" href={`/api/backup/file?n=${encodeURIComponent(b.name)}`}>
+                        <HardDriveDownload className="h-3 w-3" /> download
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {summary.length > 0 && (
         <div className="card card-body flex flex-wrap gap-2">

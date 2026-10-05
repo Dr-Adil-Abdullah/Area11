@@ -101,6 +101,11 @@ export const SETTING_DEFAULTS = {
   "security.sessionHours": 12,
   "security.requireLogin": true,
 
+  // ---- Backup (khud-b-khud, photos ke sath) ----
+  "backup.autoEnabled": false, // rozana khud backup banaye?
+  "backup.everyHours": 24, // kitne ghante baad
+  "backup.keep": 7, // kitne backups rakhein (purane kaat diye jayenge)
+
   // ---- Cloud sync (Supabase) - spec Phase 5 ----
   "sync.enabled": false,
   "sync.provider": "supabase",

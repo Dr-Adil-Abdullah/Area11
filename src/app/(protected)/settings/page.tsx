@@ -262,6 +262,30 @@ export default async function SettingsPage({
           </div>
         </Section>
 
+        {/* ---------------- Backup ---------------- */}
+        <Section
+          title="Backup (mehfooz copy)"
+          desc="Ek hi file me poora database AUR sari photos. Rozana khud-b-khud bhi ban sakta hai."
+        >
+          <div className="md:col-span-2">
+            <Check
+              name="backup.autoEnabled"
+              label="Rozana khud-b-khud backup banaye (app khulte hi)"
+              defaultChecked={s["backup.autoEnabled"]}
+            />
+          </div>
+          <Field label="Kitne ghante baad">
+            <input type="number" min={1} name="backup.everyHours" defaultValue={s["backup.everyHours"]} className="input" />
+          </Field>
+          <Field label="Kitne backups rakhein">
+            <input type="number" min={1} name="backup.keep" defaultValue={s["backup.keep"]} className="input" />
+          </Field>
+          <p className="text-xs text-slate-500 md:col-span-2">
+            Backup <code>data/backups/</code> me jama hota hai (photos ke sath, <code>.zip</code>).
+            Purane kat dete hain ta ke jagah na bhare. Download ke liye Black box / Backup safha dekhein.
+          </p>
+        </Section>
+
         {/* ---------------- Udhaar (credit) ---------------- */}
         <Section
           title="Udhaar (Credit) ki hadd"

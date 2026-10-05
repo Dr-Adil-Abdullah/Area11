@@ -5,6 +5,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { db, getDbPath, reopenDb } from "@/lib/db";
+import { makeBackupZip, restorePhotos, dbBytes } from "@/lib/backup";
+import { readZip } from "@/lib/zip";
 import { audit } from "@/lib/audit";
 import { requireOwner } from "@/lib/session";
 import { jsonError } from "@/lib/api";
@@ -19,29 +21,49 @@ function stamp() {
   return new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await requireOwner();
   } catch (e) {
     return jsonError(e);
   }
-  const s = stamp();
-  const tmp = path.join(os.tmpdir(), `area11-backup-${s}-${process.pid}.db`);
+  const what = new URL(req.url).searchParams.get("what") ?? "zip";
+
   try {
-    db.exec(`VACUUM INTO '${tmp.replace(/'/g, "''")}'`);
-    const buf = fs.readFileSync(tmp);
-    fs.unlinkSync(tmp);
-    void audit({ action: "backup", entity: "Database", details: { bytes: buf.length } });
-    return new Response(buf, {
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="area11-backup-${s}.db"`,
-      },
-    });
+    // --- Photos ke SATH poora backup (ek hi .zip) ---
+    if (what === "zip") {
+      const { zip, dbSize, photoCount } = makeBackupZip();
+      void audit({
+        action: "backup",
+        entity: "Database",
+        details: { bytes: zip.length, dbSize, photoCount, withPhotos: true },
+      });
+      return new Response(new Uint8Array(zip), {
+        headers: {
+          "Content-Type": "application/zip",
+          "Content-Disposition": `attachment; filename="area11-backup-${stamp()}.zip"`,
+        },
+      });
+    }
+
+    // --- Sirf database (purana tareeqa) ---
+    if (what === "db") {
+      const buf = dbBytes();
+      void audit({ action: "backup", entity: "Database", details: { bytes: buf.length, withPhotos: false } });
+      return new Response(new Uint8Array(buf), {
+        headers: {
+          "Content-Type": "application/octet-stream",
+          "Content-Disposition": `attachment; filename="area11-backup-${stamp()}.db"`,
+        },
+      });
+    }
+
+    return Response.json({ ok: false, error: "what=zip ya what=db chunein." }, { status: 400 });
   } catch (e) {
     return Response.json({ ok: false, error: e instanceof Error ? e.message : "backup failed" }, { status: 500 });
   }
 }
+
 
 export async function POST(req: Request) {
   try {
@@ -58,17 +80,30 @@ export async function POST(req: Request) {
   if (file.size > MAX_BYTES) {
     return Response.json({ ok: false, error: "File bohat bari hai (200 MB se kam honi chahiye)." }, { status: 400 });
   }
-  if (!/\.db$/i.test(file.name)) {
-    return Response.json({ ok: false, error: "Sirf .db file (jo backup banaya tha)." }, { status: 400 });
+  const isZip = /\.zip$/i.test(file.name);
+  if (!/\.db$/i.test(file.name) && !isZip) {
+    return Response.json({ ok: false, error: "Sirf .db ya .zip file (jo backup banaya tha)." }, { status: 400 });
   }
 
   const target = getDbPath();
   const tmpIn = path.join(os.tmpdir(), `area11-restore-${process.pid}-${Date.now()}.db`);
   let safety = "";
+  let photosRestored = 0;
 
   try {
     // 1) file pehle disk par
-    fs.writeFileSync(tmpIn, Buffer.from(await file.arrayBuffer()));
+    const raw = Buffer.from(await file.arrayBuffer());
+
+    // 1b) ZIP ho to us ke andar se DB aur photos nikaalo
+    if (isZip) {
+      const entries = readZip(raw);
+      const dbEntry = entries.find((e) => /\.db$/i.test(e.name) || e.name === "area11.db");
+      if (!dbEntry) throw new Error("Is zip ke andar database (area11.db) nahi mila.");
+      fs.writeFileSync(tmpIn, dbEntry.data);
+      photosRestored = restorePhotos(entries);
+    } else {
+      fs.writeFileSync(tmpIn, raw);
+    }
 
     // 2) sahi SQLite hai ya nahi? (header check + count)
     const head = fs.readFileSync(tmpIn).subarray(0, 16).toString("utf8");
@@ -112,7 +147,7 @@ export async function POST(req: Request) {
     void audit({
       action: "restore",
       entity: "Database",
-      details: { file: file.name, bytes: file.size, safetyCopy: safety || null },
+      details: { file: file.name, bytes: file.size, safetyCopy: safety || null, photosRestored },
     });
 
     const { listProducts } = await import("@/lib/catalog");
@@ -121,9 +156,12 @@ export async function POST(req: Request) {
     return Response.json({
       ok: true,
       needRestart: false,
-      message: "Backup wapas aa gaya — app abhi nayi database par chal rahi hai.",
+      message: isZip
+        ? `Backup wapas aa gaya — database ke sath ${photosRestored} tasveer(en) bhi.`
+        : "Backup wapas aa gaya — app abhi nayi database par chal rahi hai.",
       safetyCopy: safety ? path.basename(safety) : null,
       products: total,
+      photosRestored,
     });
   } catch (e) {
     return Response.json(

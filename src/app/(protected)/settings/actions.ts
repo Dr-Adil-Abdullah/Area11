@@ -86,6 +86,11 @@ async function saveAll(fd: FormData) {
     ),
     "payment.default": str(fd, "payment.default", "cash"),
 
+    // Backup (khud-b-khud, photos ke sath)
+    "backup.autoEnabled": bool(fd, "backup.autoEnabled"),
+    "backup.everyHours": num(fd, "backup.everyHours", 24),
+    "backup.keep": num(fd, "backup.keep", 7),
+
     // Udhaar (credit) ki hadd
     "credit.blockOverLimit": bool(fd, "credit.blockOverLimit"),
     "credit.managerCanOverride": bool(fd, "credit.managerCanOverride"),
