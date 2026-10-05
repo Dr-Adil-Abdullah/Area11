@@ -6,7 +6,7 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-05) — v0.6.1, latest checkpoint **stage-32**
+## Status (2026-10-05) — v0.6.1, latest checkpoint **stage-34**
 
 **Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **67 routes** · `npm test` **26/26** · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
@@ -16,11 +16,15 @@
 | **Phase 1** | Products + pack formula, suppliers, purchases (PINV, batch/expiry), counter billing (FEFO, Box/Strip/Tab, hold cart, round-off **with cost guard**), **cash tendered → change calculator** (quick cash buttons, receipt line), **stock write-off/adjust page** (expired/damaged/count correction, value at cost), **Excel import of old data** (template → dry-run preview → import, opening stock/batches, customer udhaar, supplier payable), thermal receipt, **login + roles (owner password / staff PIN) + URL-level page guard**, **offline/PWA shell** (installable app, offline page, internet-off banner) | ✅ **COMPLETE (stages 9–14)** |
 | **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup, **cash shifts (galla): opening float → live expected cash → close with counted cash + variance + history**, **lost-bill lookup (bill / customer / phone / medicine) with rush-time provisional returns + link-to-bill + role-gated restock** | ✅ **Phase 2 COMPLETE** (+ **shift handover** — ginta hua cash agle shift ka float, "kis ne → kis ko", handover parchi) |
 | **Discount guard (spec 7.3)** | Role percent limits (cashier 5 · manager 20 · owner unlimited) **and** no discount below purchase cost — both server-side and editable in Settings | ✅ |
-| Phase 2 rest, 3, 4, 5 | bulk update, stock-take, shift handover, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, **reports**, Supabase sync … | ⏳ see `HANDOFF.md` §4 (about **92 %** built overall) |
+| Phase 2–5 (baqi sab) | bulk update (sare records file se), stock-take (ginti), **shift handover**, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, **reports**, **backup photos ke sath + rozana auto**, **camera photo**, **Supabase sync** | ✅ **sab mukammal** — sirf hardware (thermal printer + USB scanner) ki dukan par janch baqi |
 
 **Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
 
-**Latest changes (stages 26–32):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+**Latest changes (stages 26–34):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+
+**Stage-34:** **Supabase cloud sync** — دکان کا ڈیٹا cloud پر بھیجیں (`/sync` صفحہ: بھیجیں / دیکھیں / لا کر لگائیں)، تاکہ گھر سے اعداد دیکھ سکیں اور ایک کاپی باہر محفوظ رہے۔ Local database ہمیشہ **اصل** رہتا ہے؛ انٹرنیٹ بند ہو تو ایپ ویسے ہی چلتی ہے۔ سیٹ اپ کا پورا طریقہ [`docs/SUPABASE.md`](docs/SUPABASE.md) میں۔
+
+**Stage-33:** **کیمرا سے تصویر** — پروڈکٹ اور کسٹمر دونوں صفحوں پر "Camera se lein": لائیو پیش نظارہ، پچھلا/اگلا کیمرا، اور تصویر ڈیوائس پر ہی چھوٹی ہو کر محفوظ۔
 
 **Stage-32:** **shift handover** — galla band karte waqt batayein *kaun senbhalega*: ginta hua cash agle shift ka opening float ban jata hai, "kis ne → kis ko" mehfooz rehta hai، اور ایک **handover parchi** (ساری لائنیں + فرق + دونوں دستخط) چھاپ سکتے ہیں۔
 
