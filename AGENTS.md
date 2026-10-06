@@ -2,7 +2,7 @@
 
 **Start with [`HANDOFF.md`](./HANDOFF.md)** — current status (done / remaining), run instructions, gotchas, hosting, rollback. It is the memory of this project: **update it (§3 + §4) and `README.md` after every piece of work.**
 
-Last updated: **2026-10-05** · `arena/01a10395-area11` → PR **#3** into `main`. Phase 1 complete at **stage-14**; Phase 2 essentials (cash shifts, lost-bill/rush-time returns) at **stage-16**; customization wave (custom fields, detail pages, click-to-open settings, room field, photos in folder, filters & groups) at **stages 17–20**; black box + backup/restore at **stage-19**. Current status/next work lives in `HANDOFF.md` §3–§4.
+Last updated: **2026-10-06** · `arena/01a10395-area11` → PR **#3** into `main`. **Latest checkpoint: stage-35** (Spec 1–4: manfi stock · har module ka log purana→naya · wapsi ki sakht janch · counter par fori ittila). Malik ke liye mukammal Urdu dastavez: `docs/APP-TAFSEEL.md` (§9–§12 is kaam ki tafseel). Phase 1 complete at **stage-14**; Phase 2 essentials (cash shifts, lost-bill/rush-time returns) at **stage-16**; customization wave (custom fields, detail pages, click-to-open settings, room field, photos in folder, filters & groups) at **stages 17–20**; black box + backup/restore at **stage-19**. Current status/next work lives in `HANDOFF.md` §3–§4.
 
 Non-negotiables (details in `PHASE-TWO-INFORMATION.md`, 116 numbered rules):
 

@@ -9,9 +9,9 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-05) — v0.6.1, latest checkpoint **stage-34**
+## Status (2026-10-06) — v0.6.2, latest checkpoint **stage-35**
 
-**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **67 routes** · `npm test` **26/26** · `rules-count.sh` = `SAB THEEK` · live API smoke (purchase `PINV-0001` → sale `INV-0001` → stock write-off → change `94000` paisa) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
+**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **69 routes** · `npm test` **37/37** · `rules-count.sh` = `SAB THEEK` (129) · live smoke of **Spec 1–4** (negative stock, audit old→new, return validation, POS alerts) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
 | Stage | Work | State |
 |---|---|---|
@@ -20,10 +20,13 @@
 | **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup, **cash shifts (galla): opening float → live expected cash → close with counted cash + variance + history**, **lost-bill lookup (bill / customer / phone / medicine) with rush-time provisional returns + link-to-bill + role-gated restock** | ✅ **Phase 2 COMPLETE** (+ **shift handover** — ginta hua cash agle shift ka float, "kis ne → kis ko", handover parchi) |
 | **Discount guard (spec 7.3)** | Role percent limits (cashier 5 · manager 20 · owner unlimited) **and** no discount below purchase cost — both server-side and editable in Settings | ✅ |
 | Phase 2–5 (baqi sab) | bulk update (sare records file se), stock-take (ginti), **shift handover**, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, **reports**, **backup photos ke sath + rozana auto**, **camera photo**, **Supabase sync** | ✅ **sab mukammal** — sirf hardware (thermal printer + USB scanner) ki dukan par janch baqi |
+| **Spec 1–4 (stage-35)** | **manfi (negative) stock** — bikri kabhi nahi rukti, magar screen ke ooper bara surkh alert · **har module ka log** jis me **purani → nayi value**, module tag, security events, aur CSV · **wapasi ki sakht janch** (sirf asal bill se, hadd aur mohelat ke sath) · **counter par fori ittila** (toasts + alert bar) | ✅ **COMPLETE** |
 
 **Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
 
 **Latest changes (stages 26–34):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+
+**Stage-35 (Spec 1–4):** **منفی اسٹاک + مکمل لاگ + واپسی کی جانچ + کاؤنٹر الرٹس** — اب بکری **کبھی نہیں رکتی** خواہ اسٹاک مائنس میں چلا جائے، مگر اسکرین کے بالکل اوپر بڑا سرخ الرٹ آتا ہے اور ہر واقعہ بلیک باکس میں **`negative_sale`** کے نام سے «کون · کب · **پرانی قدر → نئی قدر**» کے ساتھ محفوظ ہوتا ہے۔ واپسی اب صرف **اصل بل نمبر** سے مل کر ہوتی ہے — حد سے زیادہ واپسی یا ریفنڈ **ناممکن** ہے۔ کارٹ میں دوا ڈالتے ہی **ٹوسٹ** (کم/منفی اسٹاک، VIP/Doctor ریٹ) نظر آتا ہے۔ `/audit` پر «پرانا → نیا» کالم، ماڈیول فلٹر اور CSV؛ `/alerts` پر «Stock MINUS» کارڈ۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §9–§12 میں۔
 
 **Stage-34:** **Supabase cloud sync** — دکان کا ڈیٹا cloud پر بھیجیں (`/sync` صفحہ: بھیجیں / دیکھیں / لا کر لگائیں)، تاکہ گھر سے اعداد دیکھ سکیں اور ایک کاپی باہر محفوظ رہے۔ Local database ہمیشہ **اصل** رہتا ہے؛ انٹرنیٹ بند ہو تو ایپ ویسے ہی چلتی ہے۔ سیٹ اپ کا پورا طریقہ [`docs/SUPABASE.md`](docs/SUPABASE.md) میں۔
 
