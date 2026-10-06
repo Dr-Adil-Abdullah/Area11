@@ -50,7 +50,17 @@ export function receiveCustomerPayment(customerId: number, amountPaisa: number, 
     run("UPDATE customers SET balance_paisa = balance_paisa - ? WHERE id = ?", [amt, customerId]);
     run(`INSERT INTO payments (method, amount_paisa, customer_id, user_id, note) VALUES (?,?,?,?,?)`,
       [method || "cash", amt, customerId, user?.id ?? null, note?.trim() || "Udhaar wasooli"]);
-    void audit({ action: "update", userId: user?.id ?? null, userName: user?.name ?? null, entity: "CustomerPayment", entityId: customerId, details: { amount: amt } });
+    void audit({
+      action: "update",
+      userId: user?.id ?? null,
+      userName: user?.name ?? null,
+      entity: "CustomerPayment",
+      entityId: customerId,
+      module: "Customers",
+      before: { customer: c.name, balance_paisa: c.balance_paisa },
+      after: { customer: c.name, balance_paisa: c.balance_paisa - amt, received: amt, method: method || "cash" },
+      details: { amount: amt, note },
+    });
     return { balancePaisa: c.balance_paisa - amt };
   });
 }
@@ -64,7 +74,17 @@ export function paySupplier(supplierId: number, amountPaisa: number, note: strin
     run("UPDATE suppliers SET balance_paisa = balance_paisa - ? WHERE id = ?", [amt, supplierId]);
     run(`INSERT INTO payments (method, amount_paisa, supplier_id, user_id, note) VALUES ('cash', ?, ?, ?, ?)`,
       [amt, supplierId, user?.id ?? null, note?.trim() || "Supplier payment"]);
-    void audit({ action: "update", userId: user?.id ?? null, userName: user?.name ?? null, entity: "SupplierPayment", entityId: supplierId, details: { amount: amt } });
+    void audit({
+      action: "update",
+      userId: user?.id ?? null,
+      userName: user?.name ?? null,
+      entity: "SupplierPayment",
+      entityId: supplierId,
+      module: "Suppliers",
+      before: { supplier_id: supplierId, balance_paisa: s.balance_paisa },
+      after: { supplier_id: supplierId, balance_paisa: s.balance_paisa - amt, paid: amt },
+      details: { amount: amt, note },
+    });
     return { balancePaisa: s.balance_paisa - amt };
   });
 }
@@ -75,7 +95,8 @@ export function addExpense(category: string, title: string, amountPaisa: number,
   if (!(amt > 0)) throw new Error("Enter an amount greater than zero.");
   const id = run("INSERT INTO expenses (category, title, amount_paisa, note, user_id) VALUES (?,?,?,?,?)",
     [category || "other", title.trim(), amt, note?.trim() || null, user?.id ?? null]).lastInsertRowid;
-  void audit({ action: "create", userId: user?.id ?? null, userName: user?.name ?? null, entity: "Expense", entityId: id, details: { title, amt } });
+  void audit({ action: "create", userId: user?.id ?? null, userName: user?.name ?? null, entity: "Expense", entityId: id,
+    module: "Customers", before: null, after: { title, amount_paisa: amt }, details: { title, amt } });
   return id;
 }
 
@@ -84,7 +105,8 @@ export function addDrawing(type: "cash" | "goods", amountPaisa: number, note: st
   if (!(amt > 0)) throw new Error("Enter an amount greater than zero.");
   const id = run("INSERT INTO owner_drawings (type, amount_paisa, note, user_id) VALUES (?,?,?,?)",
     [type, amt, note?.trim() || null, user?.id ?? null]).lastInsertRowid;
-  void audit({ action: "create", userId: user?.id ?? null, userName: user?.name ?? null, entity: "OwnerDrawing", entityId: id, details: { type, amt } });
+  void audit({ action: "create", userId: user?.id ?? null, userName: user?.name ?? null, entity: "OwnerDrawing", entityId: id,
+    module: "Customers", before: null, after: { type, amount_paisa: amt }, details: { type, amt } });
   return id;
 }
 

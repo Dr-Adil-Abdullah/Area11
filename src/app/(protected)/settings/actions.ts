@@ -42,6 +42,22 @@ async function saveAll(fd: FormData) {
     "bill.roundMode": str(fd, "bill.roundMode", "down10"),
     "bill.roundTo": num(fd, "bill.roundTo", 10),
 
+    // Naye bill prefixes (pehle Settings par nazar nahi aate thay)
+    "bill.provisionalPrefix": str(fd, "bill.provisionalPrefix", "PR-"),
+    "bill.supplierReturnPrefix": str(fd, "bill.supplierReturnPrefix", "SR-"),
+    "bill.stockTakePrefix": str(fd, "bill.stockTakePrefix", "ST-"),
+
+    // Stock: manfi inventory (Spec 1)
+    "stock.allowNegative": bool(fd, "stock.allowNegative"),
+    "stock.warnNegative": bool(fd, "stock.warnNegative"),
+
+    // Returns ki sakht jaanch (Spec 3)
+    "returns.requireInvoice": bool(fd, "returns.requireInvoice"),
+    "returns.maxDays": num(fd, "returns.maxDays", 0),
+
+    // Owner ka naam (pehle chhupa tha)
+    "owner.name": str(fd, "owner.name", "Dr. Adil Abdullah"),
+
     // Tax
     "tax.enabled": bool(fd, "tax.enabled"),
     "tax.percent": num(fd, "tax.percent", 0),
@@ -109,7 +125,19 @@ async function saveAll(fd: FormData) {
     "security.requireLogin": bool(fd, "security.requireLogin"),
   };
 
+  // Spec 2: purani value pehle se nikal lo, tab hi "kya badla" ka saboot rahega
+  const before = await getSettings();
+  const beforeSlice: Record<string, unknown> = {};
+  for (const k of Object.keys(patch)) beforeSlice[k] = (before as Record<string, unknown>)[k];
+
   await setSettings(patch);
+
+  const changed: Record<string, unknown> = {};
+  for (const k of Object.keys(patch)) {
+    const a = beforeSlice[k];
+    const b = patch[k];
+    if (JSON.stringify(a ?? null) !== JSON.stringify(b ?? null)) changed[k] = { from: a, to: b };
+  }
 
   const user = await currentUser();
   await audit({
@@ -117,7 +145,10 @@ async function saveAll(fd: FormData) {
     userId: user?.id,
     userName: user?.name,
     entity: "Setting",
-    details: { keys: Object.keys(patch), store: patch["store.name"] },
+    module: "Settings",
+    before: beforeSlice,
+    after: patch as Record<string, unknown>,
+    details: { keys: Object.keys(patch), changed: Object.keys(changed), store: patch["store.name"] },
   });
 
   revalidatePath("/settings");

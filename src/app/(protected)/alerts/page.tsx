@@ -36,10 +36,50 @@ export default async function AlertsPage() {
       ORDER BY b.expiry_ym, p.name`
   );
   const samples = sampleStock();
+  // Spec 1.2: stock MINUS me gai cheezein -- ginti ke waqt sab se pehle ye dekhein
+  const negative = query<{
+    product_id: number; name: string; base_unit: string; rack_no: string | null;
+    minus_batches: number; qty_base: number;
+  }>(
+    `SELECT p.id AS product_id, p.name, p.base_unit, p.rack_no,
+            COUNT(*) AS minus_batches,
+            SUM(b.qty_base) AS qty_base
+       FROM batches b JOIN products p ON p.id = b.product_id
+      WHERE b.active = 1 AND b.qty_base < 0
+      GROUP BY p.id
+      ORDER BY qty_base ASC`
+  );
   return (
     <div className="space-y-4">
       <div><h1 className="text-xl font-semibold text-slate-800">Expiry &amp; stock alerts</h1>
         <p className="text-sm text-slate-500">Expiry windows come from Settings (now {levels.map((l) => l.days).join(" / ")} days). Reorder level is set per product.</p></div>
+
+      {/* ===== Spec 1.2: sab se ooper wala surkh alert ===== */}
+      {negative.length > 0 && (
+        <div className="rounded-lg border-2 border-rose-300 bg-rose-100 p-3 text-rose-900">
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <span>⚠</span> Stock MINUS me hai — {negative.length} dawa (en)
+          </div>
+          <div className="mt-1 text-xs">
+            Ginti (Stock take) ya purchases se theek karein. Har manfi bikri blackbox me
+            <b> negative_sale</b> ke naam se mehfooz hai — kis ne aur kab becha, sab record hai.
+          </div>
+          <table className="tbl mt-2 bg-white/60">
+            <thead><tr><th>Dawa</th><th>Rack</th><th className="text-right">Kitna minus</th></tr></thead>
+            <tbody>
+              {negative.map((n) => (
+                <tr key={n.product_id}>
+                  <td className="font-medium">{n.name}</td>
+                  <td className="text-xs text-slate-500">{n.rack_no ?? "—"}</td>
+                  <td className="text-right font-semibold text-rose-700">
+                    {Math.round(n.qty_base * 1000) / 1000} {n.base_unit}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="card"><div className="card-head"><div className="card-title">Expiring / expired batches</div><span className="badge-slate">{exp.length}</span></div>
           <div className="max-h-[65vh] overflow-auto"><table className="tbl"><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th className="text-right">Qty</th><th>Status</th></tr></thead><tbody>

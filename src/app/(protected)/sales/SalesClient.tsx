@@ -137,8 +137,26 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
                       {items.map((i) => (
                         <div key={i.id} className="flex items-center gap-3 text-sm">
                           <span className="w-64 truncate">{i.name}</span>
-                          <span className="text-xs text-slate-500">sold {i.qty_base}, returned {i.returned_qty}</span>
-                          <input className="input-sm w-24" placeholder="0" value={qty[i.id] ?? ""} onChange={(e) => setQty({ ...qty, [i.id]: e.target.value })} />
+                          <span className="text-xs text-slate-500">
+                            sold {i.qty_base} · returned {i.returned_qty} ·{" "}
+                            <b className="text-emerald-700">baqi {Math.max(0, i.qty_base - i.returned_qty)}</b>
+                          </span>
+                          <input
+                            className="input-sm w-24"
+                            type="number"
+                            min={0}
+                            max={Math.max(0, i.qty_base - i.returned_qty)}
+                            placeholder="0"
+                            value={qty[i.id] ?? ""}
+                            onChange={(e) => {
+                              const left = Math.max(0, i.qty_base - i.returned_qty);
+                              const v = Number(e.target.value);
+                              setQty({ ...qty, [i.id]: v > left ? String(left) : e.target.value });
+                            }}
+                          />
+                          {Number(qty[i.id]) > Math.max(0, i.qty_base - i.returned_qty) && (
+                            <span className="text-xs text-rose-600">hadd se zyada</span>
+                          )}
                         </div>))}
                       <div className="flex flex-wrap items-center gap-3">
                         <input className="input-sm w-64" placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />

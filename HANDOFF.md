@@ -2,7 +2,9 @@
 
 > **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں — **کام کرتا ہوا اور آج (2026-10-03) دوبارہ verify شدہ**۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** اگلا کام "§4 REMAINING" میں ہے (سب سے پہلے: **PR #3 merge** اور login+roles)۔ ہر کام کے بعد یہ فائل اپ ڈیٹ کریں۔
 
-Last updated: **2026-10-03 (evening)** · App version **0.6.1 (Phase 1 done + Phase 2 essentials + login/roles)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: see `git tag` (`stage-1 … stage-8` + this work).
+> 🇵🇰 **مالک کے لیے مکمل اردو دستاویز: [`docs/APP-TAFSEEL.md`](./docs/APP-TAFSEEL.md)** — سب فیچرز، Settings کی ہر لائن، باقی کام، اور فائنل کرنے سے پہلے کے خطرے۔
+
+Last updated: **2026-10-05** · App version **0.6.1 (Phase 1 done + Phase 2 essentials + login/roles)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: see `git tag` (`stage-1 … stage-8` + this work).
 
 ---
 

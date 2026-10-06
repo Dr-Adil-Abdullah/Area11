@@ -18,6 +18,8 @@ import { applyRoundWithCostGuard, toBaseUnits, marginDiscount, retailDiscount, p
 import { getSettings } from "./settings";
 import { audit } from "./audit";
 import { checkDiscountLimit, maxDiscountPercent } from "./roles";
+import { getSyncSettings } from "./settings-sync";
+import { evaluateNegativeStock } from "./stock-rules";
 
 export type CartLineInput = {
   productId: number;
@@ -63,7 +65,22 @@ export type SaleResult = {
   tenderedPaisa: number;
   changePaisa: number;
   warnings: string[];
+  /** Spec 1.2: jin cheezon ka stock is bill se MINUS me gaya */
+  negativeItems: NegativeItem[];
 };
+
+export type NegativeItem = {
+  productId: number;
+  name: string;
+  inStockBase: number;
+  soldBase: number;
+  afterBase: number;
+};
+
+/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye */
+function roundQty(n: number): number {
+  return Math.round(n * 1000) / 1000;
+}
 
 /**
  * Bill ka total aur itemon ka jor HAMESHA barabar hone chahiye.
@@ -98,6 +115,7 @@ export function createSale(
   return tx(() => {
     const code = takeNextCode("sale");
     const warnings: string[] = [];
+    const negativeItems: NegativeItem[] = [];
     const settingsSnapshot = getSyncSettings();
 
     const lines = input.items.map((it) => {
@@ -114,20 +132,46 @@ export function createSale(
 
       const qtyBase = toBaseUnits(Number(it.qty) || 0, it.unit, product.box_strips, product.strip_tablets);
       let costPaisa = product.cost_paisa;
+      let inStockBase = 0;   // is waqt kitna maujood hai (batch ya poori dawa)
+      let stockLabel = "";   // kis cheez ka stock dekha (batch no ya Product)
 
       if (it.batchId) {
-        const batch = get<{ id: number; qty_base: number; cost_paisa: number }>(
-          "SELECT id, qty_base, cost_paisa FROM batches WHERE id = ?",
+        const batch = get<{ id: number; qty_base: number; cost_paisa: number; batch_no: string | null }>(
+          "SELECT id, qty_base, cost_paisa, batch_no FROM batches WHERE id = ?",
           [it.batchId]
         );
         if (!batch) throw new Error(`Batch ${it.batchId} not found`);
         costPaisa = batch.cost_paisa;
-        if (batch.qty_base < qtyBase) {
-          // Spec 1.2.5: crash nahi -- minus me dikhao magar alert do
-          warnings.push(
-            `${product.name}: batch me sirf ${batch.qty_base} base units the, ${qtyBase} bike. Stock minus me chala gaya.`
-          );
-        }
+        inStockBase = batch.qty_base;
+        stockLabel = batch.batch_no ? `batch ${batch.batch_no}` : "batch";
+      } else {
+        // batch nahi chuna to poori dawa ka jama stock dekho
+        inStockBase =
+          scalar<number>("SELECT COALESCE(SUM(qty_base), 0) AS c FROM batches WHERE product_id = ?", [
+            it.productId,
+          ]) ?? 0;
+        stockLabel = "stock";
+      }
+
+      // ---------------- Spec 1: NEGATIVE INVENTORY ----------------
+      // Faisla ek hi jagah se (src/lib/stock-rules.ts) -- test bhi wahan hai
+      const verdict = evaluateNegativeStock({
+        name: product.name,
+        inStockBase,
+        sellBase: qtyBase,
+        allowNegative: settingsSnapshot.stock.allowNegative,
+        warn: settingsSnapshot.stock.warnNegative,
+        stockLabel,
+      });
+      if (verdict.short) {
+        negativeItems.push({
+          productId: it.productId,
+          name: product.name,
+          inStockBase: roundQty(inStockBase),
+          soldBase: roundQty(qtyBase),
+          afterBase: verdict.afterBase,
+        });
+        if (verdict.message) warnings.push(verdict.message);
       }
 
       const gross = Math.round(qtyBase * Math.max(0, it.unitPricePaisa));
@@ -291,6 +335,9 @@ export function createSale(
       // nazdeek expiry wala batch khud pakro -- warna batches aur stock_movements
       // ka hisaab alag ho jata hai.
       if (!l.batchId) {
+        // Spec 1.3: stock hamesha foran update ho -- chahe batch khaali hi kyun na ho.
+        // Pehle positive stock wala batch (FEFO), warna AAKHRI batch (stock minus me
+        // chala jaye to bhi record rahe -- warna kitab aur asliyat me farq parh jata hai).
         const fefo = get<{ id: number }>(
           `SELECT id FROM batches
             WHERE product_id = ? AND active = 1 AND qty_base > 0
@@ -298,7 +345,18 @@ export function createSale(
             LIMIT 1`,
           [l.productId]
         );
-        if (fefo) l.batchId = fefo.id;
+        if (fefo) {
+          l.batchId = fefo.id;
+        } else {
+          const last = get<{ id: number }>(
+            `SELECT id FROM batches
+              WHERE product_id = ? AND active = 1
+              ORDER BY expiry_ym IS NULL, expiry_ym DESC, id DESC
+              LIMIT 1`,
+            [l.productId]
+          );
+          if (last) l.batchId = last.id;
+        }
       }
 
       run(
@@ -321,9 +379,24 @@ export function createSale(
         ]
       );
 
-      // Stock minus (batch qty)
+      // Stock minus (batch qty) -- Purana/Naya record log ke liye (Spec 2)
       if (l.batchId) {
+        const beforeQty =
+          scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [l.batchId]) ?? 0;
         run("UPDATE batches SET qty_base = qty_base - ? WHERE id = ?", [l.qtyBase, l.batchId]);
+        const afterQty =
+          scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [l.batchId]) ?? 0;
+        audit({
+          action: afterQty < 0 ? "negative_sale" : "update",
+          userId: user?.id ?? null,
+          userName: user?.name ?? null,
+          entity: "Batch",
+          entityId: l.batchId,
+          module: "Inventory",
+          before: { product: l.product.name, batch_id: l.batchId, qty_base: beforeQty },
+          after: { product: l.product.name, batch_id: l.batchId, qty_base: afterQty },
+          details: { code, sale_id: saleId, sold_base: l.qtyBase },
+        });
       }
       run(
         `INSERT INTO stock_movements
@@ -420,12 +493,32 @@ export function createSale(
     }
 
     void audit({
-      action: "create",
+      action: negativeItems.length ? "negative_sale" : "create",
       userId: user?.id ?? null,
       userName: user?.name ?? null,
       entity: "Sale",
       entityId: saleId,
-      details: { code, items: lines.length, total: finalPaise, method, due, changePaisa },
+      module: "POS",
+      // Spec 2: purana kya tha, naya kya hua
+      before: null,
+      after: {
+        code,
+        items: lines.length,
+        subtotal_paisa: subtotal,
+        discount_paisa: billDiscount,
+        tax_paisa: taxPaisa,
+        total_paisa: finalPaise,
+        paid_paisa: paid,
+        due_paisa: due,
+        status: isCredit ? "credit" : "paid",
+      },
+      details: {
+        code,
+        method,
+        changePaisa,
+        negativeStock: negativeItems.map((n) => `${n.name} (${n.afterBase})`),
+        warnings,
+      },
     });
 
     return {
@@ -441,64 +534,9 @@ export function createSale(
       changePaisa,
       duePaisa: due,
       warnings,
+      negativeItems,
     };
   });
-}
-
-// ---------------------------------------------------------------------------
-// Settings ko transaction ke andar (synchronously) padhne ke liye chhota helper
-// ---------------------------------------------------------------------------
-type SyncSettings = {
-  tax: { enabled: boolean; percent: number };
-  roundMode: string;
-  roundTo: number;
-  discount: { enabled: boolean; cashier: number; manager: number; blockBelowCost: boolean };
-  loyalty: { enabled: boolean; rupeesPerPoint: number; vipThreshold: number };
-  credit: { blockOverLimit: boolean; managerCanOverride: boolean };
-};
-
-function getSyncSettings(): SyncSettings {
-  const rows = query<{ key: string; value: string }>(
-    `SELECT key, value FROM settings
-      WHERE key IN ('tax.enabled','tax.percent','bill.roundMode','bill.roundTo',
-                    'discount.enabled','discount.maxPercentCashier','discount.maxPercentManager',
-                    'discount.blockBelowCost',
-                    'loyalty.enabled','loyalty.rupeesPerPoint','loyalty.vipThreshold',
-                    'credit.blockOverLimit','credit.managerCanOverride')`
-  );
-  const map = new Map(rows.map((r) => [r.key, r.value]));
-  const j = <T,>(key: string, fallback: T): T => {
-    const raw = map.get(key);
-    if (raw == null) return fallback;
-    try {
-      return JSON.parse(raw) as T;
-    } catch {
-      return fallback;
-    }
-  };
-  return {
-    tax: {
-      enabled: j("tax.enabled", false),
-      percent: Number(j("tax.percent", 0)) || 0,
-    },
-    credit: {
-      blockOverLimit: j("credit.blockOverLimit", false),
-      managerCanOverride: j("credit.managerCanOverride", true),
-    },
-    roundMode: j("bill.roundMode", "down10"),
-    roundTo: Number(j("bill.roundTo", 10)) || 10,
-    discount: {
-      enabled: j("discount.enabled", true),
-      cashier: Number(j("discount.maxPercentCashier", 5)) || 0,
-      manager: Number(j("discount.maxPercentManager", 20)) || 0,
-      blockBelowCost: j("discount.blockBelowCost", true),
-    },
-    loyalty: {
-      enabled: j("loyalty.enabled", false),
-      rupeesPerPoint: Number(j("loyalty.rupeesPerPoint", 100)) || 100,
-      vipThreshold: Number(j("loyalty.vipThreshold", 500)) || 500,
-    },
-  };
 }
 
 // ---------------------------------------------------------------------------

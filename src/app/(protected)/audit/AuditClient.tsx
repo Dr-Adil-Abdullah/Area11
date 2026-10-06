@@ -8,6 +8,7 @@ import { Download, HardDriveDownload, RefreshCw, Save, Search, ShieldCheck, Uplo
 type Row = {
   id: number; at: string; user_name: string | null; action: string;
   entity: string | null; entity_id: string | null; details: string | null; ip: string | null;
+  module: string | null; old_value: string | null; new_value: string | null;
 };
 
 const ACTION_TONE: Record<string, string> = {
@@ -24,7 +25,31 @@ const ACTION_TONE: Record<string, string> = {
   backup: "bg-teal-100 text-teal-700",
   restore: "bg-orange-100 text-orange-800",
   sync: "bg-teal-100 text-teal-700",
+  negative_sale: "bg-rose-200 text-rose-900",
+  denied: "bg-rose-100 text-rose-700",
 };
+
+/** Spec 2: "purana → naya" saaf saaf dikhayein */
+function diffText(row: Row): { field: string; from: string; to: string }[] {
+  const short = (v: unknown) => {
+    if (v == null) return "—";
+    if (typeof v === "object") return JSON.stringify(v);
+    return String(v);
+  };
+  try {
+    const o = row.old_value ? (JSON.parse(row.old_value) as Record<string, unknown>) : null;
+    const n = row.new_value ? (JSON.parse(row.new_value) as Record<string, unknown>) : null;
+    if (o && n && typeof o === "object" && typeof n === "object") {
+      return Object.keys(n).map((k) => ({ field: k, from: short(o[k]), to: short(n[k]) }));
+    }
+  } catch {
+    /* purana format (seedhi string) -- neeche handle hoga */
+  }
+  if (row.old_value || row.new_value) {
+    return [{ field: "", from: short(row.old_value), to: short(row.new_value) }];
+  }
+  return [];
+}
 
 function prettyDetails(raw: string | null): string {
   if (!raw) return "";
@@ -49,6 +74,8 @@ export default function AuditClient({
   const [entities, setEntities] = useState<string[]>([]);
   const [users, setUsers] = useState<string[]>([]);
   const [actions, setActions] = useState<string[]>([]);
+  const [module, setModule] = useState("all");
+  const [modules, setModules] = useState<string[]>([]);
   const [byAction, setByAction] = useState<Record<string, number>>({});
   const [total, setTotal] = useState(0);
   const [q, setQ] = useState("");
@@ -67,12 +94,14 @@ export default function AuditClient({
     if (q.trim()) p.set("q", q.trim());
     if (action !== "all") p.set("action", action);
     if (entity !== "all") p.set("entity", entity);
+    if (module !== "all") p.set("module", module);
     if (from) p.set("from", from);
     if (to) p.set("to", to);
     const r = await (await fetch(`/api/audit?${p}`, { cache: "no-store" })).json();
     if (r.ok) {
       setRows(r.rows); setEntities(r.entities); setUsers(r.users);
       setActions(r.actions); setByAction(r.byAction ?? {}); setTotal(r.total);
+      setModules(r.modules ?? []);
     }
     setLoading(false);
   }
@@ -215,8 +244,25 @@ export default function AuditClient({
           <option value="all">Sab cheezein</option>
           {entities.map((e) => <option key={e} value={e}>{e}</option>)}
         </select>
+        <select className="select" value={module} onChange={(e) => setModule(e.target.value)}>
+          <option value="all">Sab modules</option>
+          {modules.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
         <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        <div className="md:col-span-5 flex flex-wrap items-center gap-2">
+          <a
+            className="btn-secondary"
+            href={`/api/audit?format=csv${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}${
+              action !== "all" ? `&action=${action}` : ""}${entity !== "all" ? `&entity=${entity}` : ""}${
+              module !== "all" ? `&module=${module}` : ""}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}`}
+          >
+            <Download className="h-4 w-4" /> CSV (purana → naya ke sath)
+          </a>
+          <span className="text-[11px] text-slate-500">
+            Spec 2: har entry me user, waqt, action, purani aur nayi value — sab mehfooz.
+          </span>
+        </div>
       </div>
 
       <div className="card">
@@ -228,7 +274,7 @@ export default function AuditClient({
           <table className="tbl">
             <thead>
               <tr>
-                <th>Kab</th><th>Kis ne</th><th>Kya kiya</th><th>Cheezein</th><th>Tafseel</th>
+                <th>Kab</th><th>Kis ne</th><th>Kya kiya</th><th>Cheezein</th><th>Purana → Naya</th><th>Tafseel</th>
               </tr>
             </thead>
             <tbody>
@@ -245,13 +291,32 @@ export default function AuditClient({
                       <> <Link className="text-sky-700 hover:underline" href={`/receipt/${r.entity_id}`}>rasid</Link></>
                     ) : null}
                   </td>
+                  <td className="max-w-xs text-xs">
+                    {diffText(r).length === 0 ? (
+                      <span className="text-slate-400">—</span>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {diffText(r).slice(0, 4).map((d, i) => (
+                          <div key={i} className="truncate">
+                            {d.field && <span className="text-slate-400">{d.field}: </span>}
+                            <span className="text-rose-700 line-through">{d.from}</span>
+                            <span className="mx-1 text-slate-400">→</span>
+                            <span className="font-medium text-emerald-700">{d.to}</span>
+                          </div>
+                        ))}
+                        {diffText(r).length > 4 && (
+                          <div className="text-[10px] text-slate-400">+{diffText(r).length - 4} aur</div>
+                        )}
+                      </div>
+                    )}
+                  </td>
                   <td className="max-w-md truncate text-xs text-slate-600" title={prettyDetails(r.details)}>
                     {prettyDetails(r.details) || "—"}
                   </td>
                 </tr>
               ))}
               {rows.length === 0 && !loading && (
-                <tr><td colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                <tr><td colSpan={6} className="py-8 text-center text-sm text-slate-500">
                   <ShieldCheck className="mx-auto mb-2 h-6 w-6 text-slate-300" />
                   Koi entry nahi mili.
                 </td></tr>

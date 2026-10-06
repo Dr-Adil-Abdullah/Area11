@@ -88,6 +88,19 @@ export const SETTING_DEFAULTS = {
   "payment.methods": ["cash", "credit"] as string[],
   "payment.default": "cash",
 
+  // ---- Stock: manfi (negative) inventory (Spec 1) ----
+  // allowNegative ON  = stock minus me jane ke bawajood bikri HOTI rahegi
+  //                    (sirf ooper bara surkh alert aayega)
+  // allowNegative OFF = stock kam ho to bikri RUK jayegi
+  "stock.allowNegative": true,
+  "stock.warnNegative": true, // ooper wala bara alert dikhayein?
+
+  // ---- Returns (Spec 3: sakht jaanch) ----
+  // requireInvoice ON = asal bill ke baghair wapsi nahi (bill se milan lazmi)
+  // maxDays 0         = koi hadd nahi; warna itne din ke baad wapsi band
+  "returns.requireInvoice": true,
+  "returns.maxDays": 0,
+
   // ---- Udhaar (khata) ki hadd ----
   // blockOverLimit OFF  = sirf warning (pehle jaisa)
   // blockOverLimit ON   = hadd cross karne wali udhaar bikri RUK jaye

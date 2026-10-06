@@ -12,6 +12,7 @@
 import { get, query, run, tx } from "./db";
 import { toBaseUnits } from "./money";
 import { audit } from "./audit";
+import { getSyncSettings } from "./settings-sync";
 
 export type AdjustDirection = "out" | "in";
 export type AdjustReason =
@@ -49,6 +50,8 @@ export type StockAdjustResult = {
   valuePaisa: number;
   newBatchQty: number;
   newProductQty: number;
+  /** Spec 1.2: stock minus me gaya to yahan warning aayegi (bikri nahi rukegi) */
+  warning: string | null;
 };
 
 export function adjustStock(
@@ -60,6 +63,8 @@ export function adjustStock(
   if (input.direction !== "out" && input.direction !== "in") {
     throw new Error("Direction out ya in honi chahiye");
   }
+
+  let warning: string | null = null;
 
   return tx(() => {
     const product = get<{
@@ -94,9 +99,17 @@ export function adjustStock(
     const signed = input.direction === "out" ? -qtyBase : qtyBase;
     const newBatchQty = batch.qty_base + signed;
     if (newBatchQty < 0) {
-      throw new Error(
-        `Is batch me sirf ${batch.qty_base} ${product.base_unit} hain — itna nuqsan darj nahi ho sakta.`
-      );
+      // Spec 1: manfi stock ki ijazat ho to rokein nahi -- bas warning dein
+      const allow = getSyncSettings().stock.allowNegative;
+      if (!allow) {
+        throw new Error(
+          `Is batch me sirf ${batch.qty_base} ${product.base_unit} hain — itna nuqsan darj nahi ho sakta.` +
+            ` (Manfi stock band hai — Settings › Stock se ijazat dein.)`
+        );
+      }
+      warning =
+        `${product.name} (${batch.batch_no}): stock MINUS (${Math.round(newBatchQty * 1000) / 1000}) me gaya — ` +
+        `ginti (stock-take) ke waqt theek kar lein.`;
     }
 
     const valuePaisa = Math.round(qtyBase * batch.cost_paisa);
@@ -143,11 +156,14 @@ export function adjustStock(
     );
 
     void audit({
-      action: "update",
+      action: newBatchQty < 0 ? "negative_sale" : "update",
       userId: user?.id ?? null,
       userName: user?.name ?? null,
       entity: "Stock",
       entityId: product.id,
+      module: "Stock",
+      before: { product: product.name, batch: batch.batch_no, qty_base: batch.qty_base },
+      after: { product: product.name, batch: batch.batch_no, qty_base: newBatchQty },
       details: {
         product: product.name,
         batch: batch.batch_no,
@@ -172,6 +188,7 @@ export function adjustStock(
       valuePaisa,
       newBatchQty,
       newProductQty,
+      warning,
     };
   });
 }

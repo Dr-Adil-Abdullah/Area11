@@ -14,6 +14,7 @@ import {
   toPaisa,
   toBaseUnits,
 } from "@/lib/money";
+import { ToastStack, AlertBanner, useToasts } from "@/components/Toast";
 
 type Customer = {
   id: number; name: string; phone: string | null; category: string;
@@ -134,6 +135,10 @@ export default function PosClient({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Spec 4: fori ittila (toasts) -- qeemati tabdeeli, kam/minus stock wagerah
+  const { toasts, push, dismiss } = useToasts();
+  // Spec 1.2: server ki taraf se aane wali warnings bhi ooper hi dikhein
+  const [saleWarnings, setSaleWarnings] = useState<string[]>([]);
   const [lastSale, setLastSale] = useState<{
     id: number;
     code: string;
@@ -173,6 +178,25 @@ export default function PosClient({
       /* ignore */
     }
   }, [held]);
+
+  /**
+   * Spec 1.2 + 4: LIVE jaanch -- is waqt cart me koi aisi cheez hai
+   * jis ki miqdar maujood stock se zyada ho (yani stock MINUS me jayega)?
+   * Ek hi dawa ki kai line hon to sab ka jama mila kar dekha jata hai.
+   */
+  const overLines = useMemo(() => {
+    const need = new Map<string, { name: string; want: number; have: number }>();
+    for (const l of lines) {
+      const k = `${l.productId}-${l.batchId ?? 0}`;
+      const want = toBaseUnits(Number(l.qty) || 0, l.unit, l.boxStrips, l.stripTablets);
+      const cur = need.get(k);
+      if (cur) cur.want += want;
+      else need.set(k, { name: l.name, want, have: l.availableBase });
+    }
+    return [...need.entries()]
+      .map(([k, v]) => ({ key: k, ...v, after: v.have - v.want }))
+      .filter((v) => v.after < -1e-9);
+  }, [lines]);
 
   // ---------------- search ----------------
   useEffect(() => {
@@ -225,12 +249,22 @@ export default function PosClient({
           },
         ]);
       }
+      // Spec 4: cart me dalte hi fori ittila
+      const want = toBaseUnits(1, chosenUnit, p.box_strips, p.strip_tablets);
+      if (available <= 0) {
+        push("warn", `${p.name}: stock me 0 hain`, "Bikri hogi magar stock MINUS me jayega.");
+      } else if (want > available) {
+        push("warn", `${p.name}: maujood sirf ${available}`, "Is miqdar se stock minus me jayega.");
+      }
+      if (category !== "normal") {
+        push("info", `${category.toUpperCase()} rate lagu hua`, `${p.name} — ${formatPKR(price)}`);
+      }
       setOpenProduct(null);
       setSearch("");
       setResults([]);
       searchRef.current?.focus();
     },
-    [category, lines]
+    [category, lines, push]
   );
 
   // Enter on search = barcode / exact match -> add directly
@@ -314,6 +348,7 @@ export default function PosClient({
 
   // ---------------- actions ----------------
   function clearCart() {
+    setSaleWarnings([]);
     setLines([]);
     setBillDiscount("");
     setPaidNow("");
@@ -418,7 +453,14 @@ export default function PosClient({
         change: data.changePaisa ?? 0,
       });
       setTendered("");
-      if (data.warnings?.length) setError(data.warnings.join(" | "));
+      // Spec 1.2/4: warnings ab screen ke OOPER bade alert me (chhup kar nahi rahengi)
+      const w: string[] = [...(data.warnings ?? [])];
+      for (const n of data.negativeItems ?? []) {
+        w.push(`${n.name}: stock MINUS (${n.afterBase}) me chala gaya — ginti ke waqt dekhein.`);
+      }
+      setSaleWarnings(w);
+      if (w.length) push("warn", "Stock / qeemat ki ittila", `${w.length} nukte — ooper dekhein.`);
+      setError("");
       clearCart();
       router.refresh();
       // receipt kholo (nayi window me) -- print ready
@@ -463,7 +505,37 @@ export default function PosClient({
           </span>
         </div>
       )}
-    <div className="grid gap-4 lg:grid-cols-5">
+    <div className="space-y-3">
+      {/* ===== Spec 1.2 + 4: screen ke BILKUL OOPER wala bara alert ===== */}
+      {overLines.length > 0 && (
+        <AlertBanner title={`Stock MINUS me ja raha hai — ${overLines.length} cheez(en)`}>
+          {overLines.map((o) => (
+            <div key={o.key}>
+              • <b>{o.name}</b>: maujood {o.have} · bill me {Math.round(o.want * 1000) / 1000} ·{" "}
+              <b>bad men {Math.round(o.after * 1000) / 1000}</b>
+            </div>
+          ))}
+          <div className="pt-1 opacity-80">
+            Bikri rukegi nahi (Settings › Stock me &quot;manfi stock&quot; band kiya ja sakta hai)،
+            magar ginti ke waqt ye farq zaroor nazar aayega.
+          </div>
+        </AlertBanner>
+      )}
+
+      {saleWarnings.length > 0 && (
+        <AlertBanner title="Pichhle bill se ittila" tone="warn">
+          {saleWarnings.map((w, i) => (
+            <div key={i}>• {w}</div>
+          ))}
+          <button className="btn-ghost !py-0.5 !text-[11px]" onClick={() => setSaleWarnings([])}>
+            Band karein
+          </button>
+        </AlertBanner>
+      )}
+
+      <ToastStack toasts={toasts} onDismiss={dismiss} />
+
+      <div className="grid gap-4 lg:grid-cols-5">
       {/* ---------------- LEFT: search ---------------- */}
       <div className="space-y-3 lg:col-span-3">
         <div className="card">
@@ -686,8 +758,13 @@ export default function PosClient({
                         <td>
                           <div className="text-sm font-medium text-slate-800">{l.name}</div>
                           <div className="text-[11px] text-slate-500">
-                            Batch {l.batchLabel} {l.expiry ? `• exp ${l.expiry}` : ""}
+                            Batch {l.batchLabel} {l.expiry ? `• exp ${l.expiry}` : ""} • maujood {l.availableBase}
                           </div>
+                          {toBaseUnits(Number(l.qty) || 0, l.unit, l.boxStrips, l.stripTablets) > l.availableBase + 1e-9 && (
+                            <div className="mt-0.5 inline-block rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">
+                              ⚠ stock minus me jayega ({Math.round((l.availableBase - toBaseUnits(Number(l.qty) || 0, l.unit, l.boxStrips, l.stripTablets)) * 1000) / 1000})
+                            </div>
+                          )}
                           <div className="mt-1 flex items-center gap-1">
                             <button className="btn-ghost !px-1.5 !py-0.5" onClick={() => setLineQty(l.key, l.qty - 1)}>
                               <Minus className="h-3 w-3" />
@@ -1023,5 +1100,6 @@ export default function PosClient({
       </div>
     </div>
     </div>
+  </div>
   );
 }

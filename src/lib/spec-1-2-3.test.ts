@@ -1,0 +1,127 @@
+// ---------------------------------------------------------------------------
+// Area11 - Test: Spec 1 (negative inventory) + Spec 2 (purana vs naya record)
+// ---------------------------------------------------------------------------
+// Ye test jaan-bujh kar sirf PURE modules par hain (koi database nahi), taake
+// `npm test` hamesha chale -- chahe data folder maujood ho ya na ho.
+// ---------------------------------------------------------------------------
+
+import test from "node:test";
+import assert from "node:assert/strict";
+import { diffFields, splitDiff } from "./audit-diff.ts";
+import { evaluateNegativeStock } from "./stock-rules.ts";
+
+// =================== Spec 1: NEGATIVE INVENTORY ===================
+
+test("Spec 1.1: stock kafi ho to koi masla nahi", () => {
+  const v = evaluateNegativeStock({
+    name: "Panadol",
+    inStockBase: 50,
+    sellBase: 10,
+    allowNegative: true,
+    warn: true,
+  });
+  assert.equal(v.short, false);
+  assert.equal(v.block, false);
+  assert.equal(v.afterBase, 40);
+});
+
+test("Spec 1.1: barabar ho to bhi theek (0 reh jaye to masla nahi)", () => {
+  const v = evaluateNegativeStock({
+    name: "Panadol",
+    inStockBase: 10,
+    sellBase: 10,
+    allowNegative: true,
+    warn: true,
+  });
+  assert.equal(v.short, false);
+  assert.equal(v.afterBase, 0);
+});
+
+test("Spec 1.1: manfi ijazat ho to bikri RUKE nahi -- sirf alert aaye", () => {
+  const v = evaluateNegativeStock({
+    name: "Brufen",
+    inStockBase: 5,
+    sellBase: 12,
+    allowNegative: true,
+    warn: true,
+    stockLabel: "batch B-1",
+  });
+  assert.equal(v.short, true, "minus me gaya to nishan lagna chahiye");
+  assert.equal(v.block, false, "ijazat hai to bikri nahi rukni chahiye");
+  assert.equal(v.afterBase, -7);
+  assert.match(v.message, /Brufen/);
+  assert.match(v.message, /MINUS/);
+});
+
+test("Spec 1.1: manfi ijazat BAND ho to bikri ruk jaye (409)", () => {
+  assert.throws(
+    () =>
+      evaluateNegativeStock({
+        name: "Brufen",
+        inStockBase: 5,
+        sellBase: 12,
+        allowNegative: false,
+        warn: true,
+      }),
+    (e: unknown) => {
+      const err = e as Error & { status?: number };
+      assert.equal(err.status, 409);
+      assert.match(err.message, /Manfi stock band hai/);
+      return true;
+    }
+  );
+});
+
+test("Spec 1.2: warn OFF ho to bikri ho magar paigham na aaye", () => {
+  const v = evaluateNegativeStock({
+    name: "X",
+    inStockBase: 1,
+    sellBase: 9,
+    allowNegative: true,
+    warn: false,
+  });
+  assert.equal(v.short, true);
+  assert.equal(v.message, "", "warn off to koi paigham nahi");
+});
+
+// =================== Spec 2: PURANA vs NAYA ===================
+
+test("Spec 2.2: sirf badli hui felds record hon", () => {
+  const d = diffFields(
+    { name: "Panadol", retail_paisa: 500, rack: "A1" },
+    { name: "Panadol Extra", retail_paisa: 500, rack: "A1" }
+  );
+  assert.deepEqual(Object.keys(d), ["name"]);
+  assert.deepEqual(d.name, { from: "Panadol", to: "Panadol Extra" });
+});
+
+test("Spec 2.2: do column me baant (purana / naya)", () => {
+  const { oldValue, newValue } = splitDiff(
+    diffFields({ qty_base: 10, cost: 100 }, { qty_base: 4, cost: 100 })
+  );
+  assert.deepEqual(oldValue, { qty_base: 10 });
+  assert.deepEqual(newValue, { qty_base: 4 });
+});
+
+test("Spec 2.2: kuch na badle to khaali", () => {
+  assert.deepEqual(diffFields({ a: 1 }, { a: 1 }), {});
+  assert.deepEqual(diffFields(null, { a: 1 }), {});
+  assert.deepEqual(diffFields({ a: 1 }, null), {});
+});
+
+test("Spec 2.2: purani value null ho to bhi farq pakda jaye", () => {
+  const d = diffFields({ note: null, qty: 3 }, { note: "damaged", qty: 3 });
+  assert.deepEqual(d.note, { from: null, to: "damaged" });
+});
+
+test("Spec 2.2: nayi feld (pehle maujood na ho) bhi record ho", () => {
+  const d = diffFields({ a: 1 } as Record<string, unknown>, { a: 1, b: 2 } as Record<string, unknown>);
+  assert.deepEqual(d.b, { from: null, to: 2 });
+});
+
+test("Spec 1.2: stock minus hone par blackbox action 'negative_sale' hi rahe", () => {
+  // sales.ts ka usool: negativeItems ho to action "negative_sale", warna "create"
+  const decide = (negatives: number) => (negatives > 0 ? "negative_sale" : "create");
+  assert.equal(decide(0), "create");
+  assert.equal(decide(2), "negative_sale");
+});

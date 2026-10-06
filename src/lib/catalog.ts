@@ -303,17 +303,23 @@ export function updateProduct(
     });
   }
 
+  // Spec 2: purana record vs naya record -- farq khud nikal kar mehfooz
+  const after = getProduct(id);
   void audit({
     action: "update",
     userId: user?.id ?? null,
     userName: user?.name ?? null,
     entity: "Product",
     entityId: id,
+    module: "Inventory",
+    before: before as unknown as Record<string, unknown>,
+    after: (after ?? null) as unknown as Record<string, unknown> | null,
     details: { name: input.name },
   });
 }
 
 export function softDeleteProduct(id: number, user?: { id?: number; name?: string }): void {
+  const before = getProduct(id);
   run("UPDATE products SET active = 0, updated_at = datetime('now','localtime') WHERE id = ?", [id]);
   void audit({
     action: "delete",
@@ -321,6 +327,9 @@ export function softDeleteProduct(id: number, user?: { id?: number; name?: strin
     userName: user?.name ?? null,
     entity: "Product",
     entityId: id,
+    module: "Inventory",
+    before: { name: before?.name ?? null, active: 1 },
+    after: { name: before?.name ?? null, active: 0 },
   });
 }
 

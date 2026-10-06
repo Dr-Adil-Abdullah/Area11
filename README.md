@@ -4,6 +4,9 @@
 
 > 🤖 **New agent / new person? Open [`HANDOFF.md`](./HANDOFF.md) first.** It has the status, TODO list, how to run, gotchas and rollback. (`AGENTS.md` is the short rule sheet.)
 >
+>
+> 🇵🇰 **اردو میں پوری تفصیل (سب فیچرز + Settings کی ہر لائن + باقی کام + فائنل کرنے سے پہلے کے خطرے): [`docs/APP-TAFSEEL.md`](./docs/APP-TAFSEEL.md)**
+>
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
 ## Status (2026-10-05) — v0.6.1, latest checkpoint **stage-34**

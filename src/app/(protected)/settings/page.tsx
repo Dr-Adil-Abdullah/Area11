@@ -141,6 +141,9 @@ export default async function SettingsPage({
           <Field label="Primary colour" hint="Buttons and highlights follow this colour.">
             <input type="color" name="brand.primaryColor" defaultValue={s["brand.primaryColor"]} className="h-10 w-24 rounded border border-slate-300" />
           </Field>
+          <Field label="Owner / Malik ka naam" hint="Audit log aur reports me is naam se kaam record hoga.">
+            <input name="owner.name" defaultValue={s["owner.name"]} className="input" />
+          </Field>
         </Section>
 
         {/* ---------------- Billing ---------------- */}
@@ -169,6 +172,68 @@ export default async function SettingsPage({
           <Field label="Round to (rupees)">
             <input type="number" name="bill.roundTo" defaultValue={s["bill.roundTo"]} className="input" min={0} max={100} />
           </Field>
+          <div className="md:col-span-2 rounded-lg bg-slate-50 p-3">
+            <div className="mb-2 text-xs font-semibold text-slate-600">Bill ke aaghaz (prefix) — sab badle ja sakte hain</div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Field label="Provisional return (PR-)">
+                <input name="bill.provisionalPrefix" defaultValue={s["bill.provisionalPrefix"]} className="input" />
+              </Field>
+              <Field label="Supplier return (SR-)">
+                <input name="bill.supplierReturnPrefix" defaultValue={s["bill.supplierReturnPrefix"]} className="input" />
+              </Field>
+              <Field label="Stock take (ST-)">
+                <input name="bill.stockTakePrefix" defaultValue={s["bill.stockTakePrefix"]} className="input" />
+              </Field>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              Agle number (next no) app khud barhati hai — unhein haath se na badlein.
+            </p>
+          </div>
+        </Section>
+
+        {/* ---------------- Stock: NEGATIVE inventory (Spec 1) ---------------- */}
+        <Section
+          title="Stock & Negative Inventory"
+          desc="Spec 1: bikri rukni nahi chahiye — magar manfi stock par ooper bara surkh alert lazmi hai."
+        >
+          <Check
+            name="stock.allowNegative"
+            label="Manfi (negative) stock ki ijazat"
+            hint="ON = stock 0 ya kam ho to bhi bikri hogi (sirf alert). OFF = itna maal nahi to bikri ruk jayegi."
+            defaultChecked={s["stock.allowNegative"]}
+          />
+          <Check
+            name="stock.warnNegative"
+            label="Manfi stock par bara surkh alert dikhayein"
+            hint="Counter ke bilkul ooper patti aati hai aur blackbox me record rehta hai."
+            defaultChecked={s["stock.warnNegative"]}
+          />
+          <div className="md:col-span-2 rounded-lg bg-amber-50 p-3 text-[11px] text-amber-900">
+            Mashwara: ye <b>ON</b> rakhein. Dukan me aksar ghalat ginti ya rider ke maal ki wajah se stock
+            minus dikhta hai — bikri rukne se gahak ka nuqsan hota hai. Har manfi bikri blackbox
+            (Audit log) me <b>negative_sale</b> ke naam se mehfooz ho jati hai.
+          </div>
+        </Section>
+
+        {/* ---------------- Returns (Spec 3) ---------------- */}
+        <Section
+          title="Returns (Wapsi) — sakht jaanch"
+          desc="Spec 3: asal bill ke baghair wapsi nahi, aur hadd se zyada wapsi mumkin hi nahi."
+        >
+          <Check
+            name="returns.requireInvoice"
+            label="Asal bill (invoice) ka milan lazmi"
+            hint="Bill number ke baghair ya ghair-mutaalliq item ki wapsi roknay ke liye."
+            defaultChecked={s["returns.requireInvoice"]}
+          />
+          <Field label="Wapsi ki mohelat (din)" hint="0 = koi hadd nahi. Masalan 7 likhein to 7 din purane bill par wapsi band.">
+            <input type="number" name="returns.maxDays" defaultValue={s["returns.maxDays"]} className="input" min={0} max={365} />
+          </Field>
+          <div className="md:col-span-2 rounded-lg bg-slate-50 p-3 text-[11px] text-slate-600">
+            Chahe setting kuch bhi ho, ye 3 usool <b>kabhi nahi tut-te</b>: (1) jitna bika tha us se
+            zyada wapsi nahi, (2) jitne paise wasool hue the us se zyada refund nahi, (3) wapsi hamesha
+            asal bill se mila kar hoti hai aur purana bill kabhi edit nahi hota.
+          </div>
         </Section>
 
         {/* ---------------- Tax ---------------- */}
@@ -190,6 +255,12 @@ export default async function SettingsPage({
           desc="You can switch the method later; both are already built."
         >
           <Check name="discount.enabled" label="Discounts allowed" defaultChecked={s["discount.enabled"]} />
+          <Check
+            name="discount.blockBelowCost"
+            label="Kharid qeemat se neeche chhoot rok dein"
+            hint="Spec 7.3: koi bhi role (owner bhi) aisi chhoot nahi de sakta jis se line kharid qeemat se neeche jaye."
+            defaultChecked={s["discount.blockBelowCost"]}
+          />
           <Field
             label="Discount method"
             hint="Margin: on profit only (cost 200, sell 300, 10% = Rs 10 off → 290)."
