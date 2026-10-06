@@ -7,7 +7,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { diffFields, splitDiff } from "./audit-diff.ts";
+import { diffFields, splitDiff, valuesForLog } from "./audit-diff.ts";
 import { evaluateNegativeStock } from "./stock-rules.ts";
 
 // =================== Spec 1: NEGATIVE INVENTORY ===================
@@ -124,4 +124,30 @@ test("Spec 1.2: stock minus hone par blackbox action 'negative_sale' hi rahe", (
   const decide = (negatives: number) => (negatives > 0 ? "negative_sale" : "create");
   assert.equal(decide(0), "create");
   assert.equal(decide(2), "negative_sale");
+});
+
+// =================== Spec 2.2: naya record / mitaya gaya / badla gaya ===================
+
+test("Spec 2.2: NAYA record banne par poori nayi value mehfooz ho (purana null)", () => {
+  const v = valuesForLog(null, { name: "Ali", limit: 5000 });
+  assert.equal(v.oldValue, null);
+  assert.deepEqual(v.newValue, { name: "Ali", limit: 5000 });
+});
+
+test("Spec 2.2: record MITANE par poorani value mehfooz ho (naya null)", () => {
+  const v = valuesForLog({ name: "Ali", active: 1 }, null);
+  assert.deepEqual(v.oldValue, { name: "Ali", active: 1 });
+  assert.equal(v.newValue, null);
+});
+
+test("Spec 2.2: badlav par sirf badli hui felds (purana → naya)", () => {
+  const v = valuesForLog({ name: "Ali", limit: 5000 }, { name: "Ali", limit: 7500 });
+  assert.deepEqual(v.oldValue, { limit: 5000 });
+  assert.deepEqual(v.newValue, { limit: 7500 });
+});
+
+test("Spec 2.2: kuch na badle to dono column khaali", () => {
+  const v = valuesForLog({ a: 1 }, { a: 1 });
+  assert.equal(v.oldValue, null);
+  assert.equal(v.newValue, null);
 });

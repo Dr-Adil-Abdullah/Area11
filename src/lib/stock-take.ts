@@ -138,7 +138,9 @@ export function openStockTake(
       );
     }
 
-    void audit({ action: "create", userId: user?.id ?? null, userName: user?.name ?? null, entity: "stock_take", entityId: id, details: { code, lines: rows.length } });
+    void audit({ action: "create", userId: user?.id ?? null, userName: user?.name ?? null, entity: "stock_take", entityId: id,
+      module: "Stock", before: null, after: { code, status: "open", lines: rows.length },
+      details: { code, lines: rows.length } });
     return { id, code, items: rows.length };
   });
 }
@@ -334,7 +336,11 @@ export function applyStockTake(
       [user?.id ?? null, shortPaisa, extraPaisa, stockTakeId]
     );
 
-    void audit({ action: "update", userId: user?.id ?? null, userName: user?.name ?? null, entity: "stock_take", entityId: stockTakeId, details: { code: st.code, changed, shortPaisa, extraPaisa } });
+    void audit({ action: "update", userId: user?.id ?? null, userName: user?.name ?? null, entity: "stock_take", entityId: stockTakeId,
+      module: "Stock",
+      before: { code: st.code, status: "open", applied: 0 },
+      after: { code: st.code, status: "applied", applied: 1, changed, shortPaisa, extraPaisa },
+      details: { code: st.code, changed, shortPaisa, extraPaisa } });
     return { id: stockTakeId, code: st.code, changed, shortPaisa, extraPaisa };
   });
 }
@@ -344,7 +350,9 @@ export function cancelStockTake(stockTakeId: number, user?: { id?: number; name?
   if (!st) throw new Error("Ginti ka session nahi mila.");
   if (st.status !== "open") throw new Error("Sirf khuli hui ginti cancel ho sakti hai.");
   run("UPDATE stock_takes SET status = 'cancelled' WHERE id = ?", [stockTakeId]);
-  void audit({ action: "delete", userId: user?.id ?? null, userName: user?.name ?? null, entity: "stock_take", entityId: stockTakeId, details: { code: st.code } });
+  void audit({ action: "delete", userId: user?.id ?? null, userName: user?.name ?? null, entity: "stock_take", entityId: stockTakeId,
+    module: "Stock", before: { code: st.code, status: "open" }, after: { code: st.code, status: "cancelled" },
+    details: { code: st.code } });
 }
 
 // ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ const TYPES: Record<string, string> = {
 };
 
 export async function GET(req: Request) {
-  const denied = await guard();
+  const denied = await guard(undefined, { module: "Other", entity: "Photo", req });
   if (denied) return denied;
 
   const name = new URL(req.url).searchParams.get("f") ?? "";
@@ -25,6 +25,10 @@ export async function GET(req: Request) {
   if (!file.startsWith(PHOTO_DIR) || !fs.existsSync(file)) {
     return new NextResponse("not found", { status: 404 });
   }
+  // NOTE: tasveer DEKHNE ka log nahi likhte -- har safhe par kai dafa load hoti
+  //       hai, is se blackbox shor se bhar jata hai. Tasveer BADALNE ka record
+  //       products/customers ke "purana → naya" me khud aa jata hai.
+
   const buf = fs.readFileSync(file);
   const type = TYPES[path.extname(name).toLowerCase()] ?? "application/octet-stream";
   return new NextResponse(buf, {

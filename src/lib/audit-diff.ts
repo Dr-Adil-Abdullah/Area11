@@ -46,3 +46,26 @@ export function splitDiff(diff: FieldDiff): {
 export function roundQty(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
+
+/**
+ * Log ke do column (purana / naya) taiyar karo -- chahe record naya ho,
+ * mita diya gaya ho ya sirf badla ho.
+ *   naya record  → purana null, naya = poori value
+ *   mitaya gaya  → purana = poori value, naya null
+ *   badla gaya   → sirf wahi felds jo badli hain
+ */
+export function valuesForLog(
+  before: Record<string, unknown> | null | undefined,
+  after: Record<string, unknown> | null | undefined
+): { oldValue: Record<string, unknown> | null; newValue: Record<string, unknown> | null } {
+  const b = before ?? null;
+  const a = after ?? null;
+  if (a && !b) return { oldValue: null, newValue: a };
+  if (b && !a) return { oldValue: b, newValue: null };
+  if (b && a) {
+    const diff = diffFields(b, a);
+    if (!Object.keys(diff).length) return { oldValue: null, newValue: null };
+    return splitDiff(diff);
+  }
+  return { oldValue: null, newValue: null };
+}

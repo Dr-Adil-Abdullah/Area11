@@ -51,6 +51,7 @@ export default function StockClient({
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [warn, setWarn] = useState("");
   const [done, setDone] = useState("");
   const [adjustments, setAdjustments] = useState<AdjustmentRow[]>(initialAdjustments);
   const [summary, setSummary] = useState(initialSummary);
@@ -60,6 +61,7 @@ export default function StockClient({
     setResults([]);
     setProduct(null);
     setError("");
+    setWarn("");
     setDone("");
     if (!term.trim()) return;
     const res = await fetch(`/api/pos/search?q=${encodeURIComponent(term)}&limit=10`, {
@@ -76,6 +78,7 @@ export default function StockClient({
     setBatchId(p.batches?.[0] ? String(p.batches[0].id) : "");
     setDone("");
     setError("");
+    setWarn("");
   }
 
   async function refresh(productId?: number) {
@@ -99,6 +102,7 @@ export default function StockClient({
     }
     setBusy(true);
     setError("");
+    setWarn("");
     setDone("");
     try {
       const res = await fetch("/api/stock/adjust", {
@@ -125,6 +129,14 @@ export default function StockClient({
           product.base_unit
         } (value ${formatPKR(data.valuePaisa)}) — batch me ab ${data.newBatchQty}, total ${data.newProductQty}`
       );
+      // Spec 1.2: stock minus me gaya to yahan BHI bara surkh alert (chhup kar nahi)
+      if (data.warning) {
+        setWarn(data.warning as string);
+      } else if ((data.newBatchQty ?? 0) < 0) {
+        setWarn(
+          `${data.productName}: batch ab MINUS (${data.newBatchQty}) me hai — ginti (Stock-take) se theek karein.`
+        );
+      }
       setQty("1");
       setNote("");
       // product ki taaza stock dobara lo
@@ -326,6 +338,11 @@ export default function StockClient({
               </div>
             </div>
 
+            {warn && (
+              <div className="rounded-lg border-2 border-rose-300 bg-rose-100 px-3 py-2 text-sm font-semibold text-rose-900">
+                ⚠ {warn}
+              </div>
+            )}
             {error && (
               <div className="md:col-span-2 flex items-start gap-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
                 <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />

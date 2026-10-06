@@ -1,3 +1,4 @@
+import { audit } from "./audit";
 // ---------------------------------------------------------------------------
 // Area11 - Users (staff accounts: Owner / Manager / Cashier)
 // ---------------------------------------------------------------------------
@@ -89,7 +90,12 @@ export type UserInput = {
 };
 
 /** Naya user banao (sirf owner kar sakta hai -- check API me hota hai) */
-export function createUser(input: UserInput, pinLength = 4): number {
+export function createUser(
+  input: UserInput,
+  pinLength = 4,
+  /** Spec 2: kaun bana raha hai (actor) -- log me isi ka naam jayega */
+  actor?: { id?: number; name?: string } | null
+): number {
   const name = (input.name ?? "").trim();
   if (name.length < 2) throw new Error("Name is too short");
   if (!isRole(input.role)) throw new Error("Role must be owner, manager or cashier");
@@ -118,11 +124,30 @@ export function createUser(input: UserInput, pinLength = 4): number {
     ]
   );
   const row = get<{ id: number }>(`SELECT id FROM users WHERE lower(name) = lower(?)`, [name]);
-  return row?.id ?? 0;
+  const newId = row?.id ?? 0;
+  // Spec 2: naya staff account bhi record ho (PIN/password KABHI log nahi hota)
+  void audit({
+    action: "create",
+    userId: actor?.id ?? null,
+    userName: actor?.name ?? null,
+    entity: "User",
+    entityId: newId,
+    module: "Users",
+    before: null,
+    after: { name, role, active: input.active === false ? 0 : 1, phone: input.phone ?? null },
+    details: { name, role, note: "PIN/password kabhi log nahi hota" },
+  });
+  return newId;
 }
 
 /** User update karo (naam, role, PIN/password, active) */
-export function updateUser(id: number, patch: Partial<UserInput>, pinLength = 4): void {
+export function updateUser(
+  id: number,
+  patch: Partial<UserInput>,
+  pinLength = 4,
+  /** Spec 2: kaun badal raha hai (actor) */
+  actor?: { id?: number; name?: string } | null
+): void {
   const current = get<UserSecretRow>(`SELECT * FROM users WHERE id = ?`, [id]);
   if (!current) throw new Error("User not found");
 
@@ -167,6 +192,30 @@ export function updateUser(id: number, patch: Partial<UserInput>, pinLength = 4)
       id,
     ]
   );
+
+  // Spec 2: purana record → naya record (PIN/password ke baghair)
+  const after = get<{ name: string; role: string; active: number; phone: string | null }>(
+    "SELECT name, role, active, phone FROM users WHERE id = ?", [id]);
+  void audit({
+    action: "update",
+    userId: actor?.id ?? null,
+    userName: actor?.name ?? null,
+    entity: "User",
+    entityId: id,
+    module: "Users",
+    before: { name: current.name, role: current.role, active: current.active, phone: current.phone ?? null },
+    after: after
+      ? {
+          name: after.name,
+          role: after.role,
+          active: after.active,
+          phone: after.phone ?? null,
+          pin_changed: pin ? 1 : 0,
+          password_changed: password ? 1 : 0,
+        }
+      : null,
+    details: { name: after?.name ?? name },
+  });
 }
 
 export type LoginResult =

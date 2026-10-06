@@ -92,6 +92,9 @@ export function recordProvisional(input: ProvInput, user?: U): { id: number; cod
       userName: user?.name ?? null,
       entity: "ProvisionalReturn",
       entityId: id,
+      module: "Returns",
+      before: null,
+      after: { code, status: "pending", refund_paisa: refund, items: items.length },
       details: { code, refundPaisa: refund, items: items.length },
     });
     return { id, code, refundPaisa: refund };
@@ -191,6 +194,9 @@ export function linkProvisional(
       userName: user?.name ?? null,
       entity: "ProvisionalReturn",
       entityId: id,
+      module: "Returns",
+      before: { code: p.code, status: p.status },
+      after: { code: p.code, status: "linked", linked_to: sale.code, restocked },
       details: { code: p.code, linkedTo: sale.code, restocked },
     });
     return { id, saleId, restocked };
@@ -214,6 +220,9 @@ export function cancelProvisional(id: number, reason: string | null, user?: U): 
     userName: user?.name ?? null,
     entity: "ProvisionalReturn",
     entityId: id,
+    module: "Returns",
+    before: { code: p.code, status: "pending" },
+    after: { code: p.code, status: "cancelled", reason: reason ?? null },
     details: { code: p.code, cancelled: reason },
   });
 }

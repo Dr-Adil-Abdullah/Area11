@@ -90,7 +90,9 @@ export function createCustomField(
 
   void audit({
     action: "create", userId: user?.id ?? null, userName: user?.name ?? null,
-    entity: "CustomField", entityId: id, details: { entity, label, type },
+    entity: "CustomField", entityId: id, module: "Settings",
+    before: null, after: { entity, label, type, active: 1 },
+    details: { entity, label, type },
   });
   return id;
 }
@@ -113,7 +115,10 @@ export function updateCustomField(
   );
   void audit({
     action: "update", userId: user?.id ?? null, userName: user?.name ?? null,
-    entity: "CustomField", entityId: id, details: { label, active },
+    entity: "CustomField", entityId: id, module: "Settings",
+    before: { label: f?.label ?? null, active: f?.active ?? null },
+    after: { label, active },
+    details: { label, active },
   });
 }
 
@@ -197,6 +202,8 @@ export function deleteCustomField(id: number, user?: U): void {
   run("DELETE FROM custom_fields WHERE id = ?", [id]);
   void audit({
     action: "delete", userId: user?.id ?? null, userName: user?.name ?? null,
-    entity: "CustomField", entityId: id, details: { label: f.label },
+    entity: "CustomField", entityId: id, module: "Settings",
+    before: { label: f.label, active: 1 }, after: { label: f.label, active: 0 },
+    details: { label: f.label },
   });
 }

@@ -1,4 +1,4 @@
-import { run } from "@/lib/db";
+import { get, run } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { guard } from "@/lib/api";
 import { createCustomer, findCustomers, listCustomers, updateCustomer } from "@/lib/customers";
@@ -61,6 +61,15 @@ export async function POST(req: Request) {
       userName: user?.name,
       entity: "Customer",
       entityId: id,
+      module: "Customers",
+      // Spec 2: kya naya banaya (purana kuch nahi tha)
+      before: null,
+      after: {
+        name: body.name,
+        phone: body.phone ?? null,
+        category: body.category ?? "normal",
+        credit_limit_paisa: body.creditLimitPaisa ?? 0,
+      },
       details: { name: body.name },
     });
     return NextResponse.json({ ok: true, id });
@@ -80,13 +89,32 @@ export async function PATCH(req: Request) {
     const b = (await req.json()) as { id?: number; name?: string; phone?: string | null; category?: string; creditLimitPaisa?: number; notes?: string | null; photo?: string | null; custom?: Record<string, unknown> };
     if (!b.id) throw new Error("id required");
     if (b.custom) validateCustomValues("customer", b.custom);
+    // Spec 2: purana record pehle nikal lo -- tab hi farq (purana → naya) mehfooz hoga
+    const beforeCust = get<{
+      name: string; phone: string | null; category: string | null;
+      credit_limit_paisa: number | null; notes: string | null;
+    }>("SELECT name, phone, category, credit_limit_paisa, notes, photo FROM customers WHERE id = ?", [b.id]);
     updateCustomer(b.id, b);
     if (typeof b.photo === "string") {
       const file = b.photo ? savePhoto({ entity: "customer", id: b.id, dataUrl: b.photo }) : null;
       run("UPDATE customers SET photo = ? WHERE id = ?", [file, b.id]);
     }
     if (b.custom) setCustomValues("customer", b.id, b.custom, user ?? undefined);
-    void audit({ action: "update", userId: user?.id, userName: user?.name, entity: "Customer", entityId: b.id, details: { name: b.name } });
+    const afterCust = get<{
+      name: string; phone: string | null; category: string | null;
+      credit_limit_paisa: number | null; notes: string | null;
+    }>("SELECT name, phone, category, credit_limit_paisa, notes, photo FROM customers WHERE id = ?", [b.id]);
+    void audit({
+      action: "update",
+      userId: user?.id,
+      userName: user?.name,
+      entity: "Customer",
+      entityId: b.id,
+      module: "Customers",
+      before: (beforeCust ?? null) as unknown as Record<string, unknown> | null,
+      after: (afterCust ?? null) as unknown as Record<string, unknown> | null,
+      details: { name: b.name },
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "failed" }, { status: 400 });

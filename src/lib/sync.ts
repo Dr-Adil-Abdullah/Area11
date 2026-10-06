@@ -172,7 +172,10 @@ export async function pushSync(user?: { id?: number; name?: string }): Promise<S
     setStatus("pushed", at);
     void audit({
       action: "sync", userId: user?.id ?? null, userName: user?.name ?? null,
-      entity: "Supabase", details: { direction: "push", counts: packet.counts, bytes: body.length },
+      entity: "Supabase", module: "Sync",
+      before: null,
+      after: { direction: "push", shop_id: packet.shop ?? null, counts: packet.counts, bytes: body.length },
+      details: { direction: "push", counts: packet.counts, bytes: body.length },
     });
     return {
       ok: true, action: "push",
@@ -234,7 +237,10 @@ export async function pullSync(
     setStatus("pulled", at);
     void audit({
       action: "sync", userId: user?.id ?? null, userName: user?.name ?? null,
-      entity: "Supabase", details: { direction: "pull", applied, sentAt: row.sent_at },
+      entity: "Supabase", module: "Sync",
+      before: { last_sync_at: null },
+      after: { direction: "pull", applied, sentAt: row.sent_at, last_sync_at: new Date().toISOString() },
+      details: { direction: "pull", applied, sentAt: row.sent_at },
     });
     return {
       ok: true, action: "pull",

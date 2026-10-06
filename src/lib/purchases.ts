@@ -280,6 +280,18 @@ export function createPurchase(
       userName: user?.name ?? null,
       entity: "Purchase",
       entityId: purchaseId,
+      module: "Purchases",
+      // Spec 2: purana kya tha (khaali), naya kya hua
+      before: null,
+      after: {
+        code,
+        supplier:
+          (get<{ name: string }>("SELECT name FROM suppliers WHERE id = ?", [input.supplierId ?? 0])?.name ?? null),
+        items: lines.length,
+        subtotal_paisa: subtotal,
+        total_paisa: total,
+        paid_paisa: paid,
+      },
       details: { code, items: lines.length, total },
     });
 

@@ -5,6 +5,7 @@ import { ensureBootstrap } from "@/lib/bootstrap";
 import { getSettings } from "@/lib/settings";
 import { currentUser } from "@/lib/session";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { negativeStockSummary } from "@/lib/alerts";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -36,6 +37,8 @@ export default async function RootLayout({
   await ensureBootstrap();
   const settings = await getSettings();
   const user = await currentUser();
+  // Spec 1.2: har safhe ke ooper alert ke liye (sirf login ke baad)
+  const negative = user ? negativeStockSummary() : { items: 0, worst: 0 };
 
   return (
     <html lang="en">
@@ -60,6 +63,8 @@ export default async function RootLayout({
           userRole={user?.role ?? "cashier"}
           isAuthed={!!user}
           autoLockMinutes={Number(settings["security.autoLockMinutes"]) || 0}
+          negativeStock={negative}
+          warnNegative={settings["stock.warnNegative"] !== false}
         >
           {children}
         </AppShell>

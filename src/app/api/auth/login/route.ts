@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { ensureBootstrap } from "@/lib/bootstrap";
 import { checkLogin, listUsers } from "@/lib/users";
 import { createSessionToken, loginStamp, SESSION_COOKIE } from "@/lib/session";
-import { audit } from "@/lib/audit";
+import { audit, ipFrom } from "@/lib/audit";
 import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +65,10 @@ export async function POST(req: Request) {
       void audit({
         action: "login_failed",
         entity: "User",
-        details: { mode, name: body.name ?? null },
+        module: "Auth",
+        before: null,
+        after: { mode, name: body.name ?? null, success: false, ip: ipFrom(req) },
+        details: { mode, name: body.name ?? null, ip: ipFrom(req) },
       });
       return NextResponse.json({ ok: false, error: result.error }, { status: 401 });
     }
@@ -85,7 +88,10 @@ export async function POST(req: Request) {
       action: "login",
       entity: "User",
       entityId: result.user.id,
-      details: { name: result.user.name, role: result.user.role },
+      module: "Auth",
+      before: { last_login_at: null },
+      after: { id: result.user.id, name: result.user.name, role: result.user.role, ip: ipFrom(req) },
+      details: { name: result.user.name, role: result.user.role, ip: ipFrom(req) },
     });
 
     return NextResponse.json({ ok: true, user: result.user });

@@ -7,6 +7,9 @@ import { listSuppliers } from "@/lib/catalog";
 import { query } from "@/lib/db";
 import WhatsAppCard from "./WhatsAppCard";
 import QuickReturnCard from "./QuickReturnCard";
+import QuarantineCard from "./QuarantineCard";
+import { quarantineRows } from "@/lib/returns";
+import { currentUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 const badge: Record<string, string> = { expired: "badge-red", very_near: "badge-red", near: "badge-amber", ok: "badge-green" };
@@ -36,6 +39,10 @@ export default async function AlertsPage() {
       ORDER BY b.expiry_ym, p.name`
   );
   const samples = sampleStock();
+  // Spec 3.3: wapsi hua maal jo abhi shelf par nahi (quarantine)
+  const quarantine = quarantineRows();
+  const me = await currentUser();
+  const canRelease = me?.role === "owner" || me?.role === "manager";
   // Spec 1.2: stock MINUS me gai cheezein -- ginti ke waqt sab se pehle ye dekhein
   const negative = query<{
     product_id: number; name: string; base_unit: string; rack_no: string | null;
@@ -93,6 +100,11 @@ export default async function AlertsPage() {
             {low.length === 0 && <tr><td colSpan={3} className="py-8 text-center text-sm text-slate-500">All products are above their reorder level. (Set “Reorder level” on a product to track it.)</td></tr>}
           </tbody></table></div></div>
       </div>
+
+      <QuarantineCard
+        initial={JSON.parse(JSON.stringify(quarantine))}
+        canRelease={canRelease}
+      />
 
       <QuickReturnCard
         expired={JSON.parse(JSON.stringify(expired))}

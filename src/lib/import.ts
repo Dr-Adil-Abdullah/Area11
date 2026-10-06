@@ -440,6 +440,14 @@ export async function commitImport(buf: Buffer, user?: { id?: number; name?: str
     userId: user?.id ?? null,
     userName: user?.name ?? null,
     entity: "Import",
+    module: "Import",
+    before: null,
+    after: {
+      products: result.products ?? null,
+      customers: result.customers ?? null,
+      suppliers: result.suppliers ?? null,
+      batches: result.batches ?? null,
+    },
     details: { ...result, skipped: preview.totals.skip, errors: preview.totals.error },
   });
 

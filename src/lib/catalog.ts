@@ -236,16 +236,22 @@ export function createProduct(input: ProductInput, user?: { id?: number; name?: 
     ]
   );
 
+  const newId = res.lastInsertRowid;
+  const created = getProduct(newId);
   void audit({
     action: "create",
     userId: user?.id ?? null,
     userName: user?.name ?? null,
     entity: "Product",
-    entityId: res.lastInsertRowid,
+    entityId: newId,
+    module: "Inventory",
+    // Spec 2: naya record -- poori nayi value mehfooz (purana kuch nahi tha)
+    before: null,
+    after: (created ?? null) as unknown as Record<string, unknown> | null,
     details: { name: input.name },
   });
 
-  return res.lastInsertRowid;
+  return newId;
 }
 
 export function updateProduct(
@@ -256,6 +262,35 @@ export function updateProduct(
   const before = getProduct(id);
   if (!before) throw new Error("Product not found");
 
+  // ---------------- AHEM (BUG FIX): PARTIAL update ----------------
+  // Agar koi sirf 2 felds bheje (masalan naam + retail rate) to baqi
+  // felds 0 / khaali NAHI honi chahiye -- purani value hi rehni chahiye.
+  // Is liye: jo feld BHEJI gayi hai wahi badlein, baqi purani rahe.
+  const i = input as Partial<ProductInput> & Record<string, unknown>;
+  const merged: ProductInput & { trackExpiry?: boolean } = {
+    name: i.name !== undefined ? i.name : before.name,
+    generic: i.generic !== undefined ? i.generic : before.generic,
+    brand: i.brand !== undefined ? i.brand : before.brand,
+    barcode: i.barcode !== undefined ? i.barcode : before.barcode,
+    companyId: i.companyId !== undefined ? i.companyId : before.company_id,
+    categoryId: i.categoryId !== undefined ? i.categoryId : before.category_id,
+    rackNo: i.rackNo !== undefined ? i.rackNo : before.rack_no,
+    room: i.room !== undefined ? i.room : (before as { room?: string | null }).room ?? null,
+    packSizeLabel:
+      i.packSizeLabel !== undefined ? i.packSizeLabel : before.pack_size_label,
+    baseUnit: i.baseUnit !== undefined ? i.baseUnit : before.base_unit,
+    boxStrips: i.boxStrips !== undefined ? i.boxStrips : before.box_strips,
+    stripTablets: i.stripTablets !== undefined ? i.stripTablets : before.strip_tablets,
+    costPaisa: i.costPaisa !== undefined ? i.costPaisa : before.cost_paisa,
+    retailPaisa: i.retailPaisa !== undefined ? i.retailPaisa : before.retail_paisa,
+    vipPaisa: i.vipPaisa !== undefined ? i.vipPaisa : before.vip_paisa,
+    doctorPaisa: i.doctorPaisa !== undefined ? i.doctorPaisa : before.doctor_paisa,
+    reorderLevel: i.reorderLevel !== undefined ? i.reorderLevel : before.reorder_level,
+    trackExpiry: i.trackExpiry !== undefined ? i.trackExpiry : before.track_expiry === 1,
+  };
+  // aage ka purana code `input` padhta hai -- is liye usi ko badal dete hain
+  const input2 = merged as ProductInput;
+
   run(
     `UPDATE products SET
        name = ?, generic = ?, brand = ?, barcode = ?, company_id = ?, category_id = ?,
@@ -264,30 +299,30 @@ export function updateProduct(
        reorder_level = ?, track_expiry = ?, updated_at = datetime('now','localtime')
      WHERE id = ?`,
     [
-      input.name.trim(),
-      input.generic?.trim() || null,
-      input.brand?.trim() || null,
-      input.barcode?.trim() || null,
-      input.companyId ?? null,
-      input.categoryId ?? null,
-      input.rackNo?.trim() || null,
-      input.room?.trim() || null,
-      input.packSizeLabel?.trim() || null,
-      input.baseUnit || "tablet",
-      Math.max(0, Math.round(input.boxStrips ?? 0)),
-      Math.max(0, Math.round(input.stripTablets ?? 0)),
-      Math.max(0, Math.round(input.costPaisa ?? 0)),
-      Math.max(0, Math.round(input.retailPaisa ?? 0)),
-      Math.max(0, Math.round(input.vipPaisa ?? 0)),
-      Math.max(0, Math.round(input.doctorPaisa ?? 0)),
-      Math.max(0, input.reorderLevel ?? 0),
-      input.trackExpiry === false ? 0 : 1,
+      input2.name.trim(),
+      input2.generic?.trim() || null,
+      input2.brand?.trim() || null,
+      input2.barcode?.trim() || null,
+      input2.companyId ?? null,
+      input2.categoryId ?? null,
+      input2.rackNo?.trim() || null,
+      input2.room?.trim() || null,
+      input2.packSizeLabel?.trim() || null,
+      input2.baseUnit || "tablet",
+      Math.max(0, Math.round(input2.boxStrips ?? 0)),
+      Math.max(0, Math.round(input2.stripTablets ?? 0)),
+      Math.max(0, Math.round(input2.costPaisa ?? 0)),
+      Math.max(0, Math.round(input2.retailPaisa ?? 0)),
+      Math.max(0, Math.round(input2.vipPaisa ?? 0)),
+      Math.max(0, Math.round(input2.doctorPaisa ?? 0)),
+      Math.max(0, input2.reorderLevel ?? 0),
+      input2.trackExpiry === false ? 0 : 1,
       id,
     ]
   );
 
   // Price change to audit log me (Spec 13.2)
-  if ((input.retailPaisa ?? before.retail_paisa) !== before.retail_paisa) {
+  if ((input2.retailPaisa ?? before.retail_paisa) !== before.retail_paisa) {
     void audit({
       action: "price_change",
       userId: user?.id ?? null,
@@ -298,7 +333,7 @@ export function updateProduct(
         name: before.name,
         field: "retail_paisa",
         from: before.retail_paisa,
-        to: input.retailPaisa,
+        to: input2.retailPaisa,
       },
     });
   }
@@ -314,7 +349,7 @@ export function updateProduct(
     module: "Inventory",
     before: before as unknown as Record<string, unknown>,
     after: (after ?? null) as unknown as Record<string, unknown> | null,
-    details: { name: input.name },
+    details: { name: input2.name },
   });
 }
 

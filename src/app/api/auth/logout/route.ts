@@ -11,7 +11,15 @@ export async function POST() {
   const store = await cookies();
   store.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
   if (user) {
-    void audit({ action: "logout", entity: "User", entityId: user.id, details: { name: user.name } });
+    void audit({
+      action: "logout",
+      entity: "User",
+      entityId: user.id,
+      module: "Auth",
+      before: { name: user.name, logged_in: true },
+      after: { name: user.name, logged_in: false },
+      details: { name: user.name },
+    });
   }
   return NextResponse.json({ ok: true });
 }

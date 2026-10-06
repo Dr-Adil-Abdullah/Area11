@@ -197,6 +197,22 @@ export function createSupplierReturn(input: SupplierReturnInput, user?: U): { id
       userName: user?.name ?? null,
       entity: "SupplierReturn",
       entityId: retId,
+      module: "Suppliers",
+      // Spec 2: purana balance → naya balance
+      before: {
+        supplier: supplier.name,
+        balance_paisa:
+          ((get<{ balance_paisa: number }>("SELECT balance_paisa FROM suppliers WHERE id = ?", [input.supplierId])
+            ?.balance_paisa ?? 0) - (input.settled ? 0 : total)),
+      },
+      after: {
+        code,
+        supplier: supplier.name,
+        total_paisa: total,
+        settled: !!input.settled,
+        reason: input.reason ?? null,
+        items: input.lines?.length ?? 0,
+      },
       details: { code, supplier: supplier.name, total, settled: !!input.settled, reason: input.reason ?? null },
     });
 

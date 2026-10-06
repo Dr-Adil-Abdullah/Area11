@@ -346,6 +346,22 @@ export default function PosClient({
     };
   }, [lines, billDiscount, paidNow, tendered, settings, userRole]);
 
+  // Spec 4.2: round-off ya nuqsan ki fori ittila (ek hi dafa, jab naya ho)
+  const lastPricingNote = useRef<string>("");
+  useEffect(() => {
+    const note =
+      totals.roundOffPaise !== 0 ? `round-${totals.roundOffPaise}` : "";
+    if (note && lastPricingNote.current !== note) {
+      lastPricingNote.current = note;
+      push(
+        "info",
+        totals.roundOffPaise < 0 ? `Round-off: ${formatPKR(totals.roundOffPaise)} (gahak ko faida)` : "Round-off lagu hua",
+        `Bill ka kul ${formatPKR(totals.total)}`
+      );
+    }
+    if (totals.roundOffPaise === 0) lastPricingNote.current = "";
+  }, [totals.roundOffPaise, totals.total, push]);
+
   // ---------------- actions ----------------
   function clearCart() {
     setSaleWarnings([]);
@@ -488,6 +504,19 @@ export default function PosClient({
         const gross = Math.round(base * l.unitPricePaisa);
         const disc =
           settings.discountMode === "retail" ? retailDiscount(gross, percent) : marginDiscount(l.costPaisa * base, gross, percent);
+        // Spec 4.2: qeemat ki tabdeeli ki FORI ittila (chhoot lagte hi)
+        if (Number(l.discountPaisa) !== disc) {
+          push(
+            "info",
+            `Chhoot badli: ${l.name}`,
+            `${formatPKR(l.discountPaisa)} → ${formatPKR(disc)} (${percent}%)`
+          );
+        }
+        // hadd se upar ho to foran khabar dein (ser par to server bhi rokay ga)
+        const allowed = userRole === "cashier" ? settings.maxCashier : settings.maxManager;
+        if (percent > allowed && userRole !== "owner") {
+          push("warn", `Chhoot hadd se zyada (${percent}%)`, `Aap ki hadd ${allowed}% hai — manager se poochhein.`);
+        }
         return { ...l, discountPaisa: disc };
       })
     );

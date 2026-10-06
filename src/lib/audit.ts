@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------
 
 import { run } from "./db";
-import { diffFields, splitDiff } from "./audit-diff";
+import { diffFields, splitDiff, valuesForLog } from "./audit-diff";
 
 export type AuditAction =
   | "login"
@@ -79,13 +79,11 @@ export function audit(params: AuditEntry): void {
     // before/after diye hon to farq khud nikal lo
     let oldRaw = params.oldValue;
     let newRaw = params.newValue;
-    if (params.before || params.after) {
-      const diff = diffFields(params.before ?? null, params.after ?? null);
-      if (Object.keys(diff).length) {
-        const split = splitDiff(diff);
-        oldRaw = split.oldValue;
-        newRaw = split.newValue;
-      }
+    // Naya record / mitaya gaya / sirf badla hua -- sab ka hisaab ek hi jagah
+    const { oldValue: o, newValue: n } = valuesForLog(params.before, params.after);
+    if (o || n) {
+      oldRaw = params.oldValue ?? o;
+      newRaw = params.newValue ?? n;
     }
     run(
       `INSERT INTO audit_logs

@@ -44,6 +44,8 @@ export default function AppShell({
   userRole,
   isAuthed,
   autoLockMinutes,
+  negativeStock,
+  warnNegative = true,
 }: {
   children: React.ReactNode;
   appName: string;
@@ -54,10 +56,16 @@ export default function AppShell({
   userRole: string;
   isAuthed: boolean;
   autoLockMinutes: number;
+  /** Spec 1.2: kitni cheezein stock me MINUS hain (har safhe par alert) */
+  negativeStock?: { items: number; worst: number };
+  /** Spec 1.2: ye alert dikhana hai ya nahi (Settings: stock.warnNegative) */
+  warnNegative?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // Spec 1.2: alert chhupana sirf ISI session ke liye (dobara login → phir nazar aaye)
+  const [hideAlert, setHideAlert] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lock = useCallback(async () => {
@@ -230,6 +238,29 @@ export default function AppShell({
             <span className="badge-green">Offline ready</span>
           </div>
         </header>
+
+        {/* ===== Spec 1.2: HAR SAFHE ke bilkul ooper wala bara surkh alert ===== */}
+        {warnNegative && !hideAlert && (negativeStock?.items ?? 0) > 0 && (
+          <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2 border-b-2 border-rose-300 bg-rose-100 px-4 py-2 text-rose-900">
+            <span className="text-base leading-none">⚠</span>
+            <span className="text-sm font-bold">
+              Stock MINUS me hai — {negativeStock!.items} dawa (en)
+            </span>
+            <span className="text-xs opacity-80">
+              (sab se zyada {negativeStock!.worst}) · ginti (Stock-take) ya purchase se theek karein
+            </span>
+            <Link href="/alerts" className="ml-1 text-xs font-semibold underline">
+              Abhi dekhein
+            </Link>
+            <button
+              className="ml-auto text-xs opacity-70 hover:opacity-100"
+              onClick={() => setHideAlert(true)}
+              title="Is session ke liye chhupa dein"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         <main className="flex-1 p-4 lg:p-6">{children}</main>
 

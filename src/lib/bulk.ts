@@ -978,6 +978,18 @@ export async function commitBulkUpdate(
     userId: user?.id ?? null,
     userName: user?.name ?? null,
     entity: "bulk_update",
+    module: "Import",
+    before: null,
+    after: {
+      products: out.products,
+      customers: out.customers,
+      suppliers: out.suppliers,
+      categories: out.categories,
+      companies: out.companies,
+      batches: out.batches,
+      settings: out.settings,
+      skipped: out.skipped,
+    },
     details: out,
   });
 

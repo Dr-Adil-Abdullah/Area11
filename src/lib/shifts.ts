@@ -78,7 +78,9 @@ export function openShift(openingFloatPaisa: number, user?: U, note?: string | n
   );
   void audit({
     action: "create", userId: user?.id, userName: user?.name,
-    entity: "Shift", entityId: res.lastInsertRowid, details: { openingFloatPaisa: float },
+    entity: "Shift", entityId: res.lastInsertRowid, module: "Customers",
+    before: null, after: { status: "open", opening_float_paisa: float },
+    details: { openingFloatPaisa: float },
   });
   return { id: res.lastInsertRowid };
 }
@@ -181,7 +183,16 @@ export function closeShift(input: CloseShiftInput, user?: U): {
     );
     void audit({
       action: "update", userId: user?.id, userName: user?.name,
-      entity: "Shift", entityId: open.id,
+      entity: "Shift", entityId: open.id, module: "Customers",
+      before: { status: "open", opening_float_paisa: open.opening_float_paisa ?? null, closed_at: null },
+      after: {
+        status: "closed",
+        opening_float_paisa: open.opening_float_paisa ?? null,
+        expected_paisa: flow.expectedPaisa,
+        actual_paisa: actual,
+        difference_paisa: difference,
+        handed_to_name: handedToName ?? null,
+      },
       details: {
         expectedPaisa: flow.expectedPaisa, actualPaisa: actual, differencePaisa: difference,
         handedToName, openNext: Boolean(input.openNext),
@@ -204,7 +215,9 @@ export function closeShift(input: CloseShiftInput, user?: U): {
       nextShiftId = Number(res.lastInsertRowid);
       void audit({
         action: "create", userId: input.handedToUserId ?? null, userName: handedToName,
-        entity: "Shift", entityId: nextShiftId,
+        entity: "Shift", entityId: nextShiftId, module: "Customers",
+        before: null,
+        after: { status: "open", opening_float_paisa: actual, from_shift_id: open.id },
         details: { openingFloatPaisa: actual, fromShiftId: open.id },
       });
     }

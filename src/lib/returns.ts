@@ -251,3 +251,88 @@ export function voidSale(saleId: number, reason: string | null, user?: U) {
     return { refundedPaisa: received };
   });
 }
+
+// ---------------------------------------------------------------------------
+// Spec 3.3 + 1.3: QUARANTINE (maal wapas aya magar shelf par nahi)
+// ---------------------------------------------------------------------------
+// Wapsi ke waqt maal QUARANTINE me jata hai (janch tak stock me nahi).
+// Pehle ye maal kahin nazar nahi aata tha -- ab yahan se dekha aur
+// janch ke baad ek click se shelf par dala ja sakta hai.
+// ---------------------------------------------------------------------------
+export type QuarantineRow = {
+  id: number; date: string; product_id: number; name: string;
+  batch_id: number | null; batch_no: string | null; base_unit: string;
+  qty_base: number; refund_paisa: number; reason: string | null;
+  sale_code: string | null; customer_name: string | null; user_name: string | null;
+};
+
+export function quarantineRows(): QuarantineRow[] {
+  return query<QuarantineRow>(
+    `SELECT r.id, r.date, r.product_id, p.name, r.batch_id, b.batch_no, p.base_unit,
+            r.qty_base, r.refund_paisa, r.reason, s.code AS sale_code,
+            c.name AS customer_name, u.name AS user_name
+       FROM sale_returns r
+       JOIN products p  ON p.id = r.product_id
+       LEFT JOIN batches b   ON b.id = r.batch_id
+       LEFT JOIN sales s     ON s.id = r.sale_id
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN users u     ON u.id = r.user_id
+      WHERE r.restock = 0 AND r.qty_base > 0
+      ORDER BY r.id DESC
+      LIMIT 200`
+  );
+}
+
+/** Janch ke baad maal wapas shelf (stock) me -- sirf owner/manager */
+export function releaseFromQuarantine(
+  returnId: number,
+  user?: U
+): { qtyBase: number; batchId: number | null; productName: string } {
+  if (!canRestock(user)) {
+    const err = new Error("Maal stock me wapas dalne ka ikhtiyar sirf owner/manager ke paas hai.");
+    (err as Error & { status?: number }).status = 403;
+    throw err;
+  }
+  const row = get<{
+    id: number; product_id: number; batch_id: number | null; qty_base: number;
+    restock: number; name: string; sale_id: number; code: string | null;
+  }>(
+    `SELECT r.id, r.product_id, r.batch_id, r.qty_base, r.restock, p.name,
+            r.sale_id, s.code
+       FROM sale_returns r
+       JOIN products p ON p.id = r.product_id
+       LEFT JOIN sales s ON s.id = r.sale_id
+      WHERE r.id = ?`,
+    [returnId]
+  );
+  if (!row) throw new Error("Ye wapsi record nahi mila.");
+  if (row.restock) throw new Error("Ye maal pehle hi stock me wapas ja chuka hai.");
+  if (!row.batch_id) throw new Error("Is wapsi ke sath koi batch jurra hi nahi — /stock se seedha adjust karein.");
+
+  return tx(() => {
+    const beforeQty =
+      scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [row.batch_id]) ?? 0;
+    run("UPDATE batches SET qty_base = qty_base + ? WHERE id = ?", [row.qty_base, row.batch_id]);
+    const afterQty =
+      scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [row.batch_id]) ?? 0;
+    run("UPDATE sale_returns SET restock = 1 WHERE id = ?", [returnId]);
+    run(
+      `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      [row.product_id, row.batch_id, "return_in", row.qty_base, "return", row.sale_id,
+       row.code ?? null, "Quarantine se janch ke baad shelf par", user?.id ?? null]
+    );
+    void audit({
+      action: "update",
+      userId: user?.id ?? null,
+      userName: user?.name ?? null,
+      entity: "SaleReturn",
+      entityId: returnId,
+      module: "Returns",
+      before: { product: row.name, batch_id: row.batch_id, restock: 0, qty_base: beforeQty },
+      after: { product: row.name, batch_id: row.batch_id, restock: 1, qty_base: afterQty },
+      details: { released: row.qty_base, sale: row.code },
+    });
+    return { qtyBase: row.qty_base, batchId: row.batch_id, productName: row.name };
+  });
+}
