@@ -80,8 +80,27 @@ export function paySupplier(supplierId: number, amountPaisa: number, note: strin
   const amt = Math.round(amountPaisa);
   if (!(amt > 0)) throw new Error("Enter an amount greater than zero.");
   return tx(() => {
-    const s = get<{ id: number; balance_paisa: number }>("SELECT id, balance_paisa FROM suppliers WHERE id = ?", [supplierId]);
+    const s = get<{ id: number; name: string; balance_paisa: number }>(
+      "SELECT id, name, balance_paisa FROM suppliers WHERE id = ?", [supplierId]);
     if (!s) throw new Error("Supplier not found");
+    const owed = s.balance_paisa;
+    const newBalance = owed - amt;
+    // Review (U-36): zyada adaigi ROOKI nahi jati (advance payment jayez hai),
+    // magar malik ko foran ALERT/itila mile ke hum ne wajib se zyada de diya.
+    const warnings: string[] = [];
+    if (amt > owed && owed > 0) {
+      const extra = amt - owed;
+      warnings.push(
+        `${s.name}: itna paisa wajib hi nahi tha — wajib Rs ${(owed / 100).toFixed(2)} the, ` +
+          `Rs ${(amt / 100).toFixed(2)} diye gaye. Rs ${(extra / 100).toFixed(2)} ZYADA (advance) ` +
+          `ada kar diye gaye hain — ab ye supplier humara qarzi hai.`
+      );
+    } else if (owed <= 0 && amt > 0) {
+      warnings.push(
+        `${s.name}: is supplier ka koi wajib baqaya nahi tha (hisab ${(owed / 100).toFixed(2)}), ` +
+          `phir bhi Rs ${(amt / 100).toFixed(2)} diye gaye — ye poora advance (qarz) hai.`
+      );
+    }
     run("UPDATE suppliers SET balance_paisa = balance_paisa - ? WHERE id = ?", [amt, supplierId]);
     run(`INSERT INTO payments (method, amount_paisa, supplier_id, user_id, note) VALUES ('cash', ?, ?, ?, ?)`,
       [amt, supplierId, user?.id ?? null, note?.trim() || "Supplier payment"]);
@@ -92,11 +111,11 @@ export function paySupplier(supplierId: number, amountPaisa: number, note: strin
       entity: "SupplierPayment",
       entityId: supplierId,
       module: "Suppliers",
-      before: { supplier_id: supplierId, balance_paisa: s.balance_paisa },
-      after: { supplier_id: supplierId, balance_paisa: s.balance_paisa - amt, paid: amt },
-      details: { amount: amt, note },
+      before: { supplier: s.name, supplier_id: supplierId, balance_paisa: owed },
+      after: { supplier: s.name, supplier_id: supplierId, balance_paisa: newBalance, paid: amt, overpaid: amt > owed },
+      details: { amount: amt, note, warnings },
     });
-    return { balancePaisa: s.balance_paisa - amt };
+    return { balancePaisa: newBalance, warnings };
   });
 }
 

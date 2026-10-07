@@ -79,7 +79,12 @@ export default function SuppliersClient({ initialSuppliers }: { initialSuppliers
     const v = prompt(`Pay ${s.name}. Amount in Rs (we owe ${(s.balance_paisa / 100).toFixed(2)}):`, String(Math.max(0, s.balance_paisa) / 100));
     if (!v) return;
     const r = await (await fetch("/api/suppliers/pay", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ supplierId: s.id, amountPaisa: toPaisa(v) }) })).json();
-    if (!r.ok) alert(r.error); else await reload();
+    if (!r.ok) alert(r.error);
+    else {
+      // Review (U-36): zyada adaigi par foran ittila (kaam nahi rukta)
+      if (Array.isArray(r.warnings) && r.warnings.length) alert("ALERT: " + r.warnings.join("\nALERT: "));
+      await reload();
+    }
   }
 
   async function remove(s: Supplier) {
