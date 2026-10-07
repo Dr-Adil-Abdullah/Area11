@@ -167,10 +167,16 @@ export function returnSaleItems(
       //   * restock:false sirf khaas surat me (tab bhi quarantine list me
       //     nazar aata rahe ga, ghaib nahi hoga)
       const restock = l.restock !== false && !!it.batch_id && canRestock(user);
+      const toQuarantine = !restock && !!it.batch_id;
       if (l.restock === false && it.batch_id) quarantinedForRole = true;
-      run(`INSERT INTO sale_returns (sale_id, sale_item_id, product_id, batch_id, qty_base, refund_paisa, restock, reason, user_id, code)
-           VALUES (?,?,?,?,?,?,?,?,?,?)`,
-        [saleId, it.id, it.product_id, it.batch_id, qty, refund, restock ? 1 : 0, reason?.trim() || null, user?.id ?? null, returnCode]);
+      // U-34: quarantine me jane wale har item ko ek MUSTAQIL number (Q-0001 …)
+      const qcode = toQuarantine ? takeNextCode("quarantine") : null;
+      run(`INSERT INTO sale_returns
+             (sale_id, sale_item_id, product_id, batch_id, qty_base, refund_paisa, restock, reason, user_id, code,
+              qcode, disposition)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [saleId, it.id, it.product_id, it.batch_id, qty, refund, restock ? 1 : 0, reason?.trim() || null,
+         user?.id ?? null, returnCode, qcode, restock ? "restocked" : "quarantine"]);
       if (restock) run("UPDATE batches SET qty_base = qty_base + ? WHERE id = ?", [qty, it.batch_id]);
       run(`INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
            VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -278,20 +284,28 @@ export type QuarantineRow = {
   batch_id: number | null; batch_no: string | null; base_unit: string;
   qty_base: number; refund_paisa: number; reason: string | null;
   sale_code: string | null; customer_name: string | null; user_name: string | null;
+  /** U-34: har item ka MUSTAQIL quarantine number (Q-0001 …) */
+  qcode: string | null;
+  /** kahan gaya: quarantine | restocked | expired | sold */
+  disposition: string;
+  disposed_at: string | null;
+  disposed_note: string | null;
+  return_code: string | null;
 };
 
 export function quarantineRows(): QuarantineRow[] {
   return query<QuarantineRow>(
     `SELECT r.id, r.date, r.product_id, p.name, r.batch_id, b.batch_no, p.base_unit,
             r.qty_base, r.refund_paisa, r.reason, s.code AS sale_code,
-            c.name AS customer_name, u.name AS user_name
+            c.name AS customer_name, u.name AS user_name,
+            r.qcode, r.disposition, r.disposed_at, r.disposed_note, r.code AS return_code
        FROM sale_returns r
        JOIN products p  ON p.id = r.product_id
        LEFT JOIN batches b   ON b.id = r.batch_id
        LEFT JOIN sales s     ON s.id = r.sale_id
        LEFT JOIN customers c ON c.id = s.customer_id
        LEFT JOIN users u     ON u.id = r.user_id
-      WHERE r.restock = 0 AND r.qty_base > 0
+      WHERE r.disposition = 'quarantine' AND r.qty_base > 0
       ORDER BY r.id DESC
       LIMIT 200`
   );
@@ -329,7 +343,8 @@ export function releaseFromQuarantine(
     run("UPDATE batches SET qty_base = qty_base + ? WHERE id = ?", [row.qty_base, row.batch_id]);
     const afterQty =
       scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [row.batch_id]) ?? 0;
-    run("UPDATE sale_returns SET restock = 1 WHERE id = ?", [returnId]);
+    run("UPDATE sale_returns SET restock = 1, disposition = 'restocked', disposed_at = datetime('now','localtime'), disposed_by = ? WHERE id = ?",
+        [user?.id ?? null, returnId]);
     run(
       `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
        VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -374,6 +389,8 @@ export type ReturnReceipt = {
     batchNo: string | null;
     refundPaisa: number;
     restock: number;
+    /** U-34: quarantine ka mustaqil number (Q-0001) — agar maal quarantine me gaya */
+    qcode: string | null;
   }[];
 };
 
@@ -381,13 +398,13 @@ export type ReturnReceipt = {
 export function getReturnReceipt(code: string): ReturnReceipt | null {
   const rows = query<{
     id: number; date: string; code: string | null; reason: string | null;
-    qty_base: number; refund_paisa: number; restock: number;
+    qty_base: number; refund_paisa: number; restock: number; qcode: string | null;
     name: string; base_unit: string; batch_no: string | null;
     sale_code: string | null; customer_name: string | null;
     customer_phone: string | null; user_name: string | null;
   }>(
     `SELECT r.id, r.date, r.code, r.reason, r.qty_base, r.refund_paisa, r.restock,
-            p.name, p.base_unit, b.batch_no,
+            p.name, p.base_unit, b.batch_no, r.qcode,
             s.code AS sale_code, c.name AS customer_name, c.phone AS customer_phone,
             u.name AS user_name
        FROM sale_returns r
@@ -419,6 +436,7 @@ export function getReturnReceipt(code: string): ReturnReceipt | null {
       batchNo: r.batch_no,
       refundPaisa: r.refund_paisa,
       restock: r.restock,
+      qcode: r.qcode ?? null,
     })),
   };
 }
@@ -433,5 +451,143 @@ export function returnsForSale(saleId: number): { code: string; date: string; re
       GROUP BY r.code
       ORDER BY MIN(r.id) DESC`,
     [saleId]
+  );
+}
+
+// ---------------------------------------------------------------------------
+// U-34: QUARANTINE ka POORA PATA -- "kaun sa saman kidhar gaya"
+// ---------------------------------------------------------------------------
+// Malik ka hukum: quarantine me maujood har saman ka ek MUSTAQIL number ho
+// (Q-0001) aur history me saaf nazar aaye ke woh aakhir gaya kahan:
+//   stock me wapas  |  expiry / kharaab (write-off)  |  bech diya gaya
+// ---------------------------------------------------------------------------
+export type QuarantineDisposition = "restocked" | "expired" | "sold";
+
+const DISPOSITION_LABEL: Record<QuarantineDisposition, string> = {
+  restocked: "اسٹاک (شیلف) میں واپس",
+  expired: "ایکسپائری / خراب (write-off)",
+  sold: "فروخت کر دیا گیا",
+};
+
+export function dispositionLabel(d: string): string {
+  return DISPOSITION_LABEL[d as QuarantineDisposition] ?? d;
+}
+
+function quarantineRowOf(id: number) {
+  return get<{
+    id: number; product_id: number; batch_id: number | null; qty_base: number;
+    restock: number; name: string; sale_id: number; code: string | null;
+    qcode: string | null; disposition: string;
+  }>(
+    `SELECT r.id, r.product_id, r.batch_id, r.qty_base, r.restock, p.name,
+            r.sale_id, s.code, r.qcode, r.disposition
+       FROM sale_returns r
+       JOIN products p ON p.id = r.product_id
+       LEFT JOIN sales s ON s.id = r.sale_id
+      WHERE r.id = ?`,
+    [id]
+  );
+}
+
+/**
+ * Quarantine ke saman ka faisla: stock me wapas / expiry-kharaab / bech diya.
+ * Q number (Q-0001) hamesha wahi rehta hai -- sirf 'disposition' badalta hai,
+ * taake history me poora safar nazar aaye.
+ */
+export function decideQuarantine(
+  id: number,
+  disposition: QuarantineDisposition,
+  note: string | null,
+  user?: U
+): { qcode: string | null; productName: string; disposition: string } {
+  if (!canRestock(user)) {
+    const err = new Error("Quarantine ka faisla sirf owner/manager kar sakte hain.");
+    (err as Error & { status?: number }).status = 403;
+    throw err;
+  }
+  const row = quarantineRowOf(id);
+  if (!row) throw new Error("Ye wapsi record nahi mila.");
+  if (row.disposition !== "quarantine")
+    throw new Error(`Ye maal pehle hi ${dispositionLabel(row.disposition)} me ja chuka hai.`);
+
+  return tx(() => {
+    if (disposition === "restocked") {
+      if (!row.batch_id) throw new Error("Is wapsi ke sath koi batch jurra hi nahi — /stock se seedha adjust karein.");
+      const beforeQty = scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [row.batch_id]) ?? 0;
+      run("UPDATE batches SET qty_base = qty_base + ? WHERE id = ?", [row.qty_base, row.batch_id]);
+      const afterQty = scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [row.batch_id]) ?? 0;
+      run(
+        `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
+         VALUES (?,?,?,?,?,?,?,?,?)`,
+        [row.product_id, row.batch_id, "return_in", row.qty_base, "return", row.sale_id, row.code ?? null,
+         `Quarantine ${row.qcode ?? ""} se stock me wapas`, user?.id ?? null]
+      );
+      run(
+        `UPDATE sale_returns SET restock = 1, disposition = 'restocked',
+                disposed_at = datetime('now','localtime'), disposed_by = ?, disposed_note = ?
+          WHERE id = ?`,
+        [user?.id ?? null, note?.trim() || null, id]
+      );
+      void audit({
+        action: "update",
+        userId: user?.id ?? null,
+        userName: user?.name ?? null,
+        entity: "Quarantine",
+        entityId: id,
+        module: "Returns",
+        before: { qcode: row.qcode, product: row.name, disposition: "quarantine", qty_base: beforeQty },
+        after: { qcode: row.qcode, product: row.name, disposition: "restocked", qty_base: afterQty, note },
+        details: { qcode: row.qcode, note },
+      });
+      return { qcode: row.qcode, productName: row.name, disposition: "restocked" };
+    }
+
+    // expired (kharaab / write-off) ya sold -- dono me maal stock me wapas NAHI aata
+    run(
+      `UPDATE sale_returns SET restock = 0, disposition = ?,
+              disposed_at = datetime('now','localtime'), disposed_by = ?, disposed_note = ?
+        WHERE id = ?`,
+      [disposition, user?.id ?? null, note?.trim() || null, id]
+    );
+    run(
+      `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      [row.product_id, row.batch_id, disposition === "expired" ? "write_off" : "sale", 0,
+       "quarantine", id, row.qcode ?? null,
+       `Quarantine ${row.qcode ?? ""}: ${dispositionLabel(disposition)}${note ? " — " + note : ""}`,
+       user?.id ?? null]
+    );
+    void audit({
+      action: "update",
+      userId: user?.id ?? null,
+      userName: user?.name ?? null,
+      entity: "Quarantine",
+      entityId: id,
+      module: "Returns",
+      before: { qcode: row.qcode, product: row.name, disposition: "quarantine" },
+      after: { qcode: row.qcode, product: row.name, disposition, note },
+      details: { qcode: row.qcode, note },
+    });
+    return { qcode: row.qcode, productName: row.name, disposition };
+  });
+}
+
+/** U-34: POORI history -- har Q number kahan gaya (quarantine / stock / expiry / sold) */
+export function quarantineHistory(limit = 300): QuarantineRow[] {
+  return query<QuarantineRow>(
+    `SELECT r.id, r.date, r.product_id, p.name, r.batch_id, b.batch_no, p.base_unit,
+            r.qty_base, r.refund_paisa, r.reason, s.code AS sale_code,
+            c.name AS customer_name, u.name AS user_name,
+            r.qcode, r.disposition, r.disposed_at, r.disposed_note, r.code AS return_code
+       FROM sale_returns r
+       JOIN products p  ON p.id = r.product_id
+       LEFT JOIN batches b   ON b.id = r.batch_id
+       LEFT JOIN sales s     ON s.id = r.sale_id
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN users u     ON u.id = r.user_id
+      WHERE r.qcode IS NOT NULL
+      ORDER BY r.id DESC
+      LIMIT ?`,
+    [Math.min(limit, 1000)]
   );
 }

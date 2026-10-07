@@ -9,7 +9,7 @@ import WhatsAppCard from "./WhatsAppCard";
 import QuickReturnCard from "./QuickReturnCard";
 import QuarantineCard from "./QuarantineCard";
 import DismissedAlertsCard from "./DismissedAlertsCard";
-import { quarantineRows } from "@/lib/returns";
+import { quarantineRows, quarantineHistory } from "@/lib/returns";
 import { dismissals } from "@/lib/alert-dismiss";
 import { currentUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
@@ -43,6 +43,8 @@ export default async function AlertsPage() {
   const samples = sampleStock();
   // Spec 3.3: wapsi hua maal jo abhi shelf par nahi (quarantine)
   const quarantine = quarantineRows();
+  // U-34: poori history (kaun sa saman kidhar gaya)
+  const quarantineHist = quarantineHistory();
   // U-31: malik ki likhi hui wazahen (khatam kiye gaye alerts)
   const dismissedAlerts = dismissals();
   const me = await currentUser();
@@ -107,7 +109,8 @@ export default async function AlertsPage() {
 
       <QuarantineCard
         initial={JSON.parse(JSON.stringify(quarantine))}
-        canRelease={canRelease}
+        history={JSON.parse(JSON.stringify(quarantineHist))}
+        canDecide={canRelease}
       />
 
       <DismissedAlertsCard

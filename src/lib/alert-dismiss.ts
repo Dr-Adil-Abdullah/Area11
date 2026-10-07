@@ -23,7 +23,7 @@ import { alertKey, removeDismissed, reasonError } from "./alert-shared";
 
 export type AlertRow = {
   key: string;
-  type: "negstock" | "provisional";
+  type: "negstock" | "provisional" | "quarantine";
   tone: "red" | "amber";
   title: string;
   detail: string;
@@ -138,6 +138,34 @@ export function activeAlerts(): AlertRow[] {
           (r.phone ? ` (phone: ${r.phone})` : ""),
         entityId: r.id,
         href: `/sales`,
+      });
+    }
+  } catch {
+    /* ignore */
+  }
+
+  // (3) QUARANTINE (U-34): jo maal abhi bhi quarantine me hai -- malik faisla kare
+  //     (stock me wapas / expiry-kharaab / bech dein). Jab tak faisla na ho ALERT.
+  try {
+    const rows = query<{ id: number; qcode: string | null; name: string; qty_base: number; base_unit: string; date: string }>(
+      `SELECT r.id, r.qcode, p.name, r.qty_base, p.base_unit, r.date
+         FROM sale_returns r JOIN products p ON p.id = r.product_id
+        WHERE r.disposition = 'quarantine' AND r.qty_base > 0
+        ORDER BY r.id DESC`
+    );
+    for (const r of rows) {
+      const key = alertKey("quarantine", r.id);
+      if (off.has(key)) continue;
+      out.push({
+        key,
+        type: "quarantine",
+        tone: "amber",
+        title: `قرنطینہ ${r.qcode ?? "(baghair number)"} — ${r.name} (${r.qty_base} ${r.base_unit}) abhi quarantine me hai`,
+        detail:
+          `Malik faisla karein: maal (الف) stock me wapas, (ب) expiry/kharaab (write-off), ya (ج) bech dein. ` +
+          `Jab tak faisla na ho ye ALERT rahe ga — malik wajah likh kar bhi khatam kar sakte hain.`,
+        entityId: r.id,
+        href: `/alerts`,
       });
     }
   } catch {

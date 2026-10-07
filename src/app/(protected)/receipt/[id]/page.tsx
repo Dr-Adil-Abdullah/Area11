@@ -212,7 +212,9 @@ export default async function ReceiptPage({
                     <div className="text-[9px] text-slate-600">
                       {it.qtyBase} {it.baseUnit}
                       {it.batchNo ? ` • B:${it.batchNo}` : ""}
-                      {it.restock ? " • stock me wapas" : " • quarantine me"}
+                      {it.restock
+                        ? " • stock me wapas"
+                        : ` • quarantine${it.qcode ? ` (${it.qcode})` : ""} me`}
                     </div>
                   </td>
                   <td className="py-0.5 text-right">{it.qtyBase}</td>

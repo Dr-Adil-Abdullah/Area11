@@ -11,6 +11,7 @@ function keysFor(kind: BillKind): [string, string] {
   if (kind === "purchase") return ["bill.purchasePrefix", "bill.nextPurchaseNo"];
   if (kind === "provisional") return ["bill.provisionalPrefix", "bill.nextProvisionalNo"];
   if (kind === "return") return ["bill.returnPrefix", "bill.nextReturnNo"];
+  if (kind === "quarantine") return ["bill.quarantinePrefix", "bill.nextQuarantineNo"];
   if (kind === "supplierReturn") return ["bill.supplierReturnPrefix", "bill.nextSupplierReturnNo"];
   return ["bill.stockTakePrefix", "bill.nextStockTakeNo"];
 }
@@ -22,7 +23,8 @@ function codeParts(kind: BillKind, s: AppSettings): [string, number] {
   return [prefix, no];
 }
 
-export type BillKind = "sale" | "purchase" | "supplierReturn" | "provisional" | "stockTake" | "return";
+export type BillKind =
+  | "sale" | "purchase" | "supplierReturn" | "provisional" | "stockTake" | "return" | "quarantine";
 
 /** Agla bill number nikalo (settings se) */
 export async function peekNextCode(kind: BillKind): Promise<string> {
@@ -56,11 +58,16 @@ export function takeNextCode(kind: BillKind): string {
 
   // Safety: agar koi code pehle se maujood hai to aage barhte jao
   const table =
-    kind === "return" ? "sale_returns" : kind === "sale" ? "sales" : "purchases";
+    kind === "return" || kind === "quarantine"
+      ? "sale_returns"
+      : kind === "sale"
+        ? "sales"
+        : "purchases";
   let code = formatBillCode(prefix, no, padding);
   let guard = 0;
+  const codeCol = kind === "quarantine" ? "qcode" : "code";
   while (
-    get(`SELECT id FROM ${table} WHERE code = ?`, [code]) &&
+    get(`SELECT id FROM ${table} WHERE ${codeCol} = ?`, [code]) &&
     guard++ < 5000
   ) {
     no++;

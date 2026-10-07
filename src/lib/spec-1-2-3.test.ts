@@ -17,6 +17,12 @@ import {
   removeDismissed,
 } from "./alert-shared.ts";
 import { marginPercent, netProfitPaisa, netUnitsSold } from "./report-math.ts";
+import {
+  addsBackToStock,
+  dispositionLabel,
+  isFinalDisposition,
+  quarantineAlertKey,
+} from "./quarantine-shared.ts";
 
 // =================== Spec 1: NEGATIVE INVENTORY ===================
 
@@ -252,4 +258,35 @@ test("Margin: net bikri par munafa ka hissa", () => {
 test("Units: wapsi ghat kar waqai biki hui miqdar", () => {
   assert.equal(netUnitsSold(6, 3), 3);
   assert.equal(netUnitsSold(6.5, 0.25), 6.25);
+});
+
+// =================== U-34: QUARANTINE ka pakka number + anjam ===================
+// Malik ka hukum: har saman jo quarantine me ho us ka apna SPECIFIC number ho
+// jo change na ho sake, aur history se saaf nazar aaye ke saman kidhar gaya.
+
+test("U-34: har anjam ka saaf Urdu matlab", () => {
+  assert.equal(dispositionLabel("quarantine"), "قرنطینہ میں");
+  assert.equal(dispositionLabel("restocked"), "اسٹاک (شیلف) میں واپس");
+  assert.equal(dispositionLabel("expired"), "ایکسپائری / خراب (write-off)");
+  assert.equal(dispositionLabel("sold"), "فروخت کر دیا گیا");
+});
+
+test("U-34: sirf 'restocked' se maal stock me wapas aata hai", () => {
+  assert.equal(addsBackToStock("restocked"), true);
+  assert.equal(addsBackToStock("expired"), false, "kharaab maal stock me nahi jata");
+  assert.equal(addsBackToStock("sold"), false);
+  assert.equal(addsBackToStock("quarantine"), false);
+});
+
+test("U-34: quarantine ke ilawa har faisla aakhri hota hai (dubara nahi badalta)", () => {
+  assert.equal(isFinalDisposition("quarantine"), false, "abhi faisla baqi hai");
+  assert.equal(isFinalDisposition("restocked"), true);
+  assert.equal(isFinalDisposition("expired"), true);
+  assert.equal(isFinalDisposition("sold"), true);
+});
+
+test("U-34: har quarantine item ki alag key (do item aapas me na milay)", () => {
+  assert.equal(quarantineAlertKey(1), "quarantine:1");
+  assert.equal(quarantineAlertKey(2), "quarantine:2");
+  assert.notEqual(quarantineAlertKey(1), quarantineAlertKey(2));
 });
