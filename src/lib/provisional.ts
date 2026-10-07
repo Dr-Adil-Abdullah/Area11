@@ -275,3 +275,40 @@ export function cancelProvisional(id: number, reason: string | null, user?: U): 
     details: { code: p.code, cancelled: reason },
   });
 }
+
+/** U-35: bina-bill (jaldi) wapsi ki raseed ke liye ek hi record */
+export function getProvisionalReceipt(id: number) {
+  const rows = query<{
+    id: number; code: string; date: string; phone: string | null; reason: string | null;
+    notes: string | null; refund_paisa: number; status: string; user_name: string | null;
+    linked_code: string | null; product_id: number; name: string; qty_base: number; base_unit: string;
+  }>(
+    `SELECT p.id, p.code, p.date, p.phone, p.reason, p.notes, p.refund_paisa, p.status,
+            u.name AS user_name, s.code AS linked_code,
+            i.product_id, pr.name, i.qty_base, pr.base_unit
+       FROM provisional_returns p
+       LEFT JOIN users u ON u.id = p.user_id
+       LEFT JOIN sales s ON s.id = p.linked_sale_id
+       LEFT JOIN provisional_items i ON i.provisional_id = p.id
+       LEFT JOIN products pr ON pr.id = i.product_id
+      WHERE p.id = ?
+      ORDER BY i.id`,
+    [id]
+  );
+  if (!rows.length) return null;
+  const f = rows[0];
+  return {
+    code: f.code,
+    date: f.date,
+    phone: f.phone,
+    reason: f.reason,
+    notes: f.notes,
+    refundPaisa: f.refund_paisa,
+    status: f.status,
+    userName: f.user_name,
+    linkedSaleCode: f.linked_code,
+    items: rows
+      .filter((r) => r.product_id)
+      .map((r) => ({ name: r.name, qtyBase: r.qty_base, baseUnit: r.base_unit })),
+  };
+}

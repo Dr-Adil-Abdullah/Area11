@@ -3,12 +3,14 @@
 // Rules (user ke tasdeeq shuda usool, legacy demo se):
 //  * Refund = ASAL wasool shuda raqam ka hissa (discount/round-off ke baad), aaj ka rate nahi.
 //  * Cumulative return kabhi sold qty se zyada nahi.
-//  * Default = QUARANTINE (stock me wapas nahi). restock=true sirf janch ke baad.
+//  * MALIK KA HUKUM (U-32): default = maal FORAN stock me wapas (restock = 1).
+//  * U-35: har wapsi ka ek MUSTAQIL number (RET-0001) jo kabhi nahi badalta.
 //  * Asal sale_items kabhi edit nahi hoti; return alag table me.
 // ---------------------------------------------------------------------------
 import { get, query, run, tx, scalar } from "./db";
 import { audit } from "./audit";
 import { getSyncSettings } from "./settings-sync";
+import { takeNextCode } from "./numbering";
 
 type U = { id?: number; name?: string; role?: string } | null | undefined;
 
@@ -139,6 +141,8 @@ export function returnSaleItems(
     refunded_so_far: data.items.reduce((n, i) => n + (i.refunded_paisa || 0), 0),
   };
   return tx(() => {
+    // U-35: poori wapsi ka EK hi pakka number (har line par wahi code)
+    const returnCode = takeNextCode("return");
     let refundTotal = 0;
     for (const l of wanted) {
       const it = data.items.find((x) => x.id === l.saleItemId);
@@ -164,9 +168,9 @@ export function returnSaleItems(
       //     nazar aata rahe ga, ghaib nahi hoga)
       const restock = l.restock !== false && !!it.batch_id && canRestock(user);
       if (l.restock === false && it.batch_id) quarantinedForRole = true;
-      run(`INSERT INTO sale_returns (sale_id, sale_item_id, product_id, batch_id, qty_base, refund_paisa, restock, reason, user_id)
-           VALUES (?,?,?,?,?,?,?,?,?)`,
-        [saleId, it.id, it.product_id, it.batch_id, qty, refund, restock ? 1 : 0, reason?.trim() || null, user?.id ?? null]);
+      run(`INSERT INTO sale_returns (sale_id, sale_item_id, product_id, batch_id, qty_base, refund_paisa, restock, reason, user_id, code)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        [saleId, it.id, it.product_id, it.batch_id, qty, refund, restock ? 1 : 0, reason?.trim() || null, user?.id ?? null, returnCode]);
       if (restock) run("UPDATE batches SET qty_base = qty_base + ? WHERE id = ?", [qty, it.batch_id]);
       run(`INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
            VALUES (?,?,?,?,?,?,?,?,?)`,
@@ -218,10 +222,13 @@ export function returnSaleItems(
         items: wanted.map((l) => ({ saleItemId: l.saleItemId, qtyBase: l.qtyBase })),
         reason: reason?.trim() || null,
         restockBlocked: quarantinedForRole,
+        return_code: returnCode,
       },
-      details: { refundTotal, cashBack, reason, restockBlocked: quarantinedForRole },
+      details: { refundTotal, cashBack, reason, restockBlocked: quarantinedForRole, returnCode },
     });
     return {
+      // U-35: wapsi ka pakka number (receipt isi se chhapti hai)
+      code: returnCode,
       refundPaisa: refundTotal,
       cashBackPaisa: cashBack,
       creditReducedPaisa: refundTotal - cashBack,
@@ -342,4 +349,89 @@ export function releaseFromQuarantine(
     });
     return { qtyBase: row.qty_base, batchId: row.batch_id, productName: row.name };
   });
+}
+
+// ---------------------------------------------------------------------------
+// U-35: WAPSI KI RASEED (return receipt)
+// ---------------------------------------------------------------------------
+// Malik ka hukum: har wapsi ki chhapne wali raseed ho, jis par wapsi ka
+// MUSTAQIL number (RET-0001) ho. Yahi number history me bhi nazar aata hai.
+// ---------------------------------------------------------------------------
+export type ReturnReceipt = {
+  code: string;
+  date: string;
+  saleCode: string | null;
+  customerName: string | null;
+  customerPhone: string | null;
+  userName: string | null;
+  reason: string | null;
+  totalRefundPaisa: number;
+  items: {
+    id: number;
+    name: string;
+    qtyBase: number;
+    baseUnit: string;
+    batchNo: string | null;
+    refundPaisa: number;
+    restock: number;
+  }[];
+};
+
+/** RET-0001 (ya jo bhi code ho) ki poori raseed */
+export function getReturnReceipt(code: string): ReturnReceipt | null {
+  const rows = query<{
+    id: number; date: string; code: string | null; reason: string | null;
+    qty_base: number; refund_paisa: number; restock: number;
+    name: string; base_unit: string; batch_no: string | null;
+    sale_code: string | null; customer_name: string | null;
+    customer_phone: string | null; user_name: string | null;
+  }>(
+    `SELECT r.id, r.date, r.code, r.reason, r.qty_base, r.refund_paisa, r.restock,
+            p.name, p.base_unit, b.batch_no,
+            s.code AS sale_code, c.name AS customer_name, c.phone AS customer_phone,
+            u.name AS user_name
+       FROM sale_returns r
+       JOIN products p ON p.id = r.product_id
+       LEFT JOIN batches b ON b.id = r.batch_id
+       LEFT JOIN sales s ON s.id = r.sale_id
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN users u ON u.id = r.user_id
+      WHERE r.code = ?
+      ORDER BY r.id`,
+    [code]
+  );
+  if (!rows.length) return null;
+  const f = rows[0];
+  return {
+    code: f.code ?? code,
+    date: f.date,
+    saleCode: f.sale_code,
+    customerName: f.customer_name,
+    customerPhone: f.customer_phone,
+    userName: f.user_name,
+    reason: f.reason,
+    totalRefundPaisa: rows.reduce((n, r) => n + (r.refund_paisa || 0), 0),
+    items: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      qtyBase: r.qty_base,
+      baseUnit: r.base_unit,
+      batchNo: r.batch_no,
+      refundPaisa: r.refund_paisa,
+      restock: r.restock,
+    })),
+  };
+}
+
+/** Is bill par abhi tak kitni wapsiyan hui hain (raseed ke link ke liye) */
+export function returnsForSale(saleId: number): { code: string; date: string; refundPaisa: number; items: number }[] {
+  return query<{ code: string; date: string; refundPaisa: number; items: number }>(
+    `SELECT r.code AS code, MIN(r.date) AS date,
+            SUM(r.refund_paisa) AS refundPaisa, COUNT(*) AS items
+       FROM sale_returns r
+      WHERE r.sale_id = ? AND r.code IS NOT NULL
+      GROUP BY r.code
+      ORDER BY MIN(r.id) DESC`,
+    [saleId]
+  );
 }

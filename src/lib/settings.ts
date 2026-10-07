@@ -32,6 +32,8 @@ export const SETTING_DEFAULTS = {
   "bill.nextSaleNo": 1,
   "bill.provisionalPrefix": "PR-",
   "bill.nextProvisionalNo": 1,
+  "bill.returnPrefix": "RET-",
+  "bill.nextReturnNo": 1,
   "bill.supplierReturnPrefix": "SR-",
   "bill.nextSupplierReturnNo": 1,
   "bill.stockTakePrefix": "ST-",

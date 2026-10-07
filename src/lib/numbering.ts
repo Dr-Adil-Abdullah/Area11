@@ -10,6 +10,7 @@ function keysFor(kind: BillKind): [string, string] {
   if (kind === "sale") return ["bill.salePrefix", "bill.nextSaleNo"];
   if (kind === "purchase") return ["bill.purchasePrefix", "bill.nextPurchaseNo"];
   if (kind === "provisional") return ["bill.provisionalPrefix", "bill.nextProvisionalNo"];
+  if (kind === "return") return ["bill.returnPrefix", "bill.nextReturnNo"];
   if (kind === "supplierReturn") return ["bill.supplierReturnPrefix", "bill.nextSupplierReturnNo"];
   return ["bill.stockTakePrefix", "bill.nextStockTakeNo"];
 }
@@ -21,7 +22,7 @@ function codeParts(kind: BillKind, s: AppSettings): [string, number] {
   return [prefix, no];
 }
 
-export type BillKind = "sale" | "purchase" | "supplierReturn" | "provisional" | "stockTake";
+export type BillKind = "sale" | "purchase" | "supplierReturn" | "provisional" | "stockTake" | "return";
 
 /** Agla bill number nikalo (settings se) */
 export async function peekNextCode(kind: BillKind): Promise<string> {
@@ -54,7 +55,8 @@ export function takeNextCode(kind: BillKind): string {
   let no = Number(parse(read(noKey, "1"), 1)) || 1;
 
   // Safety: agar koi code pehle se maujood hai to aage barhte jao
-  const table = kind === "sale" ? "sales" : "purchases";
+  const table =
+    kind === "return" ? "sale_returns" : kind === "sale" ? "sales" : "purchases";
   let code = formatBillCode(prefix, no, padding);
   let guard = 0;
   while (

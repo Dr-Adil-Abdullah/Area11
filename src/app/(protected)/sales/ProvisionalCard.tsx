@@ -2,8 +2,9 @@
 
 // Area11 - Rush-time return (bill ke baghair) + pending bill alert (spec 9.2)
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Link2, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Link2, Plus, Receipt, Search, Trash2 } from "lucide-react";
 import { formatPKR, toPaisa } from "@/lib/money";
 import { PROV_REASONS, type ProvRow } from "@/lib/provisional-shared";
 
@@ -183,6 +184,11 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
                     {r.status === "cancelled" && <span className="text-slate-500">cancelled</span>}
                   </td>
                   <td className="text-right">
+                    {r.status !== "pending" && (
+                      <Link className="btn-secondary !py-1" href={`/receipt/${r.id}?type=provisional&auto=1`} title="Raseed chhapein">
+                        <Receipt className="h-4 w-4" /> Raseed
+                      </Link>
+                    )}
                     {r.status === "pending" && (
                       linking === r.id ? (
                         <div className="flex flex-col items-end gap-1">
@@ -203,6 +209,14 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
                         </div>
                       ) : (
                         <span className="inline-flex gap-1">
+                          {/* U-35: bina-bill wapsi ki bhi raseed chhapein */}
+                          <Link
+                            className="btn-secondary !py-1"
+                            href={`/receipt/${r.id}?type=provisional&auto=1`}
+                            title="Raseed chhapein"
+                          >
+                            <Receipt className="h-4 w-4" /> Raseed
+                          </Link>
                           <button className="btn-secondary !py-1" onClick={() => setLinking(r.id)}><Link2 className="h-4 w-4" /> Bill se jodein</button>
                           <button className="btn-ghost !py-1 text-slate-500" onClick={() => cancel(r.id)}><Trash2 className="h-4 w-4" /></button>
                         </span>

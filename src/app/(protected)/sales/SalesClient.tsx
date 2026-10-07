@@ -10,14 +10,18 @@ type Sale = { id: number; code: string; date: string; customer_name: string | nu
 type Item = { id: number; name: string; qty_base: number; returned_qty: number };
 
 type Prov = { pending: number; returns: Parameters<typeof ProvisionalCard>[0]["initial"]["returns"] };
+/** U-35: har bill ki wapsi ki raseed (code + raqam) */
+type ReturnSlip = { code: string; date: string; refundPaisa: number; items: number };
 
-export default function SalesClient({ sales, from, to, q, filters, provisional }: {
+export default function SalesClient({ sales, from, to, q, filters, provisional, returnReceipts = {} }: {
   sales: Sale[];
   from: string;
   to: string;
   q: string;
   filters: { method: string; status: string; margin: string; min: string; sort: string; all: boolean };
   provisional: Prov;
+  /** bill id → us ki wapsiyon ki raseedein */
+  returnReceipts?: Record<string | number, ReturnSlip[]>;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState<number | null>(null);
@@ -50,10 +54,15 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
     const r = await post(`/api/sales/${id}/return`, { lines, reason });
     if (r) {
       setOpen(null);
+      const code: string | undefined = r.code;
       alert(
         `Refund ${formatPKR(r.refundPaisa)} (cash back ${formatPKR(r.cashBackPaisa)}, credit reduced ${formatPKR(r.creditReducedPaisa)})` +
-        (r.restockBlocked ? "\n\nNateeja: maal stock me wapas nahi dala gaya (khaas surat) — /alerts par nazar aaye ga." : "")
+          (code ? `\n\nWapsi ka number: ${code}` : "") +
+          (r.restockBlocked ? "\n\nNateeja: maal stock me wapas nahi dala gaya (khaas surat) — /alerts par nazar aaye ga." : "") +
+          (code ? "\n\nRaseed (receipt) chhapni hai to abhi khul jaye gi." : "")
       );
+      // U-35: wapsi ki raseed foran chhapne ke liye
+      if (code) window.open(`/receipt/${id}?type=return&code=${encodeURIComponent(code)}&auto=1`, "_blank");
       router.refresh();
     }
   }
@@ -135,6 +144,25 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
                   <tr><td colSpan={8} className="bg-slate-50">
                     <div className="space-y-2 p-3">
                       <div className="text-sm font-medium">Return items from {s.code} (quantity in smallest units)</div>
+                      {/* U-35: is bill ki pichli wapsiyon ki raseedein (pakka number RET-… ke sath) */}
+                      {(returnReceipts[s.id] ?? returnReceipts[String(s.id)] ?? []).length > 0 && (
+                        <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                          <div className="text-xs font-semibold text-slate-600">واپسی کی رسیدیں (return receipts)</div>
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            {(returnReceipts[s.id] ?? returnReceipts[String(s.id)] ?? []).map((r) => (
+                              <Link
+                                key={r.code}
+                                href={`/receipt/${s.id}?type=return&code=${encodeURIComponent(r.code)}`}
+                                className="btn-secondary !py-1 !text-xs"
+                                title={`${r.date} · ${r.items} item(s)`}
+                              >
+                                <Receipt className="h-3.5 w-3.5" />
+                                {r.code} · {formatPKR(r.refundPaisa)}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {items.map((i) => (
                         <div key={i.id} className="flex items-center gap-3 text-sm">
                           <span className="w-64 truncate">{i.name}</span>
