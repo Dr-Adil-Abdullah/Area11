@@ -90,7 +90,10 @@ export function getSupplierReturn(id: number) {
   return { ...ret, items };
 }
 
-export function createSupplierReturn(input: SupplierReturnInput, user?: U): { id: number; code: string; totalPaisa: number } {
+export function createSupplierReturn(
+  input: SupplierReturnInput,
+  user?: U
+): { id: number; code: string; totalPaisa: number; warnings: string[] } {
   if (!input.supplierId) throw new Error("Supplier chunein.");
   const lines = (input.lines ?? []).filter((l) => Number(l.qtyBase) > 0);
   if (lines.length === 0) throw new Error("Kam az kam ek dawa ki miqdar likhein.");
@@ -98,6 +101,7 @@ export function createSupplierReturn(input: SupplierReturnInput, user?: U): { id
   const supplier = get<{ id: number; name: string }>("SELECT id, name FROM suppliers WHERE id = ?", [input.supplierId]);
   if (!supplier) throw new Error("Supplier nahi mila.");
 
+  const warnings: string[] = [];
   return tx(() => {
     let total = 0;
 
@@ -122,8 +126,12 @@ export function createSupplierReturn(input: SupplierReturnInput, user?: U): { id
           [batchId]
         );
         if (!b) throw new Error("Batch nahi mila.");
+        // Malik ka hukum: manfi stock kisi bhi kaam ko NAHI rokay ga -- sirf alert
         if (Number(l.qtyBase) > b.qty_base) {
-          throw new Error(`Batch me sirf ${b.qty_base} hain — ${l.qtyBase} wapas nahi bhej sakte.`);
+          warnings.push(
+            `${get<{ name: string }>("SELECT name FROM products WHERE id = ?", [l.productId])?.name ?? "Dawa"}: ` +
+              `batch me sirf ${b.qty_base} the, ${l.qtyBase} wapas bheje — stock MINUS (${b.qty_base - Number(l.qtyBase)}) me gaya.`
+          );
         }
         if (!cost) cost = b.cost_paisa;
       } else {
@@ -136,7 +144,10 @@ export function createSupplierReturn(input: SupplierReturnInput, user?: U): { id
         )?.n ?? 0;
         if (Number(l.qtyBase) > have) {
           const nm = get<{ name: string }>("SELECT name FROM products WHERE id = ?", [l.productId])?.name ?? "dawa";
-          throw new Error(`${nm}: hamare paas sirf ${have} hain — ${l.qtyBase} wapas nahi bhej sakte.`);
+          // Malik ka hukum: sirf alert -- kaam rukay ga nahi
+          warnings.push(
+            `${nm}: hamare paas sirf ${have} the, ${l.qtyBase} wapas bheje — stock MINUS (${have - Number(l.qtyBase)}) me gaya.`
+          );
         }
       }
       const lineTotal = Math.round(cost * Number(l.qtyBase));
@@ -216,7 +227,7 @@ export function createSupplierReturn(input: SupplierReturnInput, user?: U): { id
       details: { code, supplier: supplier.name, total, settled: !!input.settled, reason: input.reason ?? null },
     });
 
-    return { id: retId, code, totalPaisa: total };
+    return { id: retId, code, totalPaisa: total, warnings };
   });
 }
 

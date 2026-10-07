@@ -1,11 +1,14 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-// Spec 3.3 + 1.3: QUARANTINE -- wapsi hua maal jo abhi shelf par nahi aya
+// WAPSI KA MAAL JO STOCK ME WAPAS NAHI DALA GAYA (khaas surat)
 // ---------------------------------------------------------------------------
-// Wapsi ke waqt maal stock me nahi jata (janch tak). Pehle ye kahin nazar
-// nahi aata tha -- is liye "ghaib" lagta tha. Ab yahan nazar aata hai aur
-// janch ke baad ek click se shelf par chala jata hai.
+// MALIK KA HUKUM (U-32, 6-Oct-2026): "jaisay hi paisay niklen ge, stock add
+// ho jaye ga" -- yani aam wapsi par maal FORAN stock me chala jata hai, koi
+// quarantine nahi (kharaab / tarikh-guzashta maal hum late hi nahi).
+// Ye card sirf un (nadiri) suraton ke liye hai jahan wapsi ke waqt
+// jaan-bujh kar "maal stock me wapas nahi" chuna gaya ho (restock = 0).
+// Yahan se ek click se shelf par bheja ja sakta hai (black box me record).
 // ---------------------------------------------------------------------------
 
 import { useEffect, useState } from "react";
@@ -62,11 +65,13 @@ export default function QuarantineCard({
         <div>
           <div className="card-title flex items-center gap-2">
             <PackageSearch className="h-4 w-4 text-amber-600" />
-            قرنطینہ — واپسی کا مال جو ابھی شیلف پر نہیں
+            واپسی کا مال جو اسٹاک میں واپس نہیں ڈالا گیا
           </div>
           <div className="text-xs font-normal text-slate-500">
-            گاہک سے واپس آیا مال جانچ تک اسٹاک میں شامل نہیں ہوتا۔ یہاں نظر آئے گا — جانچ کے بعد
-            &quot;شیلف پر ڈالیں&quot; دبائیں تو اسٹاک میں شامل ہو جائے گا (بلیک باکس میں ریکارڈ کے ساتھ)۔
+            مالک کے حکم کے مطابق عام واپسی پر مال <b>فوراً اسٹاک</b> میں جاتا ہے۔
+            یہ فہرست صرف ان نادری صورتوں کے لیے ہے جہاں واپسی کے وقت جان بوجھ کر
+            مال اسٹاک میں واپس نہیں ڈالا گیا — &quot;شیلف پر ڈالیں&quot; دبانے سے اسٹاک میں شامل ہو جائے گا
+            (بلیک باکس میں ریکارڈ کے ساتھ)۔
           </div>
         </div>
         <span className="badge-amber">{rows.length}</span>

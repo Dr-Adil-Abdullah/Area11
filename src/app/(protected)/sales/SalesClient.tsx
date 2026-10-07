@@ -23,7 +23,8 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
   const [open, setOpen] = useState<number | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [qty, setQty] = useState<Record<number, string>>({});
-  const [restock, setRestock] = useState(false);
+  // U-32 (malik ka hukum): wapsi ka maal FORAN stock me -- default ON
+  const [restock, setRestock] = useState(true);
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,7 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
   async function openReturn(id: number) {
     if (open === id) return setOpen(null);
     const r = await (await fetch(`/api/sales/${id}`, { cache: "no-store" })).json();
-    if (r.ok) { setItems(r.items); setQty({}); setMsg(""); setReason(""); setRestock(false); setOpen(id); }
+    if (r.ok) { setItems(r.items); setQty({}); setMsg(""); setReason(""); setRestock(true); setOpen(id); }
   }
   async function post(url: string, body: unknown) {
     setBusy(true); setMsg("");
@@ -51,7 +52,7 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
       setOpen(null);
       alert(
         `Refund ${formatPKR(r.refundPaisa)} (cash back ${formatPKR(r.cashBackPaisa)}, credit reduced ${formatPKR(r.creditReducedPaisa)})` +
-        (r.restockBlocked ? "\n\nNote: stock me wapas daalne ka ikhtiyar sirf owner/manager ke paas hai — maal QUARANTINE me rakha gaya." : "")
+        (r.restockBlocked ? "\n\nNateeja: maal stock me wapas nahi dala gaya (khaas surat) — /alerts par nazar aaye ga." : "")
       );
       router.refresh();
     }
@@ -160,7 +161,7 @@ export default function SalesClient({ sales, from, to, q, filters, provisional }
                         </div>))}
                       <div className="flex flex-wrap items-center gap-3">
                         <input className="input-sm w-64" placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
-                        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} /> Put back in stock (only if inspected &amp; not expired). Unticked = quarantine.</label>
+                        <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} /> Maal foran stock me wapas daalein (tick khol dein to maal stock me nahi jaye ga — sirf khaas surat me).</label>
                         <button className="btn-primary" disabled={busy} onClick={() => doReturn(s.id)}>Refund</button>
                       </div>
                       {msg && <div className="text-xs text-rose-600">{msg}</div>}

@@ -6,6 +6,7 @@ import { getSettings } from "@/lib/settings";
 import { currentUser } from "@/lib/session";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { negativeStockSummary } from "@/lib/alerts";
+import { activeAlerts } from "@/lib/alert-dismiss";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -39,6 +40,8 @@ export default async function RootLayout({
   const user = await currentUser();
   // Spec 1.2: har safhe ke ooper alert ke liye (sirf login ke baad)
   const negative = user ? negativeStockSummary() : { items: 0, worst: 0 };
+  // U-31: zinda alerts (manfi stock + bina-bill wapsi) -- malik wajah likh kar khatam karein
+  const alerts = user ? activeAlerts() : [];
 
   return (
     <html lang="en">
@@ -65,6 +68,8 @@ export default async function RootLayout({
           autoLockMinutes={Number(settings["security.autoLockMinutes"]) || 0}
           negativeStock={negative}
           warnNegative={settings["stock.warnNegative"] !== false}
+          alerts={alerts}
+          canDismiss={user?.role === "owner"}
         >
           {children}
         </AppShell>

@@ -29,7 +29,8 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
   const [linking, setLinking] = useState<number | null>(null);
   const [billQ, setBillQ] = useState("");
   const [billHits, setBillHits] = useState<BillHit[]>([]);
-  const [restock, setRestock] = useState(false);
+  // U-33: bina-bill wapsi par maal pehle hi foran stock me add ho chuka hota hai
+  const [restock, setRestock] = useState(true);
 
   async function reload() {
     const r = await (await fetch("/api/provisional", { cache: "no-store" })).json();
@@ -85,7 +86,10 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
       body: JSON.stringify({ id, action: "link", saleId, restock }),
     })).json();
     if (!r.ok) return setMsg(r.error);
-    setMsg(restock ? `✅ Bill se jur gaya — ${r.restocked} item(s) stock me wapas.` : "✅ Bill se jur gaya (maal quarantine me hi raha).");
+    setMsg(
+      `✅ Bill se jur gaya. Maal wapsi ke waqt hi stock me add ho chuka tha (${r.restocked ?? 0} item).` +
+        "\nYaad rahe: bill jur jane ke baad bhi ALERT tab tak rahe ga jab tak malik wajah likh kar khatam na kare."
+    );
     setLinking(null); setBillQ(""); setBillHits([]); setRestock(false);
     await reload(); router.refresh();
   }
@@ -193,7 +197,7 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
                             ))}
                           </ul>
                           <label className="flex items-center gap-1 text-[11px] text-slate-600">
-                            <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} /> Maal stock me wapas (sirf owner/manager)
+                            <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} /> Maal stock me wapas (pehle hi ho chuka hota hai — foran)
                           </label>
                           <button className="btn-ghost !py-0.5 text-xs" onClick={() => { setLinking(null); setBillQ(""); setBillHits([]); }}>cancel</button>
                         </div>

@@ -9,6 +9,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { diffFields, splitDiff, valuesForLog } from "./audit-diff.ts";
 import { evaluateNegativeStock } from "./stock-rules.ts";
+import {
+  canDismissAlerts,
+  negStockKey,
+  provisionalKey,
+  reasonError,
+  removeDismissed,
+} from "./alert-shared.ts";
 
 // =================== Spec 1: NEGATIVE INVENTORY ===================
 
@@ -150,4 +157,57 @@ test("Spec 2.2: kuch na badle to dono column khaali", () => {
   const v = valuesForLog({ a: 1 }, { a: 1 });
   assert.equal(v.oldValue, null);
   assert.equal(v.newValue, null);
+});
+
+// =================== U-30 / U-31 / U-33: ALERT & WAJAH ===================
+// Malik ke hukum:
+//   U-30 = manfi stock (ya koi bhi aisi surat) KAAM KABHI NAHI ROKE, sirf alert
+//   U-31 = alert sirf MALIK khatam karay, WAJAH likh kar; wajah mehfooz rahe
+//   U-33 = bina bill wapsi par maal foran stock me, alert malik ke khatam karne tak
+
+test("U-31: alert key har qism ke liye alag bane", () => {
+  assert.equal(negStockKey(12), "negstock:12");
+  assert.equal(provisionalKey(5), "provisional:5");
+  // do alag alerts ka key kabhi aapas me nahi milna chahiye
+  assert.notEqual(negStockKey(5), provisionalKey(5));
+});
+
+test("U-31: khatam ki hui alert dobara nazar na aaye", () => {
+  const rows = [
+    { key: negStockKey(1), type: "negstock" },
+    { key: negStockKey(2), type: "negstock" },
+    { key: provisionalKey(7), type: "provisional" },
+  ];
+  const left = removeDismissed(rows, new Set([negStockKey(2)]));
+  assert.equal(left.length, 2);
+  assert.ok(!left.some((r) => r.key === negStockKey(2)));
+});
+
+test("U-31: wajah lazmi hai -- khaali ya chhoti manzoor nahi", () => {
+  assert.ok(reasonError(""));
+  assert.ok(reasonError("   "));
+  assert.ok(reasonError("ab")); // 2 harf = kam
+  assert.equal(reasonError("ginti galat thi"), null);
+});
+
+test("U-31: alert khatam karna sirf MALIK ka kaam hai", () => {
+  assert.equal(canDismissAlerts("owner"), true);
+  assert.equal(canDismissAlerts("manager"), false);
+  assert.equal(canDismissAlerts("cashier"), false);
+  assert.equal(canDismissAlerts(undefined), false);
+});
+
+test("U-30: manfi stock par bhi kaam rukta nahi (sirf alert)", () => {
+  // supplier wapsi / write-off: stock se zyada quantity darj ho to bhi
+  // block = false hona chahiye, warn = true (Spec 1 + U-30 ka mila jula usul)
+  const v = evaluateNegativeStock({
+    name: "Panadol",
+    inStockBase: 3,
+    sellBase: 10, // hamare paas 3 hain, 10 wapas bhej rahe hain
+    allowNegative: true,
+    warn: true,
+  });
+  assert.equal(v.block, false, "U-30: manfi stock kaam nahi rok sakta");
+  assert.ok(v.message.length > 0, "U-30: sirf alert (warning) jana chahiye");
+  assert.equal(v.afterBase, -7, "hisab theek: 3 - 10 = -7 (minus me gaya)");
 });

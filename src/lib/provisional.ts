@@ -74,12 +74,52 @@ export function recordProvisional(input: ProvInput, user?: U): { id: number; cod
         p.id,
         Math.round(Number(it.qtyBase)),
       ]);
-      // Maal counter par wapas aa gaya magar stock me nahi -- movement me sirf ittila
-      run(
-        `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
-         VALUES (?, NULL, 'return_in', 0, 'provisional', ?, ?, ?, ?)`,
-        [p.id, id, code, "Provisional return -- maal QUARANTINE me (bill ka intezar)", user?.id ?? null]
+      // ---------------- MALIK KA HUKUM (6-Oct-2026) ----------------
+      // "jab paise minus hon ge to stock add ho jaye ga" -- bina bill ke wapsi
+      // par bhi maal FORAN stock me. (Pehle ye quarantine me jata tha.)
+      // Bill baad me jur jata hai; jurte waqt dobara add nahi hota (neechay
+      // linkProvisionalToSale me check hai).
+      const pb = get<{ id: number; qty_base: number }>(
+        `SELECT id, qty_base FROM batches
+          WHERE product_id = ? AND active = 1 AND qty_base > 0
+          ORDER BY (expiry_ym IS NULL), expiry_ym ASC, id ASC LIMIT 1`,
+        [p.id]
       );
+      const pb2 = pb ??
+        get<{ id: number; qty_base: number }>(
+          `SELECT id, qty_base FROM batches WHERE product_id = ? AND active = 1
+           ORDER BY expiry_ym IS NULL, expiry_ym DESC, id DESC LIMIT 1`,
+          [p.id]
+        ) ??
+        null;
+      const q = Math.round(Number(it.qtyBase));
+      if (pb2) {
+        const beforeQ = pb2.qty_base;
+        run("UPDATE batches SET qty_base = qty_base + ? WHERE id = ?", [q, pb2.id]);
+        run(
+          `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
+           VALUES (?,?,?,?,?,?,?,?,?)`,
+          [p.id, pb2.id, "return_in", q, "provisional", id, code,
+           "Provisional (bina bill) wapsi -- maal foran stock me", user?.id ?? null]
+        );
+        void audit({
+          action: "update",
+          userId: user?.id ?? null,
+          userName: user?.name ?? null,
+          entity: "Batch",
+          entityId: pb2.id,
+          module: "Returns",
+          before: { product: p.name, qty_base: beforeQ },
+          after: { product: p.name, qty_base: beforeQ + q },
+          details: { provisional: code, provisionalId: id },
+        });
+      } else {
+        run(
+          `INSERT INTO stock_movements (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, note, user_id)
+           VALUES (?, NULL, 'return_in', 0, 'provisional', ?, ?, ?, ?)`,
+          [p.id, id, code, "Provisional wapsi -- is dawa ka koi batch hi nahi (stock me izafa nahi hua)", user?.id ?? null]
+        );
+      }
     }
     // Cash wapas (payments me manfi row -> cash book me refund dikhega)
     run(
@@ -164,7 +204,16 @@ export function linkProvisional(
     );
 
     let restocked = 0;
-    if (opts.restock) {
+    // Malik ka hukum: maal banate waqt HI stock me add ho gaya tha.
+    // Is liye bill jorte waqt DOBARA add nahi hoga (warna stock do-guna ho jata).
+    const alreadyIn = get<{ v: number }>(
+      `SELECT COUNT(*) v FROM stock_movements
+        WHERE ref_type='provisional' AND ref_id=? AND type='return_in' AND qty_base > 0`,
+      [id]
+    )?.v ?? 0;
+    if (opts.restock && alreadyIn > 0) {
+      restocked = items.length; // stock pehle hi add tha -- sirf ittila
+    } else if (opts.restock) {
       // Us bill ke usi product wale batch me wapas daalo (FEFO: pehla batch jisme woh dawa ho)
       for (const it of items) {
         const si = get<{ batch_id: number | null }>(

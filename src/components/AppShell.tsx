@@ -1,5 +1,6 @@
 "use client";
 
+import AlertBar, { type GlobalAlert } from "@/components/AlertBar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -46,6 +47,8 @@ export default function AppShell({
   autoLockMinutes,
   negativeStock,
   warnNegative = true,
+  alerts = [],
+  canDismiss = false,
 }: {
   children: React.ReactNode;
   appName: string;
@@ -60,12 +63,15 @@ export default function AppShell({
   negativeStock?: { items: number; worst: number };
   /** Spec 1.2: ye alert dikhana hai ya nahi (Settings: stock.warnNegative) */
   warnNegative?: boolean;
+  /** U-31: zinda alerts jo malik wajah likh kar khatam kar sakta hai */
+  alerts?: GlobalAlert[];
+  /** U-31: kya ye user malik hai (sirf malik hi alert khatam kar sakta hai) */
+  canDismiss?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   // Spec 1.2: alert chhupana sirf ISI session ke liye (dobara login → phir nazar aaye)
-  const [hideAlert, setHideAlert] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const lock = useCallback(async () => {
@@ -239,9 +245,12 @@ export default function AppShell({
           </div>
         </header>
 
-        {/* ===== Spec 1.2: HAR SAFHE ke bilkul ooper wala bara surkh alert ===== */}
-        {warnNegative && !hideAlert && (negativeStock?.items ?? 0) > 0 && (
-          <div className="sticky top-0 z-30 flex flex-wrap items-center gap-2 border-b-2 border-rose-300 bg-rose-100 px-4 py-2 text-rose-900">
+        {/* ===== Spec 1.2 + U-31: HAR SAFHE ke bilkul ooper alerts =====
+             Malik ka hukum: manfi stock kaam nahi rokta, SIRF alert jata hai;
+             aur alert us waqt tak rahta hai jab tak malik wajah likh kar
+             khatam na kare. (Pehle ye sirf usi session ke liye chhupta tha.) */}
+        {warnNegative && (negativeStock?.items ?? 0) > 0 && (
+          <div className="flex flex-wrap items-center gap-2 border-b-2 border-rose-300 bg-rose-100 px-4 py-2 text-rose-900">
             <span className="text-base leading-none">⚠</span>
             <span className="text-sm font-bold">
               Stock MINUS me hai — {negativeStock!.items} dawa (en)
@@ -252,15 +261,9 @@ export default function AppShell({
             <Link href="/alerts" className="ml-1 text-xs font-semibold underline">
               Abhi dekhein
             </Link>
-            <button
-              className="ml-auto text-xs opacity-70 hover:opacity-100"
-              onClick={() => setHideAlert(true)}
-              title="Is session ke liye chhupa dein"
-            >
-              ✕
-            </button>
           </div>
         )}
+        <AlertBar alerts={alerts} canDismiss={canDismiss} />
 
         <main className="flex-1 p-4 lg:p-6">{children}</main>
 

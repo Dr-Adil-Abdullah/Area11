@@ -27,6 +27,8 @@ export type AuditAction =
   | "restore"
   | "sync"
   | "negative_sale"   // stock minus me gaya (Spec 1.2)
+  | "dismiss_alert"   // malik ne wajah likh kar alert khatam kiya (U-31)
+  | "restore_alert"   // malik ne khatam ki hui alert wapas layi
   | "denied";         // ijazat nahi mili (security event)
 
 /** Kaun se module se kaam hua (Spec 2: "every module of the software") */
@@ -45,6 +47,7 @@ export type AuditModule =
   | "Sync"
   | "Import"
   | "Auth"
+  | "Alerts"
   | "Other";
 
 export type AuditEntry = {

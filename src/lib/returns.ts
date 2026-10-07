@@ -155,8 +155,15 @@ export function returnSaleItems(
       if (lastPart) refund = Math.max(refund, Math.floor(data.sale.total_paisa * share) - it.refunded_paisa);
       refund = Math.max(0, refund);
 
-      const restock = !!l.restock && !!it.batch_id && canRestock(user);
-      if (l.restock && !restock && it.batch_id) quarantinedForRole = true;
+      // ---------------- MALIK KA HUKUM (6-Oct-2026) ----------------
+      // "jaisay hi paisay niklen ge, stock add ho jaye ga" -- yani wapsi ke
+      // sath hi maal wapas shelf (stock) par. Damaged maal hum late hi nahi,
+      // is liye quarantine ki zaroorat nahi.
+      //   * default = restock (stock me wapas)
+      //   * restock:false sirf khaas surat me (tab bhi quarantine list me
+      //     nazar aata rahe ga, ghaib nahi hoga)
+      const restock = l.restock !== false && !!it.batch_id && canRestock(user);
+      if (l.restock === false && it.batch_id) quarantinedForRole = true;
       run(`INSERT INTO sale_returns (sale_id, sale_item_id, product_id, batch_id, qty_base, refund_paisa, restock, reason, user_id)
            VALUES (?,?,?,?,?,?,?,?,?)`,
         [saleId, it.id, it.product_id, it.batch_id, qty, refund, restock ? 1 : 0, reason?.trim() || null, user?.id ?? null]);

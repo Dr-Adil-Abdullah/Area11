@@ -108,7 +108,9 @@ export default function SupplierDetailClient({
     if (!(qty > 0)) return setMsg("Miqdar likhein.");
     const b = rBatch ? selectedBatches.find((x) => String(x.id) === rBatch) : null;
     if (rBatch && !b) return setMsg("Batch chunein.");
-    if (b && qty > b.qty_base) return setMsg(`Is batch me sirf ${b.qty_base} hain.`);
+    // U-30: manfi stock kisi kaam ko nahi rokta -- sirf ittila (alert)
+    if (b && qty > b.qty_base)
+      setMsg(`Khayal rahe: is batch me sirf ${b.qty_base} hain — ${qty} bhejne se stock MINUS (${b.qty_base - qty}) me jaye ga. Darj kar diya jaye ga.`);
     setRLines((l) => [...l, { productId: p.id, batchId: b?.id ?? null, name: p.name, batchNo: b?.batch_no ?? "—", qtyBase: qty, costPaisa: b?.cost_paisa ?? 0 }]);
     setRQty(""); setRBatch("");
     setMsg("");
@@ -126,7 +128,12 @@ export default function SupplierDetailClient({
         }),
       })).json();
       if (!r.ok) throw new Error(r.error);
-      setMsg(`Return ${r.code} darj ho gaya — ${formatPKR(r.totalPaisa)} ka maal wapas gaya.`);
+      setMsg(
+        `Return ${r.code} darj ho gaya — ${formatPKR(r.totalPaisa)} ka maal wapas gaya.` +
+        ((r.warnings as string[] | undefined)?.length
+          ? "\n\nALERT: " + (r.warnings as string[]).join("\nALERT: ")
+          : "")
+      );
       setRLines([]); setRNote(""); setRCash(false); setShowReturn(false);
       router.refresh();
     } catch (e) {
