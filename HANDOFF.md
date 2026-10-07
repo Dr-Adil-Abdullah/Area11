@@ -1,10 +1,10 @@
 # HANDOFF — read this first (any new agent)
 
-> **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں — **کام کرتا ہوا اور آج (2026-10-03) دوبارہ verify شدہ**۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** اگلا کام "§4 REMAINING" میں ہے (سب سے پہلے: **PR #3 merge** اور login+roles)۔ ہر کام کے بعد یہ فائل اپ ڈیٹ کریں۔
+> **اردو خلاصہ:** یہ ریپو ایک **آف لائن فارمیسی POS + انوینٹری** ایپ ہے (مالک: Dr. Adil Abdullah، اردو بولنے والے)۔ اصل ایپ **روٹ فولڈر** میں ہے (Next.js + SQLite)۔ فیز 1 مکمل اور فیز 2 کے ضروری حصے (ریٹرن، ادھار وصولی، کیش/ڈے-اینڈ، بیک اپ) بن چکے ہیں — **کام کرتا ہوا اور آج (2026-10-07) دوبارہ verify شدہ**۔ **سوالات (Q-01…Q-19) سب حل ہیں — دوبارہ نہ پوچھیں۔** اگلا کام "§4 REMAINING" میں ہے (سب سے پہلے: **PR #3 merge** اور login+roles)۔ ہر کام کے بعد یہ فائل اپ ڈیٹ کریں۔
 
 > 🇵🇰 **مالک کے لیے مکمل اردو دستاویز: [`docs/APP-TAFSEEL.md`](./docs/APP-TAFSEEL.md)** — سب فیچرز، Settings کی ہر لائن، باقی کام، اور فائنل کرنے سے پہلے کے خطرے۔
 
-Last updated: **2026-10-06** · App version **0.6.2 (Phase 1-4 done + Phase 5 ~95% + Spec 1-4)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: see `git tag` (`stage-1 … stage-8` + this work).
+Last updated: **2026-10-07** · App version **0.6.2 (Phase 1-4 done + Phase 5 ~95% + Spec 1-4 + malik ke ahkaam U-30…U-36)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: **`stage-43`** (see `git tag`; 43 checkpoints).
 
 ---
 
@@ -217,9 +217,10 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 ## 4. REMAINING — in priority order
 
- > **Progress snapshot (2026-10-06, after stage-35):** Phase 1 **100 %**, Phase 2 **100 %**, Phase 3 **100 %**, Phase 4 **100 %**, Phase 5 **~95 %** (audit/backup/restore ✅, reports ✅, stock-take ✅, camera ✅, Supabase sync ✅, rozana backup ✅, bulk update ✅; sirf **hardware verification** — thermal printer + USB scanner — dukan par baqi).
-> **Owner ka naya system-spec (Spec 1–4) — stage-35, sab COMPLETE:** 1) manfi inventory (bikri na ruke + ooper bara surkh alert) · 2) har module ka log with **purani → nayi value** + security events + CSV · 3) wapsi ki sakht janch (asal bill, hadd, mohelat, refund ki hadd) · 4) counter par fori ittila (toasts + alert bar).
-> **Kul taraqqi ≈ 99 %.** Baqi sirf: PR #3 merge · Netlify base directory · Supabase ki chabiyan · tax report · wapsi ki rasid · hardware ki janch.
+ > **Progress snapshot (2026-10-07, after stage-43):** Phase 1 **100 %**, Phase 2 **100 %**, Phase 3 **100 %**, Phase 4 **100 %**, Phase 5 **~95 %** (audit/backup/restore ✅, reports ✅, stock-take ✅, camera ✅, Supabase sync ✅, rozana backup ✅, bulk update ✅; sirf **hardware verification** — thermal printer + USB scanner — dukan par baqi).
+> **Owner ka naya system-spec (Spec 1–4) — stages 35 + 37, sab COMPLETE:** 1) manfi inventory (bikri na ruke + har safhe par bara surkh alert) · 2) har module ka log with **purani → nayi value** + security events + CSV · 3) wapsi ki sakht janch (asal bill, hadd, mohelat, refund ki hadd) · 4) counter par fori ittila (toasts + alert bar).
+> **Malik ke baad ke ahkaam — sab COMPLETE:** **stage-38** (U-30 manfi stock sirf ALERT · U-31 alert sirf malik wajah se khatam · U-32 wapsi ka maal foran stock me · U-33 bina-bill wapsi par mustaqil alert) · **stage-39 (U-35)** har wapsi ka pakka number `RET-0001` + chhapne wali raseed · **stage-40 (U-36)** review — wapsi ki laagat ka bara hisaabi nuqs theek (`/reports` + `/cash`) · **stage-41 (U-34)** quarantine ka pakka number `Q-0001` + anjam + poori history · **stage-42** Settings ki bekar linein khatam (70/70 istemal me) · **stage-43** review ka doosra dour (har module asal data se) + supplier overpayment alert.
+> **Kul taraqqi ≈ 99 %.** Baqi sirf: **PR #3 merge** · Netlify base directory · Supabase ki chabiyan · **tax report** (agar chahiye) · hardware (printer/scanner) ki janch.
 
 ### P0 · repo / merge / hosting (do this first)
 1. **Merge PR #3** (this branch → `main`). Afterwards PR **#2** is superseded and can be closed; branch `arena/01a0f0cf-area11` stays for history.

@@ -79,6 +79,13 @@
 
 **Live link (demo only):** <https://marea11.netlify.app> — Netlify project `marea11` publishes the **`legacy-demo-vite/` demo** (sample data) for now. The real app needs a **Node ≥ 22.5 host with a persistent disk** (shop PC / Node host with volume): a SQLite file cannot live on static or serverless hosting. Details in `HANDOFF.md` §10.
 
+## ▶️ ایپ کیسے چلائیں / دیکھیں؟
+
+**مکمل اردو ہدایات: [`docs/CHALANE-KA-TARIQA.md`](docs/CHALANE-KA-TARIQA.md)** (پریویو · اپنے کمپیوٹر پر · ویب سائٹ کی طرح)۔
+مختصراً: `npm install` → `npm start` → براؤزر میں <http://localhost:3000> (پہلا پاس ورڈ `area11`)۔
+یہ ایپ ڈیٹا **فائل** میں رکھتی ہے، اس لیے Netlify/Vercel پر **نہیں** چل سکتی — دکان کا کمپیوٹر یا
+مستقل ڈسک والی Node ہوسٹنگ استعمال کریں۔
+
 ## 📁 Files (naqsha)
 
 | File | Kaam |
