@@ -9,7 +9,7 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-07) — v0.6.2, latest checkpoint **stage-41**
+## Status (2026-10-07) — v0.6.2, latest checkpoint **stage-42**
 
 **Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **69 routes** · `npm test` **55/55** · `rules-count.sh` = `SAB THEEK` (133) · live smoke of **Spec 1–4** (negative stock, audit old→new, return validation, POS alerts) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
@@ -26,6 +26,8 @@
 **Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
 
 **Latest changes (stages 26–34):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+
+**Stage-42 (Settings کی صفائی):** پورے کوڈ کی چھان بین کی — **73 میں سے 3 بیکار لائنیں** ملیں (`reorder.levels`, `ui.language`, `sync.provider`) جنہیں **نہ کوئی کوڈ پڑھتا تھا اور نہ Settings کے صفحے پر نظر آتی تھیں** — وہ ہٹا دی گئیں۔ اب **70/70 (100%) لائنیں واقعی کام کر رہی ہیں**۔ پرانی صورت git کی تاریخ میں محفوظ ہے اور ضرورت پر ایک لائن میں واپس آ سکتی ہے۔
 
 **Stage-41 (قرنطینہ کا مستقل نمبر — U-34):** قرنطینہ میں جانے والے **ہر سامان کا اپنا پکّا نمبر** (`Q-0001`, `Q-0002`…) جو **کبھی نہیں بدلتا**۔ `/alerts` پر دو کارڈ: (1) «ابھی قرنطینہ میں» — ہر آئٹم کے ساتھ **اسٹاک میں / خراب (ایکسپائری) / فروخت** کے بٹن اور نوٹ، (2) **«قرنطینہ کی پوری تاریخ»** — صاف نظر آتا ہے کہ **کون سا سامان کہاں گیا** (نمبر، دوا، مقدار، انجام، وقت، نوٹ)۔ جب تک مال قرنطینہ میں ہے **الرٹ جاتا رہتا ہے**۔ عام واپسی بدستور **فوراً اسٹاک** میں جاتی ہے (اس پر کوئی Q-نمبر نہیں بنتا)۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12h میں۔
 

@@ -5,12 +5,17 @@
 // har counter/device par ek jaisi nazar aati hain (RULE S-07).
 //
 // Nayi setting add karni ho: sirf neeche SETTING_DEFAULTS me ek line daalein.
+//
+// NOTE (7-Oct-2026, malik ka hukum: "bekar linein khatam kar dein"):
+//   `reorder.levels`, `ui.language`, `sync.provider` yahan se HATA diye gaye --
+//   ye kahin bhi istemal nahi ho rahay thay (na koi code inhen parhta tha, na
+//   Settings ke safhe par nazar aatay thay). Zaroorat parne par ek line me wapas
+//   add ho saktay hain; purani soorat git history me maujood hai.
 // ---------------------------------------------------------------------------
 
 import { query, run } from "./db";
 
 export type ExpiryLevel = { level: number; days: number; color: string; label: string };
-export type ReorderLevel = { level: number; key: string; factor: number; label: string };
 
 export const SETTING_DEFAULTS = {
   // ---- Store & Branding (E-02, E-03) ----
@@ -64,11 +69,6 @@ export const SETTING_DEFAULTS = {
 
   // ---- Reorder alerts (3 tier) ----
   "reorder.enabled": true,
-  "reorder.levels": [
-    { level: 1, key: "warning", factor: 2.0, label: "Reorder soon" },
-    { level: 2, key: "critical", factor: 1.0, label: "Order now" },
-    { level: 3, key: "out", factor: 0, label: "Out of stock" },
-  ] as ReorderLevel[],
 
   // ---- Loyalty (abhi OFF, structure ready) ----
   "loyalty.enabled": false,
@@ -84,9 +84,6 @@ export const SETTING_DEFAULTS = {
   "receipt.showDiscount": true,
   "receipt.showSavings": false,
   "receipt.showCostColumns": false, // sirf owner
-
-  // ---- Language (user: all English) ----
-  "ui.language": "en",
 
   // ---- Payments (user: cash + credit) ----
   "payment.methods": ["cash", "credit"] as string[],
@@ -126,7 +123,6 @@ export const SETTING_DEFAULTS = {
   // ---- Cloud sync (Supabase) - spec Phase 5 ----
   // Local SQLite hamesha ASAL rahega; Supabase sirf aina (mirror) hai.
   "sync.enabled": false,
-  "sync.provider": "supabase",
   "sync.url": "",       // masalan https://xxxx.supabase.co
   "sync.key": "",       // anon / service key
   "sync.table": "area11_sync",

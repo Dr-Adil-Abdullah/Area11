@@ -59,6 +59,11 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 **Where things stand on 2026-10-03 (evening):** the app was re-verified in the morning (docs only). In the evening the whole of **Phase 1 was finished**, one work item per checkpoint:
 `stage-9` login + roles · `stage-10` health version from package.json · `stage-11` cash-change calculator + stock write-off/adjust + URL-level page guard · `stage-12` Excel import (template → dry-run preview → import) · `stage-13` offline mode / PWA (service worker, manifest, icons, offline page) · `stage-14` P1 tail UI (customer edit, category/company rename+delete, purchase sample/bonus tick, free goods excluded from the bill).
 **Phase 5 wave (stages 26–27):** stage-26 is the Reports page (below); stage-27 fixed a **serious accounting bug found while building it** — see the BUG row.
+- **stage-42 — malik ka teesra kaam: Settings ki BEKAR linein khatam:**
+  - Pooray code ki chhaan-been: har `settings` key ko har `.ts/.tsx` file me talasha gaya. Natija: **73 keys** me se sirf **3 bekar** miliN — `reorder.levels`, `ui.language`, `sync.provider` — aur **koi bhi** Settings ke safhe par nazar nahi aati thin (yani koi "dhoka" nahi tha).
+  - 3 keys + un se jurri bekar `ReorderLevel` type hata diye gaye. Ab **70/70 keys haqeeqat me istemal ho rahi hain (100%)**.
+  - `src/lib/settings.ts` ke sar-e-safhe par NOTE likh diya gaya ke ye kyun hatayi gayin aur wapas kaise layi ja sakti hain (git history me purani soorat maujood hai).
+  - **Tasdeeq:** `tsc` 0 · `npm test` **55/55** · `build` OK · live: `/settings`, `/alerts`, `/`, `/pos`, `/reports`, `/cash` sab 200.
 - **stage-41 — U-34: quarantine ka MUSTAQIL number (Q-0001) + poora pata ke "saman kidhar gaya":**
   - Nayi migration **`013_quarantine_tracking`**: `sale_returns` me `qcode` (mustaqil number), `disposition` (`quarantine` | `restocked` | `expired` | `sold`), `disposed_at`, `disposed_by`, `disposed_note` + indexes. Naya numbering kind `quarantine` (`bill.quarantinePrefix` = `Q-`, counter `bill.nextQuarantineNo`).
   - Wapsi ke waqt: jo item stock me wapas NAHI gaya usay turant **`Q-0001`** milta hai (number **kabhi nahi badalta**). Jo item foran stock me gaya (U-32 default) usay koi Q-number nahi.
