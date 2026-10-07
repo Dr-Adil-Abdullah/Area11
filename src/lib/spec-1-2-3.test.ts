@@ -16,6 +16,7 @@ import {
   reasonError,
   removeDismissed,
 } from "./alert-shared.ts";
+import { marginPercent, netProfitPaisa, netUnitsSold } from "./report-math.ts";
 
 // =================== Spec 1: NEGATIVE INVENTORY ===================
 
@@ -210,4 +211,45 @@ test("U-30: manfi stock par bhi kaam rukta nahi (sirf alert)", () => {
   assert.equal(v.block, false, "U-30: manfi stock kaam nahi rok sakta");
   assert.ok(v.message.length > 0, "U-30: sirf alert (warning) jana chahiye");
   assert.equal(v.afterBase, -7, "hisab theek: 3 - 10 = -7 (minus me gaya)");
+});
+
+// =================== REVIEW (U-36): reports ka hisaab ===================
+// Review me pakra gaya nuqs: wapsi ka maal jab stock me wapas aata hai to us ki
+// LAAGAT bhi munafay me wapas aani chahiye -- warna munafa kam dikhta hai.
+
+test("Munafa: wapsi ke baad laagat bhi wapas aaye (shelf par aya maal)", () => {
+  const profit = netProfitPaisa({
+    salesPaisa: 48000, // 6 dawa x Rs 80
+    refundPaisa: 24000, // 3 wapas x Rs 80
+    costPaisa: 30000, // 6 x Rs 50
+    returnedCostPaisa: 15000, // 3 x Rs 50 (maal shelf par wapas)
+  });
+  assert.equal(profit, 9000, "(480-240) - (300-150) = Rs 90");
+});
+
+test("Munafa: quarantine wala maal (stock me nahi aya) = laagat wapas nahi", () => {
+  const profit = netProfitPaisa({
+    salesPaisa: 48000,
+    refundPaisa: 24000,
+    costPaisa: 30000,
+    returnedCostPaisa: 0, // maal wapas nahi aya -> nuqsan
+  });
+  assert.equal(profit, -6000);
+});
+
+test("Munafa: koi wapsi na ho to aam hisaab", () => {
+  assert.equal(
+    netProfitPaisa({ salesPaisa: 48000, refundPaisa: 0, costPaisa: 30000, returnedCostPaisa: 0 }),
+    18000
+  );
+});
+
+test("Margin: net bikri par munafa ka hissa", () => {
+  assert.equal(marginPercent(24000, 9000), 37.5);
+  assert.equal(marginPercent(0, 0), 0, "zero se taqseem ka hifazat");
+});
+
+test("Units: wapsi ghat kar waqai biki hui miqdar", () => {
+  assert.equal(netUnitsSold(6, 3), 3);
+  assert.equal(netUnitsSold(6.5, 0.25), 6.25);
 });

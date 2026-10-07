@@ -9,9 +9,9 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-07) — v0.6.2, latest checkpoint **stage-39**
+## Status (2026-10-07) — v0.6.2, latest checkpoint **stage-40**
 
-**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **69 routes** · `npm test` **46/46** · `rules-count.sh` = `SAB THEEK` (133) · live smoke of **Spec 1–4** (negative stock, audit old→new, return validation, POS alerts) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
+**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **69 routes** · `npm test` **51/51** · `rules-count.sh` = `SAB THEEK` (133) · live smoke of **Spec 1–4** (negative stock, audit old→new, return validation, POS alerts) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
 | Stage | Work | State |
 |---|---|---|
@@ -26,6 +26,8 @@
 **Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
 
 **Latest changes (stages 26–34):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+
+**Stage-40 (نظرِ ثانی — U-36):** پہلے مرحلے کی نظرِ ثانی میں ایک **بڑا حسابی نقص** ملا اور ٹھیک ہو گیا: واپسی کا مال شیلف پر واپس آتا تھا مگر **رپورٹ اور کیش/ڈے اینڈ اس کی لاگت منافع میں واپس نہیں شامل کرتے تھے** — منافع کم دکھتا تھا (مثال: Rs −60 بمقابلہ درست Rs 90)۔ اب اصول صاف ہے: **لاگت تب ہی واپس جب مال واقعی اسٹاک میں آیا ہو**؛ قرنطینہ یا خراب مال کی لاگت نقصان مان کر نہیں گھٹائی جاتی۔ اس پر **5 نئے ٹیسٹ** ہیں (کل 51)۔ نظرِ ثانی کا باقی حصّہ صاف نکلا: **21/21 صفحے** بغیر کسی خرابی کے چلتے ہیں، بیک اپ ٹھیک ہے، اور ہر لاگ میں «پرانا → نیا» موجود ہے۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12g میں۔
 
 **Stage-39 (واپسی کی رسید — U-35):** ہر واپسی کو اب ایک **پکّا نمبر** ملتا ہے (`RET-0001`, `RET-0002`…) جو کبھی نہیں بدلتا اور بلیک باکس میں بھی درج ہوتا ہے۔ واپسی کے فوراً بعد **رسید خود بخود چھپنے کے لیے کھل جاتی ہے** — جس پر دکان کا نام، واپسی کا نمبر، اصل بل نمبر، گاہک، دوائیں + مقدار + واپس رقم، **ہر آئٹم کے ساتھ «اسٹاک میں واپس» یا «قرنطینہ میں»**، وجہ، کل ریفنڈ اور دستخط کی لائن ہے۔ پرانی رسیدیں `/sales` پر ہر بل کے اندر «واپسی کی رسیدیں» سے دوبارہ چھاپیں۔ **بغیر بل (جلدی) واپسی** کی بھی الگ رسید (`PR-…`) ہے۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12f میں۔
 

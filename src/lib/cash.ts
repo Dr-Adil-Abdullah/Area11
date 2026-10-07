@@ -5,6 +5,7 @@
 // baaqi (sale/customer) = paisa ANDAR (refund = manfi raqam).
 // ---------------------------------------------------------------------------
 import { get, query, run, tx } from "./db";
+import { netProfitPaisa } from "./report-math";
 import { audit } from "./audit";
 
 type U = { id?: number; name?: string } | null | undefined;
@@ -20,13 +21,23 @@ export function daySummary(day?: string) {
   const returnsTotal = n("SELECT COALESCE(SUM(refund_paisa),0) v FROM sale_returns WHERE date(date)=?");
   const profit = n(`SELECT COALESCE(SUM(i.line_total_paisa - i.qty_base*i.cost_paisa_at_sale),0) v
                       FROM sale_items i JOIN sales s ON s.id=i.sale_id WHERE date(s.date)=? AND s.status<>'void'`);
+  // Review (U-36): wapsi ka maal jab shelf/stock me wapas aata hai (restock = 1)
+  // to us ki laagat munafay me wapas aani chahiye -- warna munafa kam dikhta hai.
+  const returnedCost = n(
+    `SELECT COALESCE(SUM(r.qty_base * si.cost_paisa_at_sale),0) v
+       FROM sale_returns r JOIN sale_items si ON si.id = r.sale_item_id
+      WHERE date(r.date)=? AND r.restock = 1`
+  );
   const cashIn = n("SELECT COALESCE(SUM(amount_paisa),0) v FROM payments WHERE method='cash' AND purchase_id IS NULL AND supplier_id IS NULL AND amount_paisa>0 AND date(date)=?");
   const cashRefunds = -n("SELECT COALESCE(SUM(amount_paisa),0) v FROM payments WHERE method='cash' AND purchase_id IS NULL AND supplier_id IS NULL AND amount_paisa<0 AND date(date)=?");
   const supplierPaid = n("SELECT COALESCE(SUM(amount_paisa),0) v FROM payments WHERE method='cash' AND (purchase_id IS NOT NULL OR supplier_id IS NOT NULL) AND date(date)=?");
   const expenses = n("SELECT COALESCE(SUM(amount_paisa),0) v FROM expenses WHERE date(date)=?");
   const drawings = n("SELECT COALESCE(SUM(amount_paisa),0) v FROM owner_drawings WHERE type='cash' AND date(date)=?");
   const expectedCash = cashIn - cashRefunds - supplierPaid - expenses - drawings;
-  return { day: d, bills, voided, salesTotal, creditGiven, returnsTotal, profit: profit - returnsTotal,
+  return { day: d, bills, voided, salesTotal, creditGiven, returnsTotal,
+           profit: netProfitPaisa({ salesPaisa: salesTotal, refundPaisa: returnsTotal, costPaisa: salesTotal - profit, returnedCostPaisa: returnedCost }),
+           /** waqai stock me wapas aaye maal ki laagat (tafail ke liye) */
+           returnedCostPaisa: returnedCost,
            cashIn, cashRefunds, supplierPaid, expenses, drawings, expectedCash };
 }
 
