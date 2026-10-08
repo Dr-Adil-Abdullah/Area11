@@ -82,16 +82,30 @@ export function migrate(database: DatabaseSync = db): void {
       applied_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
-  const done = new Set(
-    (database.prepare("SELECT id FROM _migrations").all() as { id: string }[]).map((r) => r.id)
-  );
+  const isDone = database.prepare("SELECT 1 FROM _migrations WHERE id = ?");
   for (const m of MIGRATIONS) {
-    if (done.has(m.id)) continue;
+    if (isDone.get(m.id)) continue;
+    // Har migration apni transaction me (BEGIN IMMEDIATE = write lock):
+    //   * aadhi migration kabhi nahi lagti (fail = poori wapas)
+    //   * do process (masalan `next build` ke workers) ek hi waqt DB kholen to
+    //     doosra lock ka intezar karta hai, phir dobara check kar ke skip kar deta hai
+    //     (warna "duplicate column name" error aata tha)
+    database.exec("BEGIN IMMEDIATE");
     try {
+      if (isDone.get(m.id)) {
+        database.exec("COMMIT");
+        continue;
+      }
       database.exec(m.sql);
       database.prepare("INSERT INTO _migrations (id) VALUES (?)").run(m.id);
+      database.exec("COMMIT");
       console.log(`[db] migration lagayi: ${m.id}`);
     } catch (e) {
+      try {
+        database.exec("ROLLBACK");
+      } catch {
+        /* transaction pehle hi khatam */
+      }
       console.error(`[db] migration FAIL: ${m.id}`, e);
       throw e;
     }

@@ -266,6 +266,7 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 * **Prisma is dead here** (engine download blocked). Use `node:sqlite` helpers `query/get/run/scalar/tx` from `src/lib/db.ts`. Don't add an ORM.
 * `lib/db.ts`: `let migrated` must stay **above** `export const db` (TDZ bug fixed once).
+* `lib/db.ts` migrations: each one runs inside `BEGIN IMMEDIATE` and the `_migrations` check is repeated after the lock is taken. `next build` ("Collecting page data") opens the same new DB from several workers at once; without the lock they raced and one crashed with `duplicate column name: handed_to_user_id` (fixed 2026-10-08).
 * Next 15: `params` / `searchParams` are **Promises** — `await` them.
 * Timestamps are stored with `datetime('now','localtime')`; "today" = `date(date)=date('now','localtime')`.
 * `payments`: rows with `purchase_id`/`supplier_id` = money **out**; others = money **in** (refunds are negative). Day summary relies on this.
