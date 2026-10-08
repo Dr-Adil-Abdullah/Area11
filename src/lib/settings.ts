@@ -1,0 +1,191 @@
+// ---------------------------------------------------------------------------
+// Area11 - Settings (RULE E: har cheez badalne ke qabil)
+// ---------------------------------------------------------------------------
+// Tamam settings DATABASE me rehti hain (sirf browser me nahi) -- is liye
+// har counter/device par ek jaisi nazar aati hain (RULE S-07).
+//
+// Nayi setting add karni ho: sirf neeche SETTING_DEFAULTS me ek line daalein.
+//
+// NOTE (7-Oct-2026, malik ka hukum: "bekar linein khatam kar dein"):
+//   `reorder.levels`, `ui.language`, `sync.provider` yahan se HATA diye gaye --
+//   ye kahin bhi istemal nahi ho rahay thay (na koi code inhen parhta tha, na
+//   Settings ke safhe par nazar aatay thay). Zaroorat parne par ek line me wapas
+//   add ho saktay hain; purani soorat git history me maujood hai.
+// ---------------------------------------------------------------------------
+
+import { query, run } from "./db";
+
+export type ExpiryLevel = { level: number; days: number; color: string; label: string };
+
+export const SETTING_DEFAULTS = {
+  // ---- Store & Branding (E-02, E-03) ----
+  "store.name": "Area11 Pharmacy",
+  "store.address": "",
+  "store.phone": "",
+  "store.footerNote": "Thank you for your visit.",
+  "store.terms": "Medicines are returnable within 7 days with the original receipt.",
+  "brand.appName": "Area11",
+  "brand.shortName": "A11",
+  "brand.logoDataUrl": "",
+  "brand.primaryColor": "#0e7490",
+
+  // ---- Billing & Numbering (A-19, A-20) ----
+  "bill.purchasePrefix": "PINV-",
+  "bill.salePrefix": "INV-",
+  "bill.numberPadding": 4,
+  "bill.nextPurchaseNo": 1,
+  "bill.nextSaleNo": 1,
+  "bill.provisionalPrefix": "PR-",
+  "bill.nextProvisionalNo": 1,
+  "bill.returnPrefix": "RET-",
+  "bill.nextReturnNo": 1,
+  "bill.quarantinePrefix": "Q-",
+  "bill.nextQuarantineNo": 1,
+  "bill.supplierReturnPrefix": "SR-",
+  "bill.nextSupplierReturnNo": 1,
+  "bill.stockTakePrefix": "ST-",
+  "bill.nextStockTakeNo": 1,
+  "bill.roundMode": "down10", // down10 | none
+  "bill.roundTo": 10,
+
+  // ---- Tax (Q-09: default OFF) ----
+  "tax.enabled": false,
+  "tax.percent": 0,
+  "tax.label": "Sales Tax",
+
+  // ---- Discount (Q-08: margin default) ----
+  "discount.enabled": true,
+  "discount.mode": "margin", // margin | retail
+  "discount.maxPercentCashier": 5,
+  "discount.maxPercentManager": 20,
+  "discount.blockBelowCost": true, // Spec 7.3: rupay se neeche discount kisi role ko nahi
+
+  // ---- Expiry alerts (user: settings se chunenge) ----
+  "expiry.levels": [
+    { level: 1, days: 365, color: "blue", label: "Level 1 - 1 year" },
+    { level: 2, days: 180, color: "yellow", label: "Level 2 - 6 months" },
+    { level: 3, days: 90, color: "red", label: "Level 3 - 3 months" },
+  ] as ExpiryLevel[],
+
+  // ---- Reorder alerts (3 tier) ----
+  "reorder.enabled": true,
+
+  // ---- Loyalty (abhi OFF, structure ready) ----
+  "loyalty.enabled": false,
+  "loyalty.rupeesPerPoint": 100,
+  "loyalty.vipThreshold": 500,
+
+  // ---- Printer & Receipt ----
+  "printer.width": "both", // 58 | 80 | both
+  "printer.autoCut": true,
+  "printer.copies": 1,
+  "receipt.datePosition": "top", // top | bottom
+  "receipt.showOriginalPrice": true,
+  "receipt.showDiscount": true,
+  "receipt.showSavings": false,
+  "receipt.showCostColumns": false, // sirf owner
+
+  // ---- Payments (user: cash + credit) ----
+  "payment.methods": ["cash", "credit"] as string[],
+  "payment.default": "cash",
+
+  // ---- Stock: manfi (negative) inventory (Spec 1) ----
+  // allowNegative ON  = stock minus me jane ke bawajood bikri HOTI rahegi
+  //                    (sirf ooper bara surkh alert aayega)
+  // allowNegative OFF = stock kam ho to bikri RUK jayegi
+  "stock.allowNegative": true,
+  "stock.warnNegative": true, // ooper wala bara alert dikhayein?
+
+  // ---- Returns (Spec 3: sakht jaanch) ----
+  // requireInvoice ON = asal bill ke baghair wapsi nahi (bill se milan lazmi)
+  // maxDays 0         = koi hadd nahi; warna itne din ke baad wapsi band
+  "returns.requireInvoice": true,
+  "returns.maxDays": 0,
+
+  // ---- Udhaar (khata) ki hadd ----
+  // blockOverLimit OFF  = sirf warning (pehle jaisa)
+  // blockOverLimit ON   = hadd cross karne wali udhaar bikri RUK jaye
+  // managerCanOverride = manager hadd ke upar bhi udhaar de sakta hai (owner to hamesha)
+  "credit.blockOverLimit": false,
+  "credit.managerCanOverride": true,
+
+  // ---- Security (user: PIN for staff, password for owner) ----
+  "security.pinLength": 4,
+  "security.autoLockMinutes": 15,
+  "security.sessionHours": 12,
+  "security.requireLogin": true,
+
+  // ---- Backup (khud-b-khud, photos ke sath) ----
+  "backup.autoEnabled": false, // rozana khud backup banaye?
+  "backup.everyHours": 24, // kitne ghante baad
+  "backup.keep": 7, // kitne backups rakhein (purane kaat diye jayenge)
+
+  // ---- Cloud sync (Supabase) - spec Phase 5 ----
+  // Local SQLite hamesha ASAL rahega; Supabase sirf aina (mirror) hai.
+  "sync.enabled": false,
+  "sync.url": "",       // masalan https://xxxx.supabase.co
+  "sync.key": "",       // anon / service key
+  "sync.table": "area11_sync",
+  "sync.shopId": "shop-1",
+  "sync.status": "not_configured",
+  "sync.lastSyncAt": "",
+
+  // ---- Owner ----
+  "owner.name": "Dr. Adil Abdullah",
+};
+
+export type AppSettings = typeof SETTING_DEFAULTS;
+
+/** Sab settings (defaults + DB ki values mila kar) */
+export async function getSettings(): Promise<AppSettings> {
+  const out = { ...SETTING_DEFAULTS } as Record<string, unknown>;
+  try {
+    const rows = query<{ key: string; value: string }>("SELECT key, value FROM settings");
+    for (const r of rows) {
+      if (!(r.key in SETTING_DEFAULTS)) continue; // na maloom key ignore
+      try {
+        out[r.key] = JSON.parse(r.value);
+      } catch {
+        out[r.key] = r.value;
+      }
+    }
+  } catch {
+    // DB abhi tayyar nahi -- defaults hi wapas
+  }
+  return out as AppSettings;
+}
+
+/** Ek setting save karo */
+export async function setSetting(key: string, value: unknown): Promise<void> {
+  run(
+    `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now','localtime'))
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now','localtime')`,
+    [key, JSON.stringify(value)]
+  );
+}
+
+/** Kai settings ek saath save karo */
+export async function setSettings(patch: Record<string, unknown>): Promise<void> {
+  for (const [key, value] of Object.entries(patch)) {
+    await setSetting(key, value);
+  }
+}
+
+/** Default setting rows banao (jo missing hain) */
+export async function ensureSettingRows(): Promise<void> {
+  const have = new Set(
+    query<{ key: string }>("SELECT key FROM settings").map((r) => r.key)
+  );
+  for (const [key, value] of Object.entries(SETTING_DEFAULTS)) {
+    if (have.has(key)) continue;
+    run("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", [
+      key,
+      JSON.stringify(value),
+    ]);
+  }
+}
+
+/** Bill number generate karo: prefix + zero-padded number */
+export function formatBillCode(prefix: string, no: number, padding: number): string {
+  return `${prefix}${String(no).padStart(padding, "0")}`;
+}

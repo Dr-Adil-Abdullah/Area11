@@ -1,0 +1,708 @@
+// ---------------------------------------------------------------------------
+// Area11 - Sales / POS engine (Spec 8 + Spec 9 + Spec 7)
+// ---------------------------------------------------------------------------
+// Ek sale save karne par:
+//   1. Auto INV code
+//   2. Har line: qty base units me convert (Box/Strip/Tablet)
+//   3. Discount (margin ya retail -- settings se)
+//   4. Tax (agar on ho)
+//   5. Neeche round-off (spec 8.2)
+//   6. Batch se stock minus + stock movement 'out'
+//   7. Customer khatay me (agar udhaar ho)
+//   8. Loyalty points (agar on ho)
+// ---------------------------------------------------------------------------
+
+import { get, query, run, tx, scalar } from "./db";
+import { takeNextCode } from "./numbering";
+import { applyRoundWithCostGuard, toBaseUnits, marginDiscount, retailDiscount, percentOf } from "./money";
+import { getSettings } from "./settings";
+import { audit } from "./audit";
+import { checkDiscountLimit, maxDiscountPercent } from "./roles";
+import { getSyncSettings } from "./settings-sync";
+import { evaluateNegativeStock } from "./stock-rules";
+
+export type CartLineInput = {
+  productId: number;
+  batchId?: number | null;
+  unit: "box" | "strip" | "base";
+  qty: number;
+  unitPricePaisa: number; // base unit ka rate
+  discountPaisa?: number;
+  manualName?: string | null; // loose/manual item
+};
+
+export type SaleInput = {
+  customerId?: number | null;
+  items: CartLineInput[];
+  billDiscountPaisa?: number;
+  /** Counter par grahak ne jo cash diya (change nikalne ke liye) -- revenue nahi */
+  tenderedPaisa?: number;
+  paymentMethod?: "cash" | "credit" | "online" | "card" | "split";
+  paidPaisa?: number;
+  /**
+   * Split payment: ek se zyada tareeqe (spec 8.5).
+   *   [{ method: "cash", amountPaisa: 50000 }, { method: "credit", amountPaisa: 20000 }]
+   * Diya gaya to isi ka jama hona `total` ke barabar hona chahiye.
+   * "credit" wala hissa gahak ke udhaar (khatay) me jata hai.
+   */
+  splits?: { method: "cash" | "credit" | "online" | "card"; amountPaisa: number }[];
+  notes?: string | null;
+  status?: "paid" | "credit" | "hold";
+  /** Loyalty redeem: kitne points bill se katne hain (settings on hona zaroori) */
+  redeemPoints?: number;
+};
+
+export type SaleResult = {
+  id: number;
+  code: string;
+  subtotalPaisa: number;
+  discountPaisa: number;
+  taxPaisa: number;
+  roundOffPaisa: number;
+  totalPaisa: number;
+  paidPaisa: number;
+  duePaisa: number;
+  tenderedPaisa: number;
+  changePaisa: number;
+  warnings: string[];
+  /** Spec 1.2: jin cheezon ka stock is bill se MINUS me gaya */
+  negativeItems: NegativeItem[];
+};
+
+export type NegativeItem = {
+  productId: number;
+  name: string;
+  inStockBase: number;
+  soldBase: number;
+  afterBase: number;
+};
+
+/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye */
+function roundQty(n: number): number {
+  return Math.round(n * 1000) / 1000;
+}
+
+/**
+ * Bill ka total aur itemon ka jor HAMESHA barabar hone chahiye.
+ * Round-off / loyalty ki chhoot bill par lagti hai -- is liye woh farq
+ * yahan har line me us ke hissay ke mutabiq baant diya jata hai
+ * (aakhri line rounding ka bacha hua le leti hai).
+ */
+function reconcileItemTotals(
+  lines: { lineTotal: number }[],
+  target: number
+): void {
+  if (lines.length === 0) return;
+  const current = lines.reduce((n, l) => n + l.lineTotal, 0);
+  const delta = target - current;
+  if (delta === 0 || current <= 0) return;
+  let left = delta;
+  lines.forEach((l, idx) => {
+    const share =
+      idx === lines.length - 1 ? left : Math.round((l.lineTotal / current) * delta);
+    l.lineTotal = Math.max(0, l.lineTotal + share);
+    left -= share;
+  });
+}
+
+export function createSale(
+  input: SaleInput,
+  user?: { id?: number; name?: string; role?: string }
+): SaleResult {
+  if (!input.items?.length) throw new Error("Cart is empty");
+
+  // Settings transaction se pehle padh lo (async)
+  return tx(() => {
+    const code = takeNextCode("sale");
+    const warnings: string[] = [];
+    const negativeItems: NegativeItem[] = [];
+    const settingsSnapshot = getSyncSettings();
+
+    const lines = input.items.map((it) => {
+      const product = get<{
+        id: number;
+        name: string;
+        box_strips: number;
+        strip_tablets: number;
+        cost_paisa: number;
+      }>("SELECT id, name, box_strips, strip_tablets, cost_paisa FROM products WHERE id = ?", [
+        it.productId,
+      ]);
+      if (!product) throw new Error(`Product ${it.productId} not found`);
+
+      const qtyBase = toBaseUnits(Number(it.qty) || 0, it.unit, product.box_strips, product.strip_tablets);
+      let costPaisa = product.cost_paisa;
+      let inStockBase = 0;   // is waqt kitna maujood hai (batch ya poori dawa)
+      let stockLabel = "";   // kis cheez ka stock dekha (batch no ya Product)
+
+      if (it.batchId) {
+        const batch = get<{ id: number; qty_base: number; cost_paisa: number; batch_no: string | null }>(
+          "SELECT id, qty_base, cost_paisa, batch_no FROM batches WHERE id = ?",
+          [it.batchId]
+        );
+        if (!batch) throw new Error(`Batch ${it.batchId} not found`);
+        costPaisa = batch.cost_paisa;
+        inStockBase = batch.qty_base;
+        stockLabel = batch.batch_no ? `batch ${batch.batch_no}` : "batch";
+      } else {
+        // batch nahi chuna to poori dawa ka jama stock dekho
+        inStockBase =
+          scalar<number>("SELECT COALESCE(SUM(qty_base), 0) AS c FROM batches WHERE product_id = ?", [
+            it.productId,
+          ]) ?? 0;
+        stockLabel = "stock";
+      }
+
+      // ---------------- Spec 1: NEGATIVE INVENTORY ----------------
+      // Faisla ek hi jagah se (src/lib/stock-rules.ts) -- test bhi wahan hai
+      const verdict = evaluateNegativeStock({
+        name: product.name,
+        inStockBase,
+        sellBase: qtyBase,
+        allowNegative: settingsSnapshot.stock.allowNegative,
+        warn: settingsSnapshot.stock.warnNegative,
+        stockLabel,
+      });
+      if (verdict.short) {
+        negativeItems.push({
+          productId: it.productId,
+          name: product.name,
+          inStockBase: roundQty(inStockBase),
+          soldBase: roundQty(qtyBase),
+          afterBase: verdict.afterBase,
+        });
+        if (verdict.message) warnings.push(verdict.message);
+      }
+
+      const gross = Math.round(qtyBase * Math.max(0, it.unitPricePaisa));
+      const discount = Math.max(0, Math.round(it.discountPaisa ?? 0));
+      const lineTotal = Math.max(0, gross - discount);
+
+      // Spec 7.3: discount se line apni purchase cost se neeche nahi ja sakti
+      const lineCost = qtyBase * costPaisa;
+      if (settingsSnapshot.discount.blockBelowCost && gross >= lineCost && lineTotal < lineCost) {
+        throw new Error(
+          `${product.name}: this discount takes the line below its purchase cost (Rs ${(
+            lineCost / 100
+          ).toFixed(2)}). Reduce the discount.`
+        );
+      }
+
+      return {
+        ...it,
+        product,
+        qtyBase,
+        costPaisa,
+        gross,
+        discount,
+        lineTotal,
+      };
+    });
+
+    const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
+    const billDiscount = Math.max(0, Math.round(input.billDiscountPaisa ?? 0));
+
+    // Discount limit (role ke hisaab se) -- Spec 7.3 / Q-08
+    if (settingsSnapshot.discount.enabled) {
+      const grossTotal = lines.reduce((s, l) => s + l.gross, 0);
+      const totalDiscount = lines.reduce((s, l) => s + l.discount, 0) + billDiscount;
+      const limit = maxDiscountPercent(user?.role, {
+        cashier: settingsSnapshot.discount.cashier,
+        manager: settingsSnapshot.discount.manager,
+        owner: 100,
+      });
+      const check = checkDiscountLimit(totalDiscount, grossTotal, limit);
+      if (!check.allowed) {
+        throw new Error(
+          `Discount ${check.percent}% is above your limit (${check.limit}%). Ask the owner or manager.`
+        );
+      }
+    }
+
+    // Spec 7.3: bill discount bhi kul purchase cost se neeche nahi le ja sakti
+    if (settingsSnapshot.discount.blockBelowCost && billDiscount > 0) {
+      const grossAll = lines.reduce((s, l) => s + l.gross, 0);
+      const costAll = lines.reduce((s, l) => s + l.qtyBase * l.costPaisa, 0);
+      if (grossAll >= costAll && subtotal - billDiscount < costAll) {
+        throw new Error(
+          `This bill discount takes the invoice below purchase cost (Rs ${(costAll / 100).toFixed(2)}). Reduce the discount.`
+        );
+      }
+    }
+
+    const afterDiscount = Math.max(0, subtotal - billDiscount);
+    const taxPaisa = settingsSnapshot.tax.enabled
+      ? percentOf(afterDiscount, settingsSnapshot.tax.percent)
+      : 0;
+    const beforeRound = afterDiscount + taxPaisa;
+    const totalCost = Math.round(lines.reduce((sum, l) => sum + l.qtyBase * l.costPaisa, 0));
+    let { finalPaise, roundOffPaise, guarded } =
+      settingsSnapshot.roundMode === "down10"
+        ? applyRoundWithCostGuard(beforeRound, settingsSnapshot.roundTo, totalCost)
+        : { finalPaise: beforeRound, roundOffPaise: 0, guarded: false } as {
+            finalPaise: number; roundOffPaise: number; guarded: boolean;
+          };
+    if (guarded) warnings.push("Round-off skipped: it would put the bill below purchase cost.");
+    if (finalPaise < totalCost) warnings.push("Bill total is BELOW purchase cost (loss sale). Check discount.");
+
+    // ---------- Loyalty redeem (points se raqam kam karna) ----------
+    let redeemedPoints = 0;
+    let redeemPaisa = 0;
+    if (settingsSnapshot.loyalty.enabled && input.redeemPoints && input.customerId && finalPaise > 0) {
+      const cust = get<{ loyalty_points: number }>(
+        "SELECT loyalty_points FROM customers WHERE id = ?",
+        [input.customerId]
+      );
+      const have = cust?.loyalty_points ?? 0;
+      redeemedPoints = Math.min(Math.floor(input.redeemPoints), have);
+      // 1 point = 1 rupee (owner Settings se rupeesPerPoint badal sakta hai)
+      const valuePerPoint = 100; // paisa
+      redeemPaisa = Math.min(redeemedPoints * valuePerPoint, finalPaise);
+      if (redeemPaisa > 0) {
+        finalPaise -= redeemPaisa;
+        warnings.push(`Loyalty points istemal hue: ${redeemedPoints} (-${(redeemPaisa / 100).toFixed(0)} Rs).`);
+      }
+
+    }
+
+    reconcileItemTotals(lines, finalPaise - taxPaisa);
+
+    // ---------- Split payment (spec 8.5) ----------
+    // Pehle splits theek karo: manfi/0 hatao, aur total ke barabar lao
+    let splits = (input.splits ?? [])
+      .filter((x) => Math.round(x.amountPaisa) > 0)
+      .map((x) => ({ method: x.method, amountPaisa: Math.round(x.amountPaisa) }));
+    if (splits.length > 0) {
+      const sum = splits.reduce((n, x) => n + x.amountPaisa, 0);
+      if (sum !== finalPaise) {
+        // farq ko cash me adjust kar do (sab se aam tareeqa)
+        const diff = finalPaise - sum;
+        const cash = splits.find((x) => x.method === "cash");
+        if (cash) cash.amountPaisa = Math.max(0, cash.amountPaisa + diff);
+        else splits.push({ method: "cash", amountPaisa: Math.max(0, diff) });
+        splits = splits.filter((x) => x.amountPaisa > 0);
+      }
+    }
+
+    const method =
+      splits.length > 1 ? "split"
+      : splits.length === 1 ? splits[0].method
+      : (input.paymentMethod ?? "cash");
+    const isCredit = method === "credit";
+
+    const creditPart = splits.filter((x) => x.method === "credit").reduce((n, x) => n + x.amountPaisa, 0);
+    const paid = splits.length
+      ? finalPaise - creditPart
+      : isCredit
+      ? Math.max(0, Math.min(Math.round(input.paidPaisa ?? 0), finalPaise))
+      : Math.max(0, Math.round(input.paidPaisa ?? finalPaise));
+    const due = Math.max(0, finalPaise - paid);
+
+    // Cash counter: kitne diye, kitne wapas kiye (change revenue nahi -- spec 8.5)
+    const tendered = isCredit
+      ? 0
+      : Math.max(0, Math.round(input.tenderedPaisa ?? finalPaise));
+    const changePaisa = !isCredit && tendered > finalPaise ? tendered - finalPaise : 0;
+
+    const status = input.status ?? (due > 0 ? (paid > 0 ? "partial" : "credit") : "paid");
+
+    const header = run(
+      `INSERT INTO sales
+        (code, customer_id, user_id, subtotal_paisa, discount_paisa, tax_paisa, round_off_paisa,
+         total_paisa, paid_paisa, due_paisa, change_paisa, status, payment_method, notes)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        code,
+        input.customerId ?? null,
+        user?.id ?? null,
+        subtotal,
+        billDiscount,
+        taxPaisa,
+        roundOffPaise,
+        finalPaise,
+        paid,
+        due,
+        changePaisa,
+        status,
+        method,
+        input.notes?.trim() || null,
+      ]
+    );
+    const saleId = header.lastInsertRowid;
+
+    for (const l of lines) {
+      // Batch resolve: agar batch nahi diya gaya (API/manual), to FEFO se sab se
+      // nazdeek expiry wala batch khud pakro -- warna batches aur stock_movements
+      // ka hisaab alag ho jata hai.
+      if (!l.batchId) {
+        // Spec 1.3: stock hamesha foran update ho -- chahe batch khaali hi kyun na ho.
+        // Pehle positive stock wala batch (FEFO), warna AAKHRI batch (stock minus me
+        // chala jaye to bhi record rahe -- warna kitab aur asliyat me farq parh jata hai).
+        const fefo = get<{ id: number }>(
+          `SELECT id FROM batches
+            WHERE product_id = ? AND active = 1 AND qty_base > 0
+            ORDER BY (expiry_ym IS NULL), expiry_ym ASC, id ASC
+            LIMIT 1`,
+          [l.productId]
+        );
+        if (fefo) {
+          l.batchId = fefo.id;
+        } else {
+          const last = get<{ id: number }>(
+            `SELECT id FROM batches
+              WHERE product_id = ? AND active = 1
+              ORDER BY expiry_ym IS NULL, expiry_ym DESC, id DESC
+              LIMIT 1`,
+            [l.productId]
+          );
+          if (last) l.batchId = last.id;
+        }
+      }
+
+      run(
+        `INSERT INTO sale_items
+          (sale_id, product_id, batch_id, name_snapshot, qty_base, unit_sold, qty_entered,
+           unit_price_paisa, discount_paisa, line_total_paisa, cost_paisa_at_sale)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        [
+          saleId,
+          l.productId,
+          l.batchId ?? null,
+          l.manualName?.trim() || l.product.name,
+          l.qtyBase,
+          l.unit,
+          Number(l.qty) || 0,
+          Math.max(0, Math.round(l.unitPricePaisa)),
+          l.discount,
+          l.lineTotal,
+          l.costPaisa,
+        ]
+      );
+
+      // Stock minus (batch qty) -- Purana/Naya record log ke liye (Spec 2)
+      if (l.batchId) {
+        const beforeQty =
+          scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [l.batchId]) ?? 0;
+        run("UPDATE batches SET qty_base = qty_base - ? WHERE id = ?", [l.qtyBase, l.batchId]);
+        const afterQty =
+          scalar<number>("SELECT qty_base FROM batches WHERE id = ?", [l.batchId]) ?? 0;
+        audit({
+          action: afterQty < 0 ? "negative_sale" : "update",
+          userId: user?.id ?? null,
+          userName: user?.name ?? null,
+          entity: "Batch",
+          entityId: l.batchId,
+          module: "Inventory",
+          before: { product: l.product.name, batch_id: l.batchId, qty_base: beforeQty },
+          after: { product: l.product.name, batch_id: l.batchId, qty_base: afterQty },
+          details: { code, sale_id: saleId, sold_base: l.qtyBase },
+        });
+      }
+      run(
+        `INSERT INTO stock_movements
+          (product_id, batch_id, type, qty_base, ref_type, ref_id, ref_code, user_id)
+         VALUES (?,?,?,?,?,?,?,?)`,
+        [l.productId, l.batchId ?? null, "out", -l.qtyBase, "sale", saleId, code, user?.id ?? null]
+      );
+    }
+
+    // Customer khatay me
+    if (input.customerId && due > 0) {
+      // Credit limit check (Spec 10.1.2)
+      const cust = get<{ balance_paisa: number; credit_limit_paisa: number; name: string }>(
+        "SELECT balance_paisa, credit_limit_paisa, name FROM customers WHERE id = ?",
+        [input.customerId]
+      );
+      if (cust && cust.credit_limit_paisa > 0 && cust.balance_paisa + due > cust.credit_limit_paisa) {
+        const msg =
+          `${cust.name}: credit limit (${(cust.credit_limit_paisa / 100).toFixed(0)} Rs) cross ho raha hai. ` +
+          `Purana udhaar ${(cust.balance_paisa / 100).toFixed(0)} + is bill ke ${(due / 100).toFixed(0)} = ` +
+          `${((cust.balance_paisa + due) / 100).toFixed(0)} Rs.`;
+
+        // Settings ON ho to ROK do (owner hamesha de sakta hai,
+        // manager sirf tab jab managerCanOverride ON ho).
+        if (settingsSnapshot.credit.blockOverLimit) {
+          const canOverride = user?.role === "owner" || (user?.role === "manager" && settingsSnapshot.credit.managerCanOverride);
+          if (!canOverride) throw new Error(msg + " Limit ke upar udhaar band hai (Settings).");
+          warnings.push(msg + " (aap ijazat ke sath aage barh rahe hain)");
+        } else {
+          warnings.push(msg);
+        }
+      }
+      run("UPDATE customers SET balance_paisa = balance_paisa + ? WHERE id = ?", [
+        due,
+        input.customerId,
+      ]);
+    }
+
+    // Payment record(s) — split ho to har tareeqe ki alag row
+    if (splits.length > 0) {
+      for (const sp of splits) {
+        if (sp.method === "credit") continue; // udhaar: khatay me chala gaya (neeche due)
+        run(
+          `INSERT INTO payments (method, amount_paisa, sale_id, customer_id, user_id, note)
+           VALUES (?,?,?,?,?,?)`,
+          [sp.method, sp.amountPaisa, saleId, input.customerId ?? null, user?.id ?? null,
+           splits.length > 1 ? `Split payment (${sp.method})` : "Received at counter"]
+        );
+      }
+    } else if (paid > 0) {
+      run(
+        `INSERT INTO payments (method, amount_paisa, sale_id, customer_id, user_id, note)
+         VALUES (?,?,?,?,?,?)`,
+        [
+          isCredit ? "cash" : method,
+          paid,
+          saleId,
+          input.customerId ?? null,
+          user?.id ?? null,
+          "Received at counter",
+        ]
+      );
+    }
+
+    // Redeem hue points kat do
+    if (redeemPaisa > 0 && input.customerId) {
+      run("UPDATE customers SET loyalty_points = loyalty_points - ? WHERE id = ?", [
+        redeemedPoints, input.customerId,
+      ]);
+      run(
+        `INSERT INTO payments (method, amount_paisa, sale_id, customer_id, user_id, note)
+         VALUES (?,?,?,?,?,?)`,
+        ["loyalty", -redeemPaisa, saleId, input.customerId, user?.id ?? null,
+         `Loyalty redeem ${redeemedPoints} points`]
+      );
+    }
+
+    // Loyalty points (agar on ho -- Spec 10.1.4)
+    if (settingsSnapshot.loyalty.enabled && input.customerId && finalPaise > 0) {
+      const pts = Math.floor(finalPaise / 100 / settingsSnapshot.loyalty.rupeesPerPoint);
+      if (pts > 0) {
+        run("UPDATE customers SET loyalty_points = loyalty_points + ? WHERE id = ?", [
+          pts,
+          input.customerId,
+        ]);
+        const row = get<{ loyalty_points: number }>(
+          "SELECT loyalty_points FROM customers WHERE id = ?",
+          [input.customerId]
+        );
+        if (row && row.loyalty_points >= settingsSnapshot.loyalty.vipThreshold) {
+          run("UPDATE customers SET stars = 5, category = 'vip' WHERE id = ?", [input.customerId]);
+        }
+      }
+    }
+
+    void audit({
+      action: negativeItems.length ? "negative_sale" : "create",
+      userId: user?.id ?? null,
+      userName: user?.name ?? null,
+      entity: "Sale",
+      entityId: saleId,
+      module: "POS",
+      // Spec 2: purana kya tha, naya kya hua
+      before: null,
+      after: {
+        code,
+        items: lines.length,
+        subtotal_paisa: subtotal,
+        discount_paisa: billDiscount,
+        tax_paisa: taxPaisa,
+        total_paisa: finalPaise,
+        paid_paisa: paid,
+        due_paisa: due,
+        status: isCredit ? "credit" : "paid",
+      },
+      details: {
+        code,
+        method,
+        changePaisa,
+        negativeStock: negativeItems.map((n) => `${n.name} (${n.afterBase})`),
+        warnings,
+      },
+    });
+
+    return {
+      id: saleId,
+      code,
+      subtotalPaisa: subtotal,
+      discountPaisa: billDiscount,
+      taxPaisa,
+      roundOffPaisa: roundOffPaise,
+      totalPaisa: finalPaise,
+      paidPaisa: paid,
+      tenderedPaisa: isCredit ? 0 : tendered,
+      changePaisa,
+      duePaisa: due,
+      warnings,
+      negativeItems,
+    };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Sale padhna (receipt ke liye)
+// ---------------------------------------------------------------------------
+export type SaleFull = {
+  header: {
+    id: number;
+    code: string;
+    date: string;
+    customer_id: number | null;
+    customer_name?: string | null;
+    customer_phone?: string | null;
+    subtotal_paisa: number;
+    discount_paisa: number;
+    tax_paisa: number;
+    round_off_paisa: number;
+    total_paisa: number;
+    paid_paisa: number;
+    due_paisa: number;
+    change_paisa: number;
+    status: string;
+    payment_method: string;
+    user_name?: string | null;
+  };
+  items: {
+    id: number;
+    name: string;
+    name_snapshot: string | null;
+    qty_base: number;
+    unit_sold: string;
+    qty_entered: number;
+    unit_price_paisa: number;
+    discount_paisa: number;
+    line_total_paisa: number;
+    cost_paisa_at_sale: number;
+    batch_no: string | null;
+    expiry_ym: string | null;
+  }[];
+};
+
+export function getSale(id: number): SaleFull | null {
+  const header = get<SaleFull["header"]>(
+    `SELECT s.*, c.name AS customer_name, c.phone AS customer_phone, u.name AS user_name
+       FROM sales s
+       LEFT JOIN customers c ON c.id = s.customer_id
+       LEFT JOIN users u ON u.id = s.user_id
+      WHERE s.id = ?`,
+    [id]
+  );
+  if (!header) return null;
+  const items = query<SaleFull["items"][number]>(
+    `SELECT i.id, p.name, i.name_snapshot, i.qty_base, i.unit_sold, i.qty_entered,
+            i.unit_price_paisa, i.discount_paisa, i.line_total_paisa, i.cost_paisa_at_sale,
+            b.batch_no, b.expiry_ym
+       FROM sale_items i
+       JOIN products p ON p.id = i.product_id
+       LEFT JOIN batches b ON b.id = i.batch_id
+      WHERE i.sale_id = ?
+      ORDER BY i.id`,
+    [id]
+  );
+  return { header, items };
+}
+
+export function listSales(opts: {
+  search?: string;
+  limit?: number;
+  from?: string;
+  to?: string;
+  /** cash | credit | split */
+  method?: "all" | "cash" | "credit";
+  /** all | paid | due | void | returned */
+  status?: string;
+  /** all | profit | loss */
+  margin?: "all" | "profit" | "loss";
+  minTotalPaisa?: number;
+  sort?: "recent" | "oldest" | "biggest" | "profit";
+} = {}) {
+  const like = `%${(opts.search ?? "").trim()}%`;
+  // Bill code / gahak ka naam / phone / YA kisi dawa ka naam (spec 9.2.1: khoa hua bill)
+  const where: string[] = [
+    `(s.code LIKE ? OR c.name LIKE ? OR c.phone LIKE ?
+      OR EXISTS (SELECT 1 FROM sale_items i JOIN products p ON p.id = i.product_id
+                  WHERE i.sale_id = s.id AND (p.name LIKE ? OR p.generic LIKE ?)))`,
+  ];
+  const params: (string | number)[] = [like, like, like, like, like];
+
+  if (opts.from) {
+    where.push("date(s.date) >= date(?)");
+    params.push(opts.from);
+  }
+  if (opts.to) {
+    where.push("date(s.date) <= date(?)");
+    params.push(opts.to);
+  }
+  if (opts.method && opts.method !== "all") {
+    where.push("s.payment_method = ?");
+    params.push(opts.method);
+  }
+  if (opts.status && opts.status !== "all") {
+    if (opts.status === "returned") {
+      where.push("EXISTS (SELECT 1 FROM sale_returns r WHERE r.sale_id = s.id)");
+    } else {
+      where.push("s.status = ?");
+      params.push(opts.status);
+    }
+  }
+  if (opts.minTotalPaisa && opts.minTotalPaisa > 0) {
+    where.push("s.total_paisa >= ?");
+    params.push(opts.minTotalPaisa);
+  }
+  // AHEM: SQLite me HAVING sirf GROUP BY ke sath chalta hai -- is liye WHERE me
+  //       poora sub-query likha gaya hai (alias yahan bhi nahi chalta).
+  const PROFIT_EXPR =
+    "(SELECT COALESCE(SUM(i.line_total_paisa - i.qty_base * i.cost_paisa_at_sale), 0) FROM sale_items i WHERE i.sale_id = s.id)";
+  if (opts.margin === "profit") where.push(`${PROFIT_EXPR} > 0`);
+  if (opts.margin === "loss") where.push(`${PROFIT_EXPR} < 0`);
+  const ORDER =
+    opts.sort === "oldest" ? "s.id ASC"
+    : opts.sort === "biggest" ? "s.total_paisa DESC, s.id DESC"
+    : opts.sort === "profit" ? "profit_paisa DESC, s.id DESC"
+    : "s.id DESC";
+
+  return query<{
+    id: number;
+    code: string;
+    date: string;
+    customer_name: string | null;
+    items: number;
+    total_paisa: number;
+    discount_paisa: number;
+    status: string;
+    payment_method: string;
+    profit_paisa: number;
+  }>(
+    `SELECT s.id, s.code, s.date, c.name AS customer_name,
+            (SELECT COUNT(*) FROM sale_items i WHERE i.sale_id = s.id) AS items,
+            s.total_paisa, s.discount_paisa, s.status, s.payment_method,
+            (SELECT COALESCE(SUM(i.line_total_paisa - i.qty_base * i.cost_paisa_at_sale), 0)
+               FROM sale_items i WHERE i.sale_id = s.id) AS profit_paisa
+       FROM sales s
+       LEFT JOIN customers c ON c.id = s.customer_id
+      WHERE ${where.join(" AND ")}
+      ORDER BY ${ORDER}
+      LIMIT ?`,
+    [...params, Math.min(opts.limit ?? 100, 500)]
+  );
+}
+
+/** Aaj ki sale summary (shift closing ke liye -- Phase 2 me poora) */
+export function todaySummary() {
+  return get<{ bills: number; total: number; cash: number; credit: number; profit: number }>(
+    `SELECT COUNT(*) AS bills,
+            COALESCE(SUM(s.total_paisa), 0) AS total,
+            COALESCE(SUM(s.paid_paisa), 0) AS cash,
+            COALESCE(SUM(s.due_paisa), 0) AS credit,
+            (SELECT COALESCE(SUM(i.line_total_paisa - i.qty_base * i.cost_paisa_at_sale), 0)
+               FROM sale_items i
+               JOIN sales s2 ON s2.id = i.sale_id
+              WHERE date(s2.date) = date('now','localtime') AND s2.status <> 'void') AS profit
+       FROM sales s
+      WHERE date(s.date) = date('now','localtime') AND s.status <> 'void'`
+  );
+}
+
+export function saleItemCount(): number {
+  return scalar<number>("SELECT COUNT(*) AS c FROM sale_items");
+}

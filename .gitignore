@@ -1,11 +1,30 @@
+# --- checkpoint system ki apni state (isay track nahi karna) ---
+.ckpt-state
+
+# --- Node / Next.js (aane wale stages ke liye) ---
 node_modules/
+.next/
+out/
 dist/
-coverage/
-.cache/
-playwright-report/
-test-results/
-*.tsbuildinfo
-.env
-.env.*
-!.env.example
+build/
+.turbo/
+.vercel/
+
+# --- logs aur temp ---
+*.log
+npm-debug.log*
 .DS_Store
+Thumbs.db
+
+# --- database / local data (asli business data repo me nahi jayega) ---
+*.sqlite
+*.sqlite-journal
+*.db
+data/
+backups/
+.env
+.env.local
+.env*.local
+
+tsconfig.tsbuildinfo
+*.tsbuildinfo

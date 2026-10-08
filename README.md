@@ -1,176 +1,150 @@
-# Area11 · Pharmacy workspace
+# Area11
 
-A sample-data **Smart Pharmacy & Retail POS / Inventory Management System**. **Phases 1–3 are implemented as a working demo**, in the order specified by the [master blueprint](./complete_numbered_master_specs%20%281%29.md). Phases 4–5 remain later work.
+**Smart Pharmacy & Retail POS + Inventory System** — offline-first, everything editable, live preview, go-back checkpoints.
 
-> **Demo only.** Do not use this build for real pharmacy operations or real customer/financial data. Test roles are not authentication. Browser journals are not tamper-proof accounts or an immutable audit trail. Full offline startup, cloud synchronization, multi-device transactions, scheduled backups and production security are not implemented.
+> 🤖 **New agent / new person? Open [`HANDOFF.md`](./HANDOFF.md) first.** It has the status, TODO list, how to run, gotchas and rollback. (`AGENTS.md` is the short rule sheet.)
+>
+>
+> 🇵🇰 **اردو میں پوری تفصیل (سب فیچرز + Settings کی ہر لائن + باقی کام + فائنل کرنے سے پہلے کے خطرے): [`docs/APP-TAFSEEL.md`](./docs/APP-TAFSEEL.md)**
+>
+> 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Run locally
+## Status (2026-10-07) — v0.6.2, latest checkpoint **stage-43**
 
-Requires Node.js 22.12+ and npm.
+**Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **69 routes** · `npm test` **55/55** · `rules-count.sh` = `SAB THEEK` (133) · live smoke of **Spec 1–4** (negative stock, audit old→new, return validation, POS alerts) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
-```sh
-npm ci
-npm run dev
+| Stage | Work | State |
+|---|---|---|
+| Stone 0 / 0.5 | Repo, checkpoints, spec, 116 numbered rules, app foundation, editable Settings | ✅ |
+| **Phase 1** | Products + pack formula, suppliers, purchases (PINV, batch/expiry), counter billing (FEFO, Box/Strip/Tab, hold cart, round-off **with cost guard**), **cash tendered → change calculator** (quick cash buttons, receipt line), **stock write-off/adjust page** (expired/damaged/count correction, value at cost), **Excel import of old data** (template → dry-run preview → import, opening stock/batches, customer udhaar, supplier payable), thermal receipt, **login + roles (owner password / staff PIN) + URL-level page guard**, **offline/PWA shell** (installable app, offline page, internet-off banner) | ✅ **COMPLETE (stages 9–14)** |
+| **Phase 2 (essentials)** | Sales history, partial returns / void, customer credit & payment receiving, supplier payments, cash/day-end, expenses, owner drawings, DB backup, **cash shifts (galla): opening float → live expected cash → close with counted cash + variance + history**, **lost-bill lookup (bill / customer / phone / medicine) with rush-time provisional returns + link-to-bill + role-gated restock** | ✅ **Phase 2 COMPLETE** (+ **shift handover** — ginta hua cash agle shift ka float, "kis ne → kis ko", handover parchi) |
+| **Discount guard (spec 7.3)** | Role percent limits (cashier 5 · manager 20 · owner unlimited) **and** no discount below purchase cost — both server-side and editable in Settings | ✅ |
+| Phase 2–5 (baqi sab) | bulk update (sare records file se), stock-take (ginti), **shift handover**, supplier returns, WhatsApp orders, loyalty, split pay, audit viewer, **reports**, **backup photos ke sath + rozana auto**, **camera photo**, **Supabase sync** | ✅ **sab mukammal** — sirf hardware (thermal printer + USB scanner) ki dukan par janch baqi |
+| **Malik ke 4 ahkaam (stage-38, U-30 → U-33)** | **manfi stock kahin bhi kaam nahi rokta — sirf ALERT** (sale · supplier wapsi · write-off) · **har alert sirf MALIK wajah likh kar khatam karta hai** (wajah DB + black box me mehfooz) · **wapsi ka maal foran stock me** (quarantine khatam) · **bina-bill wapsi: stock foran + alert tab tak qaim jab tak malik wajah na likhe** (bill jurne ke bad bhi) | ✅ **COMPLETE** |
+| **Spec 1–4 (stages 35 + 37)** | **manfi (negative) stock** — bikri kabhi nahi rukti, magar screen ke ooper bara surkh alert · **har module ka log** jis me **purani → nayi value**, module tag, security events, aur CSV · **wapasi ki sakht janch** (sirf asal bill se, hadd aur mohelat ke sath) · **counter par fori ittila** (toasts + alert bar) | ✅ **COMPLETE** |
+
+**Owner's baseline rule — everything is customizable (`U-17`):** make your own fields on any screen, click any row to open its full detail, small clickable option blocks inside Settings, and filters / sorting / groups on every list. Nothing is hard-coded. Also: git and docs are updated with **every** change (`U-23`).
+
+**Latest changes (stages 26–34):** `/reports` is live — **aaj / 7 din / 30 din / is mahina** with KPI cards (bills, bikri, **munafa + margin**, average bill, cash vs udhaar, refunds, expenses, purchases), a per-day bar chart, **top-10 dawayen**, a **category split** and a **dead-stock list** (60 din se nahi biki); owner/manager only (a cashier is sent back to `/pos`). While building it a **real accounting bug surfaced and was fixed**: round-off and loyalty rebates were only taken off the bill total, never off the item lines, so every bill's items added up to more than the bill itself (a Rs 7.50 gap on a typical bill — visible on the receipt and in every report). Item totals are now reconciled line by line, so **bill = items, always**, and six new tests guard it.
+
+**Stage-43 (نظرِ ثانی — دوسرا دور):** ہر ماڈیول کو اصلی ڈیٹا سے چلا کر دیکھا — **ادھار**، **سپلائر ادائیگی**، **شفٹ/گلّہ** (متوقع Rs 340، فرق 0)، **گنتی** (کتاب 43 → ہاتھ 48 → اسٹاک 48)، **ایکسل برآمد/درآمد**، **تاریخ گزشتہ الرٹس**، **تصویریں**، **بلیک باکس CSV**، **بیک اپ** — سب ٹھیک۔ ایک بہتری کی: **سپلائر کو حد سے زیادہ ادائیگی پر الرٹ** (ادائیگی نہیں رکتی، صرف آگاہی + بلیک باکس میں ریکارڈ)۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12j میں۔
+
+**Stage-42 (Settings کی صفائی):** پورے کوڈ کی چھان بین کی — **73 میں سے 3 بیکار لائنیں** ملیں (`reorder.levels`, `ui.language`, `sync.provider`) جنہیں **نہ کوئی کوڈ پڑھتا تھا اور نہ Settings کے صفحے پر نظر آتی تھیں** — وہ ہٹا دی گئیں۔ اب **70/70 (100%) لائنیں واقعی کام کر رہی ہیں**۔ پرانی صورت git کی تاریخ میں محفوظ ہے اور ضرورت پر ایک لائن میں واپس آ سکتی ہے۔
+
+**Stage-41 (قرنطینہ کا مستقل نمبر — U-34):** قرنطینہ میں جانے والے **ہر سامان کا اپنا پکّا نمبر** (`Q-0001`, `Q-0002`…) جو **کبھی نہیں بدلتا**۔ `/alerts` پر دو کارڈ: (1) «ابھی قرنطینہ میں» — ہر آئٹم کے ساتھ **اسٹاک میں / خراب (ایکسپائری) / فروخت** کے بٹن اور نوٹ، (2) **«قرنطینہ کی پوری تاریخ»** — صاف نظر آتا ہے کہ **کون سا سامان کہاں گیا** (نمبر، دوا، مقدار، انجام، وقت، نوٹ)۔ جب تک مال قرنطینہ میں ہے **الرٹ جاتا رہتا ہے**۔ عام واپسی بدستور **فوراً اسٹاک** میں جاتی ہے (اس پر کوئی Q-نمبر نہیں بنتا)۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12h میں۔
+
+**Stage-40 (نظرِ ثانی — U-36):** پہلے مرحلے کی نظرِ ثانی میں ایک **بڑا حسابی نقص** ملا اور ٹھیک ہو گیا: واپسی کا مال شیلف پر واپس آتا تھا مگر **رپورٹ اور کیش/ڈے اینڈ اس کی لاگت منافع میں واپس نہیں شامل کرتے تھے** — منافع کم دکھتا تھا (مثال: Rs −60 بمقابلہ درست Rs 90)۔ اب اصول صاف ہے: **لاگت تب ہی واپس جب مال واقعی اسٹاک میں آیا ہو**؛ قرنطینہ یا خراب مال کی لاگت نقصان مان کر نہیں گھٹائی جاتی۔ اس پر **5 نئے ٹیسٹ** ہیں (کل 51)۔ نظرِ ثانی کا باقی حصّہ صاف نکلا: **21/21 صفحے** بغیر کسی خرابی کے چلتے ہیں، بیک اپ ٹھیک ہے، اور ہر لاگ میں «پرانا → نیا» موجود ہے۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12g میں۔
+
+**Stage-39 (واپسی کی رسید — U-35):** ہر واپسی کو اب ایک **پکّا نمبر** ملتا ہے (`RET-0001`, `RET-0002`…) جو کبھی نہیں بدلتا اور بلیک باکس میں بھی درج ہوتا ہے۔ واپسی کے فوراً بعد **رسید خود بخود چھپنے کے لیے کھل جاتی ہے** — جس پر دکان کا نام، واپسی کا نمبر، اصل بل نمبر، گاہک، دوائیں + مقدار + واپس رقم، **ہر آئٹم کے ساتھ «اسٹاک میں واپس» یا «قرنطینہ میں»**، وجہ، کل ریفنڈ اور دستخط کی لائن ہے۔ پرانی رسیدیں `/sales` پر ہر بل کے اندر «واپسی کی رسیدیں» سے دوبارہ چھاپیں۔ **بغیر بل (جلدی) واپسی** کی بھی الگ رسید (`PR-…`) ہے۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12f میں۔
+
+**Stage-38 (مالک کے 4 احکام — 6-Oct-2026):** **منفی اسٹاک اب کہیں بھی کام نہیں روکتا** — سپلائر واپسی، رائٹ آف، ایڈجسٹ، سب **صرف الرٹ** دیتے ہیں (سپلائر واپسی میں «Batch me sirf N hain» والی خرابی ختم) · **ہر الرٹ صرف مالک وجہ لکھ کر ختم کر سکتا ہے** — وجہ لکھنا لازمی ہے، وہ ہمیشہ کے لیے محفوظ ہوتی ہے (نئی ٹیبل `alert_dismissals`) اور بلیک باکس میں بھی درج ہوتی ہے؛ کیشیئر/منیجر صرف الرٹ دیکھ سکتے ہیں، ختم نہیں کر سکتے · **واپسی کا مال پیسے نکلتے ہی فوراً اسٹاک میں** جاتا ہے (قرنطینہ ختم) · **بغیر بل واپسی** پر بھی مال فوراً اسٹاک میں جاتا ہے اور **الرٹ تب تک قائم رہتا ہے** جب تک مالک وجہ لکھ کر ختم نہ کرے — **بل جڑ جانے کے بعد بھی**۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §12b–§12e میں۔
+
+**Stage-37 (Spec 1–4, round 2):** **ہر صفحے کے اوپر عالمی سرخ الرٹ** (صرف POS پر نہیں) · قرنطینہ — واپسی کا مال اب `/alerts` پر نظر آتا ہے اور ایک کلک سے شیلف پر جاتا ہے · **ہر ماڈیول کا لاگ پرانا → نیا** (نیا ریکارڈ / حذف / ترمیم تینوں) · چھوٹ اور round-off پر **ٹوسٹ** · اور دو اہم بگ ٹھیک: نیا ریکارڈ لاگ میں محفوظ نہیں ہو رہا تھا، اور پروڈکٹ کی جزوی ترمیم میں باقی فیلڈز صفر ہو جاتی تھیں۔
+
+**Stage-35 (Spec 1–4):** **منفی اسٹاک + مکمل لاگ + واپسی کی جانچ + کاؤنٹر الرٹس** — اب بکری **کبھی نہیں رکتی** خواہ اسٹاک مائنس میں چلا جائے، مگر اسکرین کے بالکل اوپر بڑا سرخ الرٹ آتا ہے اور ہر واقعہ بلیک باکس میں **`negative_sale`** کے نام سے «کون · کب · **پرانی قدر → نئی قدر**» کے ساتھ محفوظ ہوتا ہے۔ واپسی اب صرف **اصل بل نمبر** سے مل کر ہوتی ہے — حد سے زیادہ واپسی یا ریفنڈ **ناممکن** ہے۔ کارٹ میں دوا ڈالتے ہی **ٹوسٹ** (کم/منفی اسٹاک، VIP/Doctor ریٹ) نظر آتا ہے۔ `/audit` پر «پرانا → نیا» کالم، ماڈیول فلٹر اور CSV؛ `/alerts` پر «Stock MINUS» کارڈ۔ تفصیل [`docs/APP-TAFSEEL.md`](docs/APP-TAFSEEL.md) کے §9–§12 میں۔
+
+**Stage-34:** **Supabase cloud sync** — دکان کا ڈیٹا cloud پر بھیجیں (`/sync` صفحہ: بھیجیں / دیکھیں / لا کر لگائیں)، تاکہ گھر سے اعداد دیکھ سکیں اور ایک کاپی باہر محفوظ رہے۔ Local database ہمیشہ **اصل** رہتا ہے؛ انٹرنیٹ بند ہو تو ایپ ویسے ہی چلتی ہے۔ سیٹ اپ کا پورا طریقہ [`docs/SUPABASE.md`](docs/SUPABASE.md) میں۔
+
+**Stage-33:** **کیمرا سے تصویر** — پروڈکٹ اور کسٹمر دونوں صفحوں پر "Camera se lein": لائیو پیش نظارہ، پچھلا/اگلا کیمرا، اور تصویر ڈیوائس پر ہی چھوٹی ہو کر محفوظ۔
+
+**Stage-32:** **shift handover** — galla band karte waqt batayein *kaun senbhalega*: ginta hua cash agle shift ka opening float ban jata hai, "kis ne → kis ko" mehfooz rehta hai، اور ایک **handover parchi** (ساری لائنیں + فرق + دونوں دستخط) چھاپ سکتے ہیں۔
+
+**Stage-31:** **backup ab photos کے ساتھ** — ایک ہی `.zip` میں پورا ڈیٹا بیس + `data/photos/` کی ساری تصویریں؛ restore بھی `.zip` سے۔ ساتھ ہی **روزانہ خودکار بیک اپ** (`data/backups/`، Settings سے آن/آف، پرانے خود بخود کٹ جاتے ہیں)۔
+
+**Stage-30:** **sare records ek file se UPDATE** — "Data (Excel)" safhe par *Apna data download karein* se poori file milti hai (dawayen, gahak, supplier, categories, companies, batches, settings — **photos ke baghair**); usi me jo badalna hai badlein, wapas upload karein, pehle poora preview (purana → naya) phir ek click se update. **Khaali cell = koi tabdeeli nahi**, khata aur stock ki quantity file se nahi badalti, security settings band, aur Settings ke liye alag tick.
+
+**Stage-29:** **ginti (stock-take)** — dukan band kar ke ginne ka poora chakkar: session kholo aur kitab ka stock freeze ho jata hai, har dawa ke aage "kitab / ginti / farq / qeemat" likho, "sirf farq wali" se chhan lo, phir ek click se **lagu** — batches durust, movement record, kami/ziyada ki qeemat cost par, aur **kitab ka manfi stock bhi theek ho jata hai**. Sirf owner lagu kar sakta hai aur ek session dobara lagu nahi hota.
+
+**Stage-28:** **udhaar ki hadd ab sakht ho sakti hai** — Settings me "Udhaar (Credit) ki hadd" section: hadd poori hone par udhaar **band** kar do (sirf warning ki jagah), manager ko ijazat do ya na do, owner ko hamesha ijazat. Cashier ko saaf paishani milti hai ke purana udhaar + is bill ka = kul kitna.
+
+**Stages 23–25:** a bill can be paid **part cash, part credit** (or any mix) from a Split pad at the counter; **loyalty points** are now earned *and spent* (1 point = Rs 1, capped at what the customer has); and **categories can have sub-categories** (`Medicines › Dard/Bukhar`) — pick a parent in the filter and all its children come along. Also: expired batches can be ticked on the alerts page and sent back to the supplier in one click, and free/sample stock has its own table.
+
+**Stages 21–22:** suppliers are now a full ledger — open a supplier to see every purchase bill, payment and return, pay them from the same screen, and **send goods back** (`SR-0001`, expired / damaged / wrong items) which removes the stock and reduces what you owe (or turns it into a credit note). And the reorder list on **Expiry & stock alerts** became a WhatsApp **order pad**: tick the medicines, set the quantities, add the supplier's number and WhatsApp opens with the text ready — plus a one-tap "today's summary" message. Free `wa.me` links, no API key.
+
+**Stages 19–20:** the **black box** is now browsable at `/audit` — every action with who/when/what and filters — and **backup/restore** sits right next to it: download the whole database, or drop a `.db` back in (the app validates it, auto-saves the old one and switches over *without a restart*). Photos now go to the **`data/photos/` folder** instead of the database, products have a **room/almari** field, and **filters + sorting** were added to the product, customer and sales lists, with the product list also able to **group by category, company or room** (click a group header to fold it).
+
+**Stages 17–18:** everything is now customizable from inside — make **your own fields** for customers/products/suppliers (CNIC, shelf, discount group…; required or optional; switch on/off), **click a customer** to see their photo, khata and every bill/payment/return, **click a product** to see its batches, expiry, sales, price history and full stock ledger, **Settings sections open when clicked**, and a **new category or company can be created right inside the product form**. Photos are resized on the device and stored in the database (offline-friendly).
+
+**Stage-16:** lost-bill handling — search past bills by **medicine name**, give a customer their money back at rush time without a bill (`PR-xxxx`, goods stay **quarantined**, a red pending badge keeps blinking), then tag the real bill later (optionally putting the goods back in stock). Only owner/manager can put returned goods back into stock; a cashier's return always stays in quarantine. Also fixed: sale lines without an explicit batch now automatically take the nearest-expiry batch, so batch stock and the movement ledger can no longer drift apart.
+
+**Stage-15:** **cash shift (galla)** — open the drawer with an opening float, the screen keeps showing the expected cash as billing/expenses happen, and closing asks for the counted cash and stores the difference (short/excess) in a shift history list. The counter shows a small reminder while no shift is open. The auto-created empty shift at first start is gone.
+
+**Stage-14:** P1 finished — **customer edit** (inline row), **category & company rename/delete** (deleting only unlinks products, never deletes them), and a **Free / sample-bonus tick** on purchase lines that puts the goods into stock without adding them to the bill or the supplier payable.
+
+**Stage-13:** works offline — the app can be installed on the shop tablet/PC ("Add to Home Screen"), shows a small amber bar when the internet is down, `/api` is never cached so billing data is always live. Static UI files are cached so the counter does not go blank if the internet drops.
+
+**Stage-12:** import screen `/import` — the shop's old list can come from Excel (with a ready template and a line-by-line preview before anything is saved) · duplicate names/phones are skipped automatically, rates are typed in rupees and stored as paisa, opening stock arrives as a proper batch with expiry.
+
+**Stage-11:** `/stock` write-off & adjustment screen for owner/manager · cash-received box at the counter with live change + quick buttons · change printed on the receipt · purchased-cost guard still blocks below-cost discounts · a cashier typing an owner-only URL is sent back to `/pos`.
+
+**Live link (demo only):** <https://marea11.netlify.app> — Netlify project `marea11` publishes the **`legacy-demo-vite/` demo** (sample data) for now. The real app needs a **Node ≥ 22.5 host with a persistent disk** (shop PC / Node host with volume): a SQLite file cannot live on static or serverless hosting. Details in `HANDOFF.md` §10.
+
+## 🌿 کون سی برانچ merge کریں؟
+
+**صرف ایک: [PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3) — `arena/01a10395-area11` → `main`.**
+باقی برانچیں (PR #1 merge ہو چکا، PR #2 کا سارا کام ہماری برانچ میں شامل ہے) چھوڑ دیں۔
+نقشہ + قدم بہ قدم ہدایات: **[`docs/BRANCH-AUR-MERGE.md`](docs/BRANCH-AUR-MERGE.md)** (کوئی تصادم نہیں، MERGEABLE)۔
+
+## ▶️ ایپ کیسے چلائیں / دیکھیں؟
+
+**مکمل اردو ہدایات: [`docs/CHALANE-KA-TARIQA.md`](docs/CHALANE-KA-TARIQA.md)** (پریویو · اپنے کمپیوٹر پر · ویب سائٹ کی طرح)۔
+مختصراً: `npm install` → `npm start` → براؤزر میں <http://localhost:3000> (پہلا پاس ورڈ `area11`)۔
+یہ ایپ ڈیٹا **فائل** میں رکھتی ہے، اس لیے Netlify/Vercel پر **نہیں** چل سکتی — دکان کا کمپیوٹر یا
+مستقل ڈسک والی Node ہوسٹنگ استعمال کریں۔
+
+## 📁 Files (naqsha)
+
+| File | Kaam |
+|---|---|
+| **`PHASE-TWO-INFORMATION.md`** | ⭐ **Zabta + mansooba** — 116 numbered rules (U/R/E/S/P/B/Z/T/M/Q) |
+| **`INPUT-INFORMATION.md`** | Part 1: master spec **hoobahoo** • Part 2: A-01…A-49 (tay shuda) + Q-01…Q-19 (aap ke faisle) |
+| **`complete_numbered_master_specs (1).md`** | Asal master spec — **Single Source of Truth** |
+| **`HANDOFF.md`** | ⭐ Naye agent ke liye pehla safha: **kya ho chuka / kya baqi hai**, run, gotchas, hosting, rollback — har kaam ke baad update karein |
+| **`AGENTS.md`** | Chhota rule sheet (non-negotiables) |
+| `src/` | App ka code (Next.js + TypeScript) |
+| `legacy-demo-vite/` | Purana browser-demo (reference / reuse) |
+| `scripts/ckpt.sh` | **Wapas jane ka system** (checkpoint) |
+| `scripts/sync-spec.sh` | Spec → INPUT Part 1 khud-ba-khud copy |
+| `scripts/rules-count.sh` | Numbered points ki ginti (koi baat miss na ho) |
+| `data/area11.db` | Aap ka **asli data** (SQLite — backup = ek file ki copy) |
+
+---
+
+## 🚀 Roz-marra ka kaam
+
+```bash
+npm run dev            # App chalayein (http://localhost:3000)
+npm test               # Unit tests (Node ka built-in runner - koi library nahi)
+bash scripts/ckpt.sh save "kaam ka naam"    # Save point
+bash scripts/ckpt.sh list                   # Saare stages dekhein
+bash scripts/ckpt.sh go 3                   # Kisi bhi stage par wapas
+bash scripts/ckpt.sh undo                   # Ek qadam peeche
+bash scripts/ckpt.sh push                   # GitHub par mehfooz
+bash scripts/rules-count.sh                 # Numbered rules check
 ```
 
-The dev server binds to `0.0.0.0:5173` and accepts Arena's `.e2b.app` preview hosts. Browser assets and fonts are self-hosted; no backend is required for this demo.
+**Backup:** `data/area11.db` file ki copy — bas itna hi.
 
-```sh
-npm run build       # TypeScript check + assets in dist/
-npm run preview     # Serve the built demo
-```
+**Login:** owner password `area11` (pehle din badal lein: Settings → Staff). Staff = naam + 4-hindsi PIN (owner banata hai).
+**Password bhool gaye?** `node scripts/reset-login.mjs --owner "naya-password"` (app chalti hui bhi kaam karta hai).
 
-**Cash workflow (preserved from Phase 2):** open **Cash drawer**, enter a sample operator label and the cash physically present as the **opening float**, and select **Open cash shift** before cash checkout, refunds, cash expenses owner cash entries or supplier cash settlements. A zero float is allowed; the app never invents an opening balance.
+---
 
-## Phase 1 · preserved
+## 🛠 Technology (kam code = kam error)
 
-- Stock receiving, inline product registration, multiple delivery lines, separate automatic `PINV-0001` purchase codes and invoice history.
-- Configurable `box → strip/inner pack → base unit` conversion: five boxes of two strips of ten tablets add **100 tablets**.
-- Separate delivery lots, purchase/retail prices and expiry; nearest expiry first (FEFO). Expired and quarantined units cannot be sold.
-- Product/barcode search, pack-specific barcodes, Box/Strip/Loose selectors, quantity and batch-level stock checks.
-- Sequential `INV-0001` cash sales, stock deduction, tendered/change calculation and original invoice snapshots.
-- **Confirmed rounding:** floor to ten rupees unless that would put the invoice below aggregate purchase cost. Rs. 545/cost Rs. 543 collects **Rs. 545**, not Rs. 540.
-- 58mm/80mm receipt previews, browser printing/PDF and reprints without another sale. Physical printers/scanners remain **unverified**.
-- Park/resume/discard carts. Holds retain exact batch, quantity, discount method/percentage and receipt phone, but never reserve stock. Checkout revalidates availability, expiry and the current cashier limit.
-- English UI, integer-paisa PKR amounts, Asia/Karachi business dates, responsive layouts and keyboard shortcuts.
+| Hissa | Kya | Kyun |
+|---|---|---|
+| App | **Next.js + TypeScript** | live preview, kam code |
+| UI | **Tailwind CSS + Lucide icons** | tayyar cheezein |
+| Database | **SQLite (Node ka built-in)** | **zero extra library**, ek file, offline |
+| Money | **paisa (integer)** | calculation me kabhi ghalti nahi |
+| Auth | Node ka built-in scrypt | staff PIN + owner password |
+| Cloud | **Supabase** (Phase 5) | aap ka intekhab |
 
-## Phase 2 · returns, cash and accounts
+---
 
-### Returns and lost-bill lookup
 
-- Find an original invoice by number, medicine name, optional recorded phone or approximate date range. Phone punctuation is normalized, including full Pakistani mobile national/international number variants.
-- Return a specific original **line index and batch** in smallest units. Cumulative returns cannot exceed sold quantities. The original invoice is not rewritten.
-- Refund entitlement comes from the **actual collected amount**, after discounts and rounding—not today's price. Exact BigInt allocation and cumulative proration prevent lost paisa or over-refunds on repeated partial returns.
-- Returns default to **quarantine**: physically recorded in the original lot, but excluded from counter/FEFO/scanner availability. Cashier cannot restock. Owner/Manager may explicitly choose inspected, unexpired restock; damaged/expired returns remain quarantined. This is a demo stock disposition, **not a legal/clinical approval to resell medicine**.
-- Rush-time provisional returns record received products/quantities, actual cash refunded, reason, notes and optional phone. Unknown-batch goods stay **outside saleable inventory**.
-- A persistent red pending-return indicator appears across pages and reloads. Only Owner/Manager may verify the original bill and match the exact goods. A matched refund moves **no cash again**.
-- Refund differences require confirmed customer cash recovery/top-up. Owner alone may explicitly absorb an overpayment as an accounting expense, without deducting drawer cash twice. Underpayments cannot be written off.
-- Stable UI refund request IDs reject retries of the same direct/provisional request; a linked provisional case cannot be linked twice.
-
-### Cash drawer
-
-- One active shift with an explicit float/operator, signed cash movements and source-document references.
-- Expected cash = opening + net cash sales + owner deposits + recovered differences + received supplier cash refunds − customer refunds − expenses − owner withdrawals − cash paid to suppliers.
-- Tendered/change are not counted as revenue: receiving Rs. 100 and returning Rs. 30 records **Rs. 70**.
-- Actual counted close, saved expected balance, signed variance and an explanation for any shortage/excess.
-- Atomic handover closes the old shift and opens the next with **actual counted cash**, not the expected figure.
-- Payouts cannot overdraw the drawer; movements cannot be backdated before prior cash entries.
-- No fake historical cash entries are created for migrated Phase 1 invoices.
-
-### Owner drawings and shop expenses
-
-- Owner-only cash withdrawals (debits), cash returned (credits) and personal medicine use.
-- Medicine use is valued **at purchase cost in this demo**, deducts safe stock, and creates neither a sale nor a cash movement. This valuation is an implementation assumption, not a confirmed shop policy.
-- Owner/Manager daily/monthly cash expenses with category/purpose, notes and a separate expense journal. Owner drawings are not operating expenses.
-- Journals have no per-entry edit/delete controls, but explicit whole-demo reset remains available; these are **not immutable production records**.
-
-### Discount safeguards
-
-- Owner/Manager choose margin or retail percentage mode and the cashier percentage limit.
-- Master example: cost Rs. 200/retail Rs. 300 at 10% → **Rs. 290 in margin mode**, **Rs. 270 in retail mode**.
-- No role can discount a line below its original lot purchase cost. Protected invoice rounding remains in force.
-- Percentages use basis points and exact integer math; discounts are floored to whole paisa per line.
-- **Margin mode and a 10% cashier maximum are adjustable sample defaults—not confirmed business policy.** The explicit discount limit and final ten-rupee rounding are separate rules.
-
-## Phase 3 · smart stock & suppliers
-
-- Supplier profiles: name, agency/company, phone, address and explicitly confirmed starting balance. Contact edits preserve historical purchase-name snapshots.
-- New purchases charge the supplier account; **they do not automatically pay drawer cash**. Actual cash payments/refunds are separate, reference-linked transactions with an open shift and available payable/credit/cash limits.
-- Accepted supplier returns trace the **original supplier, invoice and batch**, remove separately chosen shelf/quarantine quantities and credit **original purchase cost**, never retail price. Unique credit references and stable request IDs block duplicate credits/retries.
-- Negative supplier balance means vendor credit. It offsets the next invoice **once through the running balance**, without another cash deduction. Bonus returns remove stock but credit zero.
-- Migrated historical costs are **reference-only**, not assumed unpaid. Owner/Manager verify the supplier's actual **current statement**; already-posted Phase 3 movements are subtracted to derive carry-forward rather than charged twice.
-- Three mutually exclusive expiry windows with adjustable days/colors, supplier filter and a fourth fixed-red **Expired goods** tab. Sample defaults: **365 / 180 / 90 days**; printed expiry is valid through that date in this demo.
-- Three **saleable-stock** reorder stages: warning / critical / out. Per-product sample critical/warning/target defaults of **1 / 2 / 4 boxes** are converted to base units and adjustable, with preferred-supplier routing.
-- Supplier-specific quantity selection, reviewed/copyable **free WhatsApp Web purchase request**. Manual login/send only—no paid API, automatic send, delivery claim, purchase, balance, stock or cash posting.
-- Per-line **sample/bonus stock costs exactly zero**. Pack conversion, retail price and original lot remain tracked; no purchase cost, expense or cash is invented.
-- Supplier/expiry/reorder management is Owner/Manager-only in the demo UI/domain. These role restrictions remain **not authentication**.
-
-These defaults and operator attestations are not confirmed shop policies, legal medicine-return permissions or real supplier integrations. [Phase 3 decisions and checks](./docs/phase-3-progress.md).
-
-## Try the demo
-
-Fresh data contains **12 sample products**, two labelled purchase deliveries and an expired lot, with **no fabricated sales, refunds, expenses, cash shifts or supplier settlements**. Fresh supplier purchase liabilities are labelled sample data; migrated real previous-version liabilities remain unknown until statement verification.
-
-1. **Cash drawer:** enter a sample operator and Rs. 1,000 float; open the shift.
-2. **Counter:** choose **Panadol 500 mg**, keep the nearest lot and one strip, then **Checkout → Complete sale**. Its initial Rs. 67.50 retail/Rs. 50 cost rounds to **Rs. 60**. Expected drawer: **Rs. 1,060**.
-3. **Returns:** locate that invoice and return **2 tablets**, not two strips. Default quarantine, refund **Rs. 12**, expected drawer **Rs. 1,048**. The original invoice remains unchanged.
-4. For a separate lost-bill scenario, make a **new sale**, then use **Provisional return**. Watch the pending indicator survive navigation/reload; Manager/Owner can **Verify & link bill**. Do not attempt to return the same previously returned units again.
-5. **Accounts:** test owner withdrawal/repayment/medicine use, or daily tea/monthly rent under **Shop expenses**.
-6. **Cash drawer:** count the actual sample balance, record any variance note and close or hand over to another operator.
-7. **Settings:** adjust receipt identity, paper width and discount policy. Owner **Reset demo** requires typing `RESET` and intentionally removes current demo transactions.
-
-Sample Panadol barcodes (search and Enter):
-
-| Pack        | Barcode        |
-| ----------- | -------------- |
-| Base tablet | `110000000011` |
-| Strip       | `110000000012` |
-| Box         | `110000000013` |
-
-Shortcuts: **F2 / Ctrl+K** product search, **F4** parked carts, **F8** checkout.
-
-**Try Phase 3:** use **Suppliers** to inspect an account or create a confirmed-zero sample supplier; **Stock in** receives standard/zero-cost bonus lines; **Expiry** reviews four bands; **Reorder** filters low-stock products and prepares reviewed WhatsApp text. The seed supplier phones are intentionally blank: add your own test destination to enable the Web link. A step-by-step Urdu test with expected **100 tablets / Rs. 500 purchase → 2-tablet credit / Rs. 490 payable** is in the [testing/hosting guide](./docs/phase-3-testing-hosting.md).
-
-## Browser data and migration
-
-- The existing key **`area11.phase1.workspace.v1` is retained**; its snapshot now uses **`schemaVersion: 3`**.
-- Startup strictly validates genuine V1/V2 root and nested data. V1 chains through a validated V2 intermediate; its **exact original JSON** is retained at **`area11.migration.phase1.original.v1`**. V2 is backed up at **`area11.migration.phase2.original.v2`** before upgrading the primary to V3. Stock/quarantine, IDs, invoice/refund sequences, receipt snapshots, cash sessions/entries, owner/expense journals, cart/discount/phone holds and shop settings are preserved.
-- Failed validation, backup/storage failure, conflicting originals or an unsupported version **pause transactions without overwriting the original**. Do not reset merely to migrate. Resolve storage issues/reload, or preserve the saved data before a deliberate reset.
-- Owner **Download saved snapshot** **Download original Phase 1** and **Download original Phase 2** provide recovery copies if originals exist. Both migration copies are retained on demo reset. These downloads are **not an import/restore workflow, scheduled backup or cloud service**.
-- Data is tied to **this browser and this origin**. New preview domains, different browsers/devices and site-data removal do not transfer localStorage. Save a recovery copy before changing origins; scheduled backup/restore/sync remain later work.
-- Use one active demo tab. Revision checks detect many stale-tab writes but are not a database mutex or a multi-counter guarantee.
-- Validated persist-before-publish snapshots keep related cash/stock/documents together. This does not guarantee physical cash exchange; confirmations are operator attestations, and no payment processor is connected.
-
-## Test and verify
-
-```sh
-npm run format:check
-npm run typecheck
-npm test
-npm run build
-npm audit
-npx playwright install --with-deps chromium
-npm run test:e2e
-```
-
-The **212 unit/repository + 36 Chromium E2E** tests cover Phases 1–3: exact packaging and protected discounts/rounding, batch-linked/cumulative refunds, provisional reconciliation, quarantine, cash/owner/expenses, supplier charges/credits/cash signs, zero-cost bonus lots, expiry boundaries/colors, reorder/WhatsApp side-effect freedom, genuine V1/V2 migration and failed-persistence rollback. Chromium E2E checks include responsive layouts, receipt printing/PDF, cash/return workflows and automated Axe checks. The final combined E2E suite runs against the compiled production preview; exact locally executed results are recorded in [Phase 3 progress](./docs/phase-3-progress.md).
-
-The sandbox uses a Chromium 153 executable obtained through an **ignored, isolated** npm browser-tools directory when Playwright's CDN is unavailable. Normal environments can use the installer above. The CI template includes format/typecheck/unit/audit/build/Chromium E2E checks. It is in `docs/workflow-templates/ci.yml` pending GitHub workflow permissions; no automatic remote CI success is claimed.
-
-## Preview and permanent hosting
-
-Use Arena's **Live Preview → Pharmacy demo** for the temporary, session-bound website. The unauthenticated external sandbox URL is traffic-token protected, so it is **not a verified open/public share link**.
-
-Deployment paths are documented: **GitHub Pages** (prepared push-based template: `docs/workflow-templates/deploy-pages.yml`, requiring owner/workflow permission to install) **Cloudflare Pages** (Git integration or built-assets Direct Upload), and **Netlify** (Git import with `netlify.toml` already configured). **Permanent public publishing is currently blocked by Pages-admin permissions**: the Arena connection received HTTP 403 when enabling Pages, and GitHub rejected active workflow files without the integration’s `workflows` permission. Templates are retained in `docs/workflow-templates/` rather than silently pretending Actions are installed. **Connect this existing repository and the room’s branch to Cloudflare Pages or Netlify**; both need one-time authorization in your own provider dashboard. Netlify imports the build/output/Node/root-base settings from `netlify.toml`, but the production branch must be selected explicitly. Netlify projects may start private: publish/make public and check the actual URL in an unauthenticated browser. No Netlify/Cloudflare account has been linked or public site verified here. For GitHub Pages, reconnect/authorize the Arena GitHub integration for workflows (or have the owner install the templates), then enable **Pages → GitHub Actions**. Exact links, fixed deployment branch, automatic-update behavior and the one-time setup are in [Permanent hosting & room updates](./docs/deployment.md). No predicted URL is claimed live before a successful, externally verified deployment.
-
-```sh
-# Root-domain hosting (Cloudflare Pages)
-VITE_BASE_PATH=/ npm run build
-
-# GitHub project path (or use the Pages workflow's configured base)
-VITE_BASE_PATH=/Area11/ npm run build
-VITE_BASE_PATH=/Area11/ npm run preview -- --port 4173
-# http://localhost:4173/Area11/
-```
-
-The non-secret base can also be set in a local `.env` using `.env.example`. Icons/fonts/assets are base-path safe, and root plus project-path production builds were smoke-tested. **Static hosting serves only the demo**: it does not create a shared database, authentication, multi-device sync or scheduled backups. Changing origins does not transfer browser data; save a recovery copy first. Upload **only built `dist` assets**, never browser financial snapshots or credentials.
-
-## Architecture and roadmap
-
-- `src/domain/model.ts`: V3 schemas, monetary/pack/date helpers and snapshot validation.
-- `src/domain/operations.ts`: products, stock, carts, discounts and sales.
-- `src/domain/arithmetic.ts`, `returns.ts`, `cash.ts`, `accounts.ts`: exact refund allocation and atomic financial commands.
-- `src/domain/suppliers.ts`, `alerts.ts`, `validation-stock.ts`: supplier accounting/returns/settlements, expiry/reorder/WhatsApp drafts and cross-record stock/ledger validation.
-- `src/domain/legacy-v1.ts`, `legacy-v2.ts`, `legacy-validation-v2.ts`, `src/data/migrations.ts`: frozen strict legacy validation and exact-original upgrades.
-- `src/data/repository.ts`: revision-checked browser persistence and recovery pause.
-- `src/pages/`, `src/ui/`: functional counter, inventory, receipts, return queue, cash drawer, account journals, suppliers, expiry/reorder desks, settings and dialogs.
-
-| Phase                            | Status                                                                                                |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 1 · Core lifeline                | Implemented demo; regressions retained                                                                |
-| 2 · Returns, cash & accounts     | Implemented demo                                                                                      |
-| 3 · Smart stock & suppliers      | Implemented demo; 0.3.0 / schema 3                                                                    |
-| 4 · Customers & advanced billing | Later: profiles, credit, loyalty, price tiers, split pay, custom fields/categories                    |
-| 5 · Intelligence & hybrid sync   | Later: immutable audit, advanced search/counting/reports, complete offline/cloud sync, backup/restore |
-
-Confirmed starting choices: [Phase 1 decisions](./docs/phase-1-decisions.md). Historical deliveries: [Phase 1](./docs/phase-1-progress.md), [Phase 2](./docs/phase-2-progress.md). Current implementation decisions and verification: [Phase 3 progress](./docs/phase-3-progress.md). The master specifications remain unchanged.
+## 💡 Yaad rahe
+- Har cheez badli ja sakti hai (Settings) — naam, logo, rang, rates, expiry levels, receipt…
+- Frontend se badlav database me khud-ba-khud.
+- Wapas jana: `git tag` (stage-1…N) → `bash scripts/ckpt.sh go N` — merge ke baad bhi.
