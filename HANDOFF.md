@@ -223,7 +223,7 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 > **Kul taraqqi ≈ 99 %.** Baqi sirf: **PR #3 merge** · Netlify base directory · Supabase ki chabiyan · **tax report** (agar chahiye) · hardware (printer/scanner) ki janch.
 
 ### P0 · repo / merge / hosting (do this first)
-1. **Merge PR #3** (this branch → `main`). Afterwards PR **#2** is superseded and can be closed; branch `arena/01a0f0cf-area11` stays for history.
+1. **Merge PR #3** (this branch → `main`) — **this is the only merge needed** (verified 2026-10-07: no conflicts, MERGEABLE, no branch protection; PR #1 already merged, PR #2's 10/10 commits are already inside this branch). Do **not** squash — keep the 44 stage tags reachable. Full map & steps: [`docs/BRANCH-AUR-MERGE.md`](docs/BRANCH-AUR-MERGE.md).
 2. **After the merge, check the Netlify project** `marea11` still builds (`https://marea11.netlify.app`). See §10 for the base-directory caveat.
 3. **Decide where the real app will actually run** (shop PC `npm start` is the simplest; a Node host with a persistent disk is the alternative). Static/serverless hosting **cannot** hold the SQLite file (§10).
 
@@ -326,13 +326,20 @@ curl -s -XPOST localhost:3000/api/sales -H 'Content-Type: application/json' \
 Static gates (must all pass before any push): `npx tsc --noEmit` · `npm run build` · `bash scripts/rules-count.sh` (`SAB THEEK`).
 Delete test rows afterwards (or delete `data/area11.db` on a dev box) so the owner starts clean.
 
-## 10. Branch, PR, hosting & merge situation (as of 2026-10-03)
+## 10. Branch, PR, hosting & merge situation (as of **2026-10-07**)
 
 **Branches / PRs**
 
 * `main` = PR #1 (the **Vite demo only**). Still the default branch; **does not contain the real app yet**.
 * `arena/01a0f0cf-area11` = previous session's branch (Next.js app, tags `stage-1 … stage-6`). PR **#2** was opened from it on 2026-10-01, is mergeable/clean, but was never merged.
-* **`arena/01a10395-area11` = current session branch.** On 2026-10-03 it was **fast-forwarded onto `arena/01a0f0cf-area11`** (nothing lost, no conflicts — the old branch already contained `main`), then this memory rewrite was added. **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** carries it into `main`; PR #2 becomes redundant and may be closed (the old branch/tags stay). No open issues; no GitHub Actions workflows are installed (only templates in `legacy-demo-vite/docs/workflow-templates/`).
+* **`arena/01a10395-area11` = current session branch.**
+* 🧭 **Kis branch ko merge karna hai — poora faisla (7-Oct-2026, dobara jaancha gaya):** **sirf aik** —
+  **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** (`arena/01a10395-area11` → `main`).
+  `arena/01a0f117-area11` (PR #1) merge ho chuka hai; `arena/01a0f0cf-area11` (PR #2, band baghair merge)
+  ka **har ek commit (10/10) hamari branch ki tareekh me pehle se maujood hai** — is liye PR #2 dobara
+  chalane ka koi faida nahi. **Conflict = 0**, GitHub kehta hai **MERGEABLE**, `main` par koi protection nahi.
+  Poora naqsha, merge ke qadam aur Netlify setting: **[`docs/BRANCH-AUR-MERGE.md`](docs/BRANCH-AUR-MERGE.md)**.
+ On 2026-10-03 it was **fast-forwarded onto `arena/01a0f0cf-area11`** (nothing lost, no conflicts — the old branch already contained `main`), then this memory rewrite was added. **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** carries it into `main`; PR #2 becomes redundant and may be closed (the old branch/tags stay). No open issues; no GitHub Actions workflows are installed (only templates in `legacy-demo-vite/docs/workflow-templates/`).
 
 **Hosting — what is actually live today**
 
