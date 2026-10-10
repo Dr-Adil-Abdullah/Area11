@@ -54,6 +54,15 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 * `node:sqlite` prints an *ExperimentalWarning* — harmless.
 * The legacy demo is its own Vite project: `cd legacy-demo-vite && npm ci && npm run dev` (its own `package.json`, tests and `netlify.toml`).
 
+## 3a. Latest change — 2026-10-10 (UI cleanup, English-only)
+
+- **Sidebar:** 15 flat links → **4 groups** (Sell · Stock & Suppliers · Cash & Reports · Admin). Click a group to open/close its pages; the group holding the current page opens by itself. Groups and links still respect the user's role (`src/components/AppShell.tsx`, `NAV_GROUPS`).
+- **Header:** the store name is a link to the Dashboard.
+- **Dashboard (`/`):** build-plan, "confirmed choices", and developer checkpoint cards removed; replaced by a **Quick actions** card. Stat cards unchanged.
+- **Footer:** developer `ckpt.sh` commands removed.
+- **Language:** sidebar, header, negative-stock banner and Dashboard are in English. Some other pages still contain Roman Urdu labels (to be converted page by page).
+- **Owner request:** all replies to the owner are in pure English (`AGENTS.md` rule 8).
+
 ## 3. What is DONE
 
 **Where things stand on 2026-10-03 (evening):** the app was re-verified in the morning (docs only). In the evening the whole of **Phase 1 was finished**, one work item per checkpoint:

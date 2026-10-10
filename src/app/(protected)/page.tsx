@@ -11,10 +11,10 @@ import {
   Boxes,
   CalendarClock,
   ShoppingCart,
-  CheckCircle2,
-  Circle,
   ShieldAlert,
-  Sparkles,
+  PackagePlus,
+  BarChart3,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -52,30 +52,6 @@ function StatCard({
         </div>
       </div>
     </div>
-  );
-}
-
-function Step({ done = false, title, phase, href }: { done?: boolean; title: string; phase?: string; href?: string }) {
-  return (
-    <li className="flex items-start gap-3 py-2">
-      {done ? (
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-      ) : (
-        <Circle className="mt-0.5 h-4 w-4 shrink-0 text-slate-300" />
-      )}
-      <div className="min-w-0 flex-1">
-        <div className={`text-sm ${done ? "text-slate-700" : "text-slate-500"}`}>
-          {href ? (
-            <Link href={href} className="hover:underline">
-              {title}
-            </Link>
-          ) : (
-            title
-          )}
-        </div>
-      </div>
-      {phase && !done && <span className="badge-slate shrink-0">{phase}</span>}
-    </li>
   );
 }
 
@@ -121,13 +97,11 @@ export default async function DashboardPage() {
           <h1 className="text-xl font-semibold text-slate-800">
             Welcome, {user?.name ?? "Owner"}
           </h1>
-          <p className="text-sm text-slate-500">
-            {settings["store.name"]} — counter is being set up step by step.
-          </p>
+          <p className="text-sm text-slate-500">{settings["store.name"]} — today at a glance</p>
         </div>
-        <Link href="/settings" className="btn-primary">
-          <Sparkles className="h-4 w-4" />
-          Setup &amp; Settings
+        <Link href="/pos" className="btn-primary">
+          <ShoppingCart className="h-4 w-4" />
+          New sale
         </Link>
       </div>
 
@@ -136,10 +110,10 @@ export default async function DashboardPage() {
           <div className="card-body flex items-start gap-3">
             <ShieldAlert className="mt-0.5 h-5 w-5 text-amber-600" />
             <div className="text-sm text-slate-700">
-              <div className="font-semibold">Security: default password is still in use</div>
+              <div className="font-semibold">Security: the default owner password is still in use</div>
               <div className="text-slate-500">
                 The owner password is still <code className="rounded bg-slate-100 px-1">area11</code>.
-                Change it from Settings ▸ Security before you start billing.
+                Change it in Settings before you start billing.
               </div>
             </div>
           </div>
@@ -160,119 +134,31 @@ export default async function DashboardPage() {
         <StatCard label="Customers" value={customerCount} icon={Users} hint={`${saleCount} total bills`} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="card lg:col-span-2">
-          <div className="card-head">
-            <div className="card-title">Build progress (the numbered plan)</div>
-            <span className="badge-green">Live</span>
-          </div>
-          <div className="card-body">
-            <ul className="divide-y divide-slate-100">
-              <Step done title="Repository + go-back (checkpoint) system" />
-              <Step done title="Master spec received and copied verbatim (Part 1)" />
-              <Step done title="Numbered rule book written (104 rules: U/R/E/S/P/B/Z/T/M/Q)" />
-              <Step done title="Foundation: Next.js + TypeScript + database + live preview ready" />
-              <Step done title="Settings system — everything editable from the screen" href="/settings" />
-              <Step done title="Products & categories — pack formula (1 Box = X Strips = Y Tablets), rates, barcode, rack" href="/products" />
-              <Step done title="Suppliers with running balances" href="/suppliers" />
-              <Step done title="Purchases / stock-in — auto PINV code, batches, expiry, supplier account" href="/purchases" />
-              <Step done title="Counter billing — barcode, FIFO batch pick, Box/Strip/Tablet, hold cart, thermal print" href="/pos" />
-              <Step title="Returns, cash closing & owner drawing" phase="Phase 2" />
-              <Step title="Suppliers, expiry alerts, reorder + WhatsApp order" phase="Phase 3" />
-              <Step title="Customers, loyalty, multi-tier rates, split payments" phase="Phase 4" />
-              <Step title="Blackbox audit, analytics, offline/cloud sync (Supabase)" phase="Phase 5" />
-            </ul>
-          </div>
+      <div className="card">
+        <div className="card-head">
+          <div className="card-title">Quick actions</div>
         </div>
-
-        <div className="space-y-4">
-          <div className="card">
-            <div className="card-head">
-              <div className="card-title">Your confirmed choices</div>
-            </div>
-            <div className="card-body space-y-2 text-sm text-slate-600">
-              <div className="flex justify-between gap-2">
-                <span>Technology</span>
-                <span className="font-medium text-slate-800">Next.js + TypeScript</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Language</span>
-                <span className="font-medium text-slate-800">English</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Offline</span>
-                <span className="font-medium text-slate-800">100% required</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Cloud backup</span>
-                <span className="font-medium text-slate-800">Supabase (Phase 5)</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Login</span>
-                <span className="font-medium text-slate-800">PIN + owner password</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Devices</span>
-                <span className="font-medium text-slate-800">2 counters + mobile</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Payments</span>
-                <span className="font-medium text-slate-800">Cash + credit</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Printer</span>
-                <span className="font-medium text-slate-800">
-                  {settings["printer.width"] === "both" ? "58 + 80 mm" : `${settings["printer.width"]} mm`}
-                </span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Old data</span>
-                <span className="font-medium text-slate-800">Excel import</span>
-              </div>
-              <div className="flex justify-between gap-2">
-                <span>Rounding</span>
-                <span className="font-medium text-slate-800">
-                  {settings["bill.roundMode"] === "down10" ? "Down to 10s" : "None"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <div className="card-title">Everything is editable</div>
-            </div>
-            <div className="card-body text-sm text-slate-600">
-              <p>
-                No screen is final. Rename the app, change the logo and colour, add or
-                remove categories, tweak expiry alerts and receipt layout — all from
-                Settings, and the data follows automatically.
-              </p>
-              <Link href="/settings" className="btn-secondary mt-3 w-full">
-                Open Settings
-              </Link>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <div className="card-title">Go back (checkpoints)</div>
-            </div>
-            <div className="card-body space-y-1 text-xs text-slate-600">
-              <div>
-                Save: <code className="rounded bg-slate-100 px-1">bash scripts/ckpt.sh save &quot;name&quot;</code>
-              </div>
-              <div>
-                List: <code className="rounded bg-slate-100 px-1">bash scripts/ckpt.sh list</code>
-              </div>
-              <div>
-                Go back: <code className="rounded bg-slate-100 px-1">bash scripts/ckpt.sh go 3</code>
-              </div>
-              <div>
-                Undo: <code className="rounded bg-slate-100 px-1">bash scripts/ckpt.sh undo</code>
-              </div>
-            </div>
-          </div>
+        <div className="card-body grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <Link href="/pos" className="btn-secondary justify-center">
+            <ShoppingCart className="h-4 w-4" />
+            Counter / Billing
+          </Link>
+          <Link href="/purchases/new" className="btn-secondary justify-center">
+            <PackagePlus className="h-4 w-4" />
+            New purchase
+          </Link>
+          <Link href="/alerts" className="btn-secondary justify-center">
+            <CalendarClock className="h-4 w-4" />
+            Stock alerts
+          </Link>
+          <Link href="/reports" className="btn-secondary justify-center">
+            <BarChart3 className="h-4 w-4" />
+            Reports
+          </Link>
+          <Link href="/settings" className="btn-secondary justify-center">
+            <SettingsIcon className="h-4 w-4" />
+            Settings
+          </Link>
         </div>
       </div>
     </div>

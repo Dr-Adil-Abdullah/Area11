@@ -13,7 +13,7 @@ Non-negotiables (details in `PHASE-TWO-INFORMATION.md`, 116 numbered rules):
 5. Keep `npx tsc --noEmit` at 0 errors, `npm run build` passing, and `bash scripts/rules-count.sh` at `SAB THEEK`.
 6. After every piece of work: `bash scripts/ckpt.sh save "…"` + `push`, update `HANDOFF.md` (§3/§4) and README. Never delete tags or force-push. **Git must be updated with every single change (`U-23`)** — code *and* docs, so the chat can be closed at any moment.
 7. The real app needs a **Node ≥ 22.5 host with a persistent disk** (shop PC or a Node host with a volume). Netlify/Vercel/Pages can only serve the static demo — never the SQLite app.
-8. Talk to the owner (Dr. Adil Abdullah) in Urdu.
+8. Talk to the owner (Dr. Adil Abdullah) in **pure English** (owner request, 2026-10-10). Keep the app UI in English too.
 
 9. Malik ke naye ahkaam (7-Oct-2026, `PHASE-TWO-INFORMATION.md` me **U-30…U-36**):
    - **U-30** manfi stock (ya koi bhi aisi surat) **kahin bhi kaam na roke — sirf ALERT**.
