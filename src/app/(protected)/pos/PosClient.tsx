@@ -15,6 +15,7 @@ import {
   toBaseUnits,
 } from "@/lib/money";
 import { ToastStack, AlertBanner, useToasts } from "@/components/Toast";
+import CustomerPicker from "@/components/CustomerPicker";
 
 type Customer = {
   id: number; name: string; phone: string | null; category: string;
@@ -862,14 +863,7 @@ export default function PosClient({
                 <User className="h-3 w-3" /> Customer (needed for credit / VIP rate)
               </label>
               <div className="flex gap-2">
-                <select className="select" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-                  <option value="">Walk-in (cash)</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}{c.phone ? ` • ${c.phone}` : ""}{c.category !== "normal" ? ` (${c.category})` : ""}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex-1 min-w-0"><CustomerPicker customers={customers} value={customerId} onChange={setCustomerId} /></div>
                 <button className="btn-secondary whitespace-nowrap" onClick={() => setShowNewCustomer((v) => !v)}>
                   <Plus className="h-4 w-4" />
                 </button>

@@ -7,6 +7,7 @@ import { currentUser } from "@/lib/session";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { negativeStockSummary } from "@/lib/alerts";
 import { activeAlerts } from "@/lib/alert-dismiss";
+import { normLang } from "@/lib/i18n";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -42,9 +43,10 @@ export default async function RootLayout({
   const negative = user ? negativeStockSummary() : { items: 0, worst: 0 };
   // U-31: zinda alerts (manfi stock + bina-bill wapsi) -- malik wajah likh kar khatam karein
   const alerts = user ? activeAlerts() : [];
+  const lang = normLang(settings["ui.language"]);
 
   return (
-    <html lang="en">
+    <html lang={lang === "ur" ? "ur" : "en"} dir={lang === "ur" ? "rtl" : "ltr"}>
       <head>
         {/* Brand colour runtime par setting se aati hai (RULE E-02) */}
         <style
@@ -70,6 +72,7 @@ export default async function RootLayout({
           warnNegative={settings["stock.warnNegative"] !== false}
           alerts={alerts}
           canDismiss={user?.role === "owner"}
+          lang={lang}
         >
           {children}
         </AppShell>

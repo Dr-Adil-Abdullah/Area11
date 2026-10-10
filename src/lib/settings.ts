@@ -19,6 +19,9 @@ export type ExpiryLevel = { level: number; days: number; color: string; label: s
 
 export const SETTING_DEFAULTS = {
   // ---- Store & Branding (E-02, E-03) ----
+  // ---- Language (English / Urdu / Roman Urdu) ----
+  "ui.language": "en",
+
   "store.name": "Area11 Pharmacy",
   "store.address": "",
   "store.phone": "",

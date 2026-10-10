@@ -4,6 +4,7 @@ import { getSettings } from "@/lib/settings";
 import { currentUser } from "@/lib/session";
 import { verifySecret } from "@/lib/auth";
 import { formatPKR } from "@/lib/money";
+import { normLang, t } from "@/lib/i18n";
 import {
   Pill,
   Users,
@@ -87,6 +88,7 @@ export default async function DashboardPage() {
     /* ignore */
   }
 
+  const lang = normLang(settings["ui.language"]);
   const todayTotal = todayRow?.total ?? 0;
   const todayBills = todayRow?.bills ?? 0;
 
@@ -95,13 +97,13 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-800">
-            Welcome, {user?.name ?? "Owner"}
+            {t(lang, "home.welcome", { name: user?.name ?? "Owner" })}
           </h1>
-          <p className="text-sm text-slate-500">{settings["store.name"]} — today at a glance</p>
+          <p className="text-sm text-slate-500">{t(lang, "home.subtitle", { store: settings["store.name"] })}</p>
         </div>
         <Link href="/pos" className="btn-primary">
           <ShoppingCart className="h-4 w-4" />
-          New sale
+          {t(lang, "home.newSale")}
         </Link>
       </div>
 
@@ -110,10 +112,10 @@ export default async function DashboardPage() {
           <div className="card-body flex items-start gap-3">
             <ShieldAlert className="mt-0.5 h-5 w-5 text-amber-600" />
             <div className="text-sm text-slate-700">
-              <div className="font-semibold">Security: the default owner password is still in use</div>
+              <div className="font-semibold">{t(lang, "home.securityTitle")}</div>
               <div className="text-slate-500">
                 The owner password is still <code className="rounded bg-slate-100 px-1">area11</code>.
-                Change it in Settings before you start billing.
+                {t(lang, "home.securityText")}
               </div>
             </div>
           </div>
@@ -122,42 +124,42 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
-          label="Today's sales"
+          label={t(lang, "home.todaysSales")}
           value={formatPKR(todayTotal)}
-          hint={`${todayBills} bills`}
+          hint={t(lang, "home.bills", { n: todayBills })}
           icon={ShoppingCart}
           tone="green"
         />
-        <StatCard label="Products" value={productCount} icon={Pill} tone="blue" />
-        <StatCard label="Suppliers" value={supplierCount} icon={Truck} tone="slate" />
-        <StatCard label="Batches in stock" value={batchCount} icon={Boxes} tone="amber" />
-        <StatCard label="Customers" value={customerCount} icon={Users} hint={`${saleCount} total bills`} />
+        <StatCard label={t(lang, "home.products")} value={productCount} icon={Pill} tone="blue" />
+        <StatCard label={t(lang, "home.suppliers")} value={supplierCount} icon={Truck} tone="slate" />
+        <StatCard label={t(lang, "home.batches")} value={batchCount} icon={Boxes} tone="amber" />
+        <StatCard label={t(lang, "home.customers")} value={customerCount} icon={Users} hint={t(lang, "home.totalBills", { n: saleCount })} />
       </div>
 
       <div className="card">
         <div className="card-head">
-          <div className="card-title">Quick actions</div>
+          <div className="card-title">{t(lang, "home.quick")}</div>
         </div>
         <div className="card-body grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <Link href="/pos" className="btn-secondary justify-center">
             <ShoppingCart className="h-4 w-4" />
-            Counter / Billing
+            {t(lang, "nav.counter")}
           </Link>
           <Link href="/purchases/new" className="btn-secondary justify-center">
             <PackagePlus className="h-4 w-4" />
-            New purchase
+            {t(lang, "home.newPurchase")}
           </Link>
           <Link href="/alerts" className="btn-secondary justify-center">
             <CalendarClock className="h-4 w-4" />
-            Stock alerts
+            {t(lang, "nav.alerts")}
           </Link>
           <Link href="/reports" className="btn-secondary justify-center">
             <BarChart3 className="h-4 w-4" />
-            Reports
+            {t(lang, "nav.reports")}
           </Link>
           <Link href="/settings" className="btn-secondary justify-center">
             <SettingsIcon className="h-4 w-4" />
-            Settings
+            {t(lang, "nav.settings")}
           </Link>
         </div>
       </div>

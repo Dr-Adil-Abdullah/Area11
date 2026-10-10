@@ -6,6 +6,7 @@ import StaffCard from "./StaffCard";
 import CustomFieldsCard from "./CustomFieldsCard";
 import { Save } from "lucide-react";
 import { saveSettingsAction } from "./actions";
+import { LANGS } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -109,6 +110,16 @@ export default async function SettingsPage({
 
       <form action={saveSettingsAction} className="space-y-5">
         {/* ---------------- Store & branding ---------------- */}
+        <Section open title="Language / زبان" desc="Menus, labels and screens. / مینو، لیبلز اور اسکرینز۔">
+          <Field label="Display language" hint="English · اردو · Roman Urdu">
+            <select name="ui.language" defaultValue={s["ui.language"]} className="select">
+              {LANGS.map((l) => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
+          </Field>
+        </Section>
+
         <Section
           open
           title="Store &amp; Branding"

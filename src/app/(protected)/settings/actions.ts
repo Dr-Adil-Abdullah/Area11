@@ -22,6 +22,9 @@ function bool(fd: FormData, key: string): boolean {
 
 async function saveAll(fd: FormData) {
   const patch: Record<string, unknown> = {
+    // Language (English / Urdu / Roman Urdu)
+    "ui.language": str(fd, "ui.language", "en"),
+
     // Store & branding
     "store.name": str(fd, "store.name"),
     "store.address": str(fd, "store.address"),

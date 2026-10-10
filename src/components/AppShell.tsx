@@ -1,6 +1,7 @@
 "use client";
 
 import AlertBar, { type GlobalAlert } from "@/components/AlertBar";
+import { t, type Lang, type TKey } from "@/lib/i18n";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,45 +28,45 @@ const STAFF = ["owner", "manager"];
 const NAV_GROUPS: NavGroup[] = [
   {
     id: "sell",
-    label: "Sell",
+    label: "nav.sell",
     icon: ShoppingCart,
     items: [
-      { href: "/pos", label: "Counter / Billing", icon: ShoppingCart },
-      { href: "/sales", label: "Sales & Returns", icon: Receipt },
-      { href: "/customers", label: "Customers & Credit", icon: Users },
+      { href: "/pos", label: "nav.counter", icon: ShoppingCart },
+      { href: "/sales", label: "nav.sales", icon: Receipt },
+      { href: "/customers", label: "nav.customers", icon: Users },
     ],
   },
   {
     id: "stock",
-    label: "Stock & Suppliers",
+    label: "nav.stock",
     icon: Boxes,
     items: [
-      { href: "/products", label: "Products", icon: Pill, roles: STAFF },
-      { href: "/purchases", label: "Purchases (Stock-in)", icon: PackagePlus, roles: STAFF },
-      { href: "/stock", label: "Adjust / Write-off", icon: PackageMinus, roles: STAFF },
-      { href: "/stock-take", label: "Stock-take", icon: ClipboardCheck, roles: STAFF },
-      { href: "/alerts", label: "Expiry & stock alerts", icon: CalendarClock },
-      { href: "/suppliers", label: "Suppliers", icon: Truck, roles: STAFF },
+      { href: "/products", label: "nav.products", icon: Pill, roles: STAFF },
+      { href: "/purchases", label: "nav.purchases", icon: PackagePlus, roles: STAFF },
+      { href: "/stock", label: "nav.adjust", icon: PackageMinus, roles: STAFF },
+      { href: "/stock-take", label: "nav.stocktake", icon: ClipboardCheck, roles: STAFF },
+      { href: "/alerts", label: "nav.alerts", icon: CalendarClock },
+      { href: "/suppliers", label: "nav.suppliers", icon: Truck, roles: STAFF },
     ],
   },
   {
     id: "money",
-    label: "Cash & Reports",
+    label: "nav.money",
     icon: Wallet,
     items: [
-      { href: "/cash", label: "Cash & Day-end", icon: Wallet, roles: STAFF },
-      { href: "/reports", label: "Reports", icon: BarChart3 },
+      { href: "/cash", label: "nav.cash", icon: Wallet, roles: STAFF },
+      { href: "/reports", label: "nav.reports", icon: BarChart3 },
     ],
   },
   {
     id: "admin",
-    label: "Admin",
+    label: "nav.admin",
     icon: SettingsIcon,
     items: [
-      { href: "/import", label: "Excel import / update", icon: FileSpreadsheet, roles: STAFF },
-      { href: "/audit", label: "Black box & Backup", icon: ShieldCheck, roles: STAFF },
-      { href: "/sync", label: "Cloud sync", icon: CloudUpload, roles: STAFF },
-      { href: "/settings", label: "Settings", icon: SettingsIcon, roles: STAFF },
+      { href: "/import", label: "nav.import", icon: FileSpreadsheet, roles: STAFF },
+      { href: "/audit", label: "nav.audit", icon: ShieldCheck, roles: STAFF },
+      { href: "/sync", label: "nav.sync", icon: CloudUpload, roles: STAFF },
+      { href: "/settings", label: "nav.settings", icon: SettingsIcon, roles: STAFF },
     ],
   },
 ];
@@ -84,6 +85,7 @@ export default function AppShell({
   warnNegative = true,
   alerts = [],
   canDismiss = false,
+  lang = "en",
 }: {
   children: React.ReactNode;
   appName: string;
@@ -102,6 +104,8 @@ export default function AppShell({
   alerts?: GlobalAlert[];
   /** U-31: is this user the owner (only the owner can clear alerts) */
   canDismiss?: boolean;
+  /** UI language (Settings: English / Urdu / Roman Urdu) */
+  lang?: Lang;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -181,12 +185,12 @@ export default function AppShell({
           )}
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold text-slate-800">{appName}</div>
-            <div className="truncate text-[11px] text-slate-500">Pharmacy POS</div>
+            <div className="truncate text-[11px] text-slate-500">{t(lang, "app.pharmacyPos")}</div>
           </div>
           <button
             className="ml-auto rounded-lg p-1 text-slate-500 hover:bg-slate-100 lg:hidden"
             onClick={() => setOpen(false)}
-            aria-label="Close menu"
+            aria-label={t(lang, "app.closeMenu")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -208,7 +212,7 @@ export default function AppShell({
                   }`}
                 >
                   <GroupIcon className="h-4 w-4" />
-                  <span className="flex-1">{group.label}</span>
+                  <span className="flex-1">{t(lang, group.label as TKey)}</span>
                   <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
                 </button>
 
@@ -227,7 +231,7 @@ export default function AppShell({
                           }`}
                         >
                           <Icon className="h-4 w-4" />
-                          {item.label}
+                          {t(lang, item.label as TKey)}
                         </Link>
                       );
                     })}
@@ -248,16 +252,16 @@ export default function AppShell({
             <button
               onClick={() => void lock()}
               className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200"
-              title="Lock now"
-              aria-label="Lock now"
+              title={t(lang, "app.lockNow")}
+              aria-label={t(lang, "app.lockNow")}
             >
               <Lock className="h-4 w-4" />
             </button>
             <button
               onClick={() => void lock()}
               className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200"
-              title="Log out"
-              aria-label="Log out"
+              title={t(lang, "app.logout")}
+              aria-label={t(lang, "app.logout")}
             >
               <LogOut className="h-4 w-4" />
             </button>
@@ -278,11 +282,11 @@ export default function AppShell({
           <button
             className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
             onClick={() => setOpen(true)}
-            aria-label="Open menu"
+            aria-label={t(lang, "app.openMenu")}
           >
             <Menu className="h-5 w-5" />
           </button>
-          <Link href="/" className="min-w-0 hover:opacity-80" title="Go to Dashboard">
+          <Link href="/" className="min-w-0 hover:opacity-80" title={t(lang, "app.goDashboard")}>
             <div className="truncate text-sm font-semibold text-slate-800">{storeName}</div>
             <div className="text-[11px] text-slate-500">
               {new Date().toLocaleDateString("en-PK", {
@@ -295,7 +299,7 @@ export default function AppShell({
           </Link>
           <div className="ml-auto flex items-center gap-2">
             <span className="badge-slate hidden sm:inline-flex capitalize">{userRole}</span>
-            <span className="badge-green">Offline ready</span>
+            <span className="badge-green">{t(lang, "app.offlineReady")}</span>
           </div>
         </header>
 
@@ -306,13 +310,13 @@ export default function AppShell({
           <div className="flex flex-wrap items-center gap-2 border-b-2 border-rose-300 bg-rose-100 px-4 py-2 text-rose-900">
             <span className="text-base leading-none">⚠</span>
             <span className="text-sm font-bold">
-              Negative stock: {negativeStock!.items} medicine(s)
+              {t(lang, "neg.title", { n: negativeStock!.items })}
             </span>
             <span className="text-xs opacity-80">
-              (worst: {negativeStock!.worst}) · fix it with Stock-take or a purchase
+              {t(lang, "neg.detail", { worst: negativeStock!.worst })}
             </span>
             <Link href="/alerts" className="ml-1 text-xs font-semibold underline">
-              View now
+              {t(lang, "neg.viewNow")}
             </Link>
           </div>
         )}
@@ -321,7 +325,7 @@ export default function AppShell({
         <main className="flex-1 p-4 lg:p-6">{children}</main>
 
         <footer className="border-t border-slate-200 bg-white px-4 py-3 text-[11px] text-slate-500">
-          {appName} · Pharmacy &amp; Retail POS
+          {t(lang, "app.footer", { app: appName })}
         </footer>
       </div>
     </div>
