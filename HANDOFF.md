@@ -4,7 +4,7 @@
 
 > 🇵🇰 **مالک کے لیے مکمل اردو دستاویز: [`docs/APP-TAFSEEL.md`](./docs/APP-TAFSEEL.md)** — سب فیچرز، Settings کی ہر لائن، باقی کام، اور فائنل کرنے سے پہلے کے خطرے۔
 
-Last updated: **2026-10-07** · App version **0.6.2 (Phase 1-4 done + Phase 5 ~95% + Spec 1-4 + malik ke ahkaam U-30…U-36)** · Session branch **`arena/01a10395-area11`** → PR **[#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` · Newest tag: **`stage-43`** (see `git tag`; 43 checkpoints).
+Last updated: **2026-10-11** · App version **0.6.2 (Phase 1-4 done + Phase 5 ~95% + Spec 1-4 + malik ke ahkaam U-30…U-36)** · **PR [#3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3) MERGED 2026-10-08** aur **PR [#4](https://github.com/Dr-Adil-Abdullah/Area11/pull/4) MERGED 2026-10-08** → `main` = `e28445d` · Is session ki branch: **`arena/a7d731d5-area11`** · Newest checkpoint: **`stage-45`** (2026-10-08, docs) — kul **45** stage tags remote par maujood; aakhri **code** checkpoint `stage-43` · Aaj: **U-37 + U-38** zabte me darj (138 numbered points — `rules-count.sh` = `SAB THEEK`); U-38 ka code **baqi** hai (§4 → N).
 
 ---
 
@@ -21,7 +21,7 @@ Last updated: **2026-10-07** · App version **0.6.2 (Phase 1-4 done + Phase 5 ~9
 | **Language / currency** | UI **English**; money **PKR**, stored as **integer paisa** (`*_paisa`). Dates local time (Asia/Karachi). |
 | **Owner's language** | Urdu — talk to the owner in Urdu (Roman-Urdu/Urdu script both fine); code & UI in English. |
 
-## 1. Standing rules from the owner (numbered in `PHASE-TWO-INFORMATION.md`, 116 points — `bash scripts/rules-count.sh` must say `SAB THEEK`)
+## 1. Standing rules from the owner (numbered in `PHASE-TWO-INFORMATION.md`, **138 points** — `bash scripts/rules-count.sh` must say `SAB THEEK`)
 
 1. **Questions are already answered** (`INPUT-INFORMATION.md` Part 2, Q-01…Q-19). Do **not** re-ask them. If something truly new blocks you: ask via **multiple-choice in chat (with a "type your own" option) — never write questions into project files**; ask all of them together, up front.
 2. **Reuse existing code in any form; write as little new code as possible** (U-08/R-*). Check `legacy-demo-vite/`, npm libraries, and open-source repos before writing from scratch.
@@ -261,6 +261,12 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 
 ### P5 · Phase 5 (spec §1.2, §11.1, §13, §15)
 **Audit-log viewer** ("blackbox") ✅ **done stage-19** · **analytics/reports** ✅ **done stage-26** (`/reports`, spec §11.1) · stock-take ✅ **done stage-29** (`/stock-take`) · **Supabase cloud sync** ⏳ (owner's phone from home; local SQLite stays primary — `sync.*` settings reserved) · scheduled backups ⏳ · restore UI ✅ **done stage-19** (on `/audit`) · Windows/Android install polish ⏳ · real thermal ESC/POS + USB barcode scanner verification on hardware ⏳ (scanner currently works as keyboard input).
+
+### N · Malik ke naye ahkaam (11-Oct-2026) — **U-37 + U-38** (zabte me darj, code baqi)
+
+1. **U-37 — «old» folder policy (purana kaam kabhi na mite).** Jab bhi nayi technology / naya kaam shuru ho, purana code **delete nahi** — ek alag folder me (jaise `old/`, `old-data/`) rakh dein; naam + README + file comments se zahir ho ke **ye purana hai**, aur wo naye kaam ke raste me na aaye (build / test / import me shamil na ho, sirf reference). Misal: `legacy-demo-vite/`. Git history hamesha barqarar (B-06/B-10). *Aaj koi code kaam nahi — sirf qaida.*
+2. **U-38 — teen zabanen (⏳ code baqi).** Settings me 3 option: **khalis Urdu rasm-ul-khat** · **Roman Urdu** · **100% English**; **default English**; click karte hi poori app usi zaban me (screens, buttons, receipt, reports). **Ahem:** `ui.language` ki setting line **stage-42 me hata di gayi thi** (`src/lib/settings.ts` ke sar par comment maujood: "ye kahin istemal nahi ho rahi thi") — ab use **kaam karte hue** wapas lana hoga: setting + har screen par asar (i18n layer), warna stage-42 wali ghalti dohra denge (line banti, kaam na karti).
+3. **«Poori guidelines» ki consolidated files — malik ke hukm par RUKI hui.** Malik chahte hain ke saari guidelines (U/R/E/S/P/B/Z/T/M + A-01…A-49 + Q-01…Q-19 + spec + tareeqa-e-kaar) 1–3 files me mukammal tafseel se mehfooz hon. Unhon ne kaha: **pehle wo 2 files bhejenge jo ab tak nahi bheji gayin** — unhe parhne ke baad hi file likhi jaye. Saari mojooda docs ki tahqeeq ho chuki hai (spec 16 sections, 138 numbered points, HANDOFF, README, `docs/*`).
 
 ## 5. Gotchas (save yourself an hour)
 

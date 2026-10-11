@@ -9,7 +9,7 @@
 >
 > 📁 Real app = **repo root** (Next.js + SQLite). `legacy-demo-vite/` = older browser-only demo kept for reference/reuse.
 
-## Status (2026-10-07) — v0.6.2, latest checkpoint **stage-43**
+## Status (2026-10-11) — v0.6.2, latest checkpoint **stage-45** (docs) · aakhri code checkpoint **stage-43** · PR #3 + #4 `main` me merge ho chuke
 
 **Branch:** `arena/01a10395-area11` → **[PR #3](https://github.com/Dr-Adil-Abdullah/Area11/pull/3)** into `main` (it already contains the earlier session's work `arena/01a0f0cf-area11` / PR #2, fast-forwarded on 2026-10-03). Verified today: `npx tsc --noEmit` 0 errors · `npm run build` **69 routes** · `npm test` **55/55** · `rules-count.sh` = `SAB THEEK` (133) · live smoke of **Spec 1–4** (negative stock, audit old→new, return validation, POS alerts) OK · cashier blocked from owner/manager pages · legacy demo tests 212/212.
 
@@ -96,7 +96,7 @@
 
 | File | Kaam |
 |---|---|
-| **`PHASE-TWO-INFORMATION.md`** | ⭐ **Zabta + mansooba** — 116 numbered rules (U/R/E/S/P/B/Z/T/M/Q) |
+| **`PHASE-TWO-INFORMATION.md`** | ⭐ **Zabta + mansooba** — 138 numbered rules (U/R/E/S/P/B/Z/T/M/Q) |
 | **`INPUT-INFORMATION.md`** | Part 1: master spec **hoobahoo** • Part 2: A-01…A-49 (tay shuda) + Q-01…Q-19 (aap ke faisle) |
 | **`complete_numbered_master_specs (1).md`** | Asal master spec — **Single Source of Truth** |
 | **`HANDOFF.md`** | ⭐ Naye agent ke liye pehla safha: **kya ho chuka / kya baqi hai**, run, gotchas, hosting, rollback — har kaam ke baad update karein |
