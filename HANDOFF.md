@@ -54,6 +54,12 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 * `node:sqlite` prints an *ExperimentalWarning* — harmless.
 * The legacy demo is its own Vite project: `cd legacy-demo-vite && npm ci && npm run dev` (its own `package.json`, tests and `netlify.toml`).
 
+## 2a. Latest change — 2026-10-12 (purana code kamenṭ; nayi heading "Windows Software")
+
+- `docs/technology-comparison.html` (interactive comparison page — priority sliders + **score ranking**; copied here from `arena/0cbbd7cd-area11` @ `de86a88`): **the whole previous code is now commented out** — old `<title>`, all CSS, every page section and the entire `<script>` sit inside HTML comments (kept readable so it can be studied later, but never executed → it cannot throw errors). The 5 old `<!-- … -->` section markers were neutralised by reopening the outer comment right after each `-->`, so nothing leaks out live.
+- The page's only live content is the new heading **`<h1>Windows Software</h1>`** (`<title>` set to match). Verified with a comment-aware parser: rendered tags = `html/head/meta/meta/title/body/h1`, visible text = "Windows Software" only.
+- Owner will state the next working method after this — **do not build anything new yet.** (checkpoint `stage-47`)
+
 ## 3. What is DONE
 
 **Where things stand on 2026-10-03 (evening):** the app was re-verified in the morning (docs only). In the evening the whole of **Phase 1 was finished**, one work item per checkpoint:
