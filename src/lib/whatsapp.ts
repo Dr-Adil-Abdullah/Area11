@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - WhatsApp order text (free: wa.me link, koi API/key nahi — Q-11)
 // ---------------------------------------------------------------------------
@@ -14,12 +18,12 @@ export type OrderLine = {
   stockBase: number;
   reorderLevel: number;
   baseUnit: string;
-  /** kitna mangwana hai (default: reorder level se stock nikal kar) */
+  /** kitna mangwana hai (default: reorder level se stock nikal kar) *//*
   suggestQty: number;
   lastCostPaisa?: number;
 };
 
-/** Reorder list: jin ki miqdar reorder level se kam/barabar hai */
+/** Reorder list: jin ki miqdar reorder level se kam/barabar hai *//*
 export function reorderList(limit = 200): OrderLine[] {
   return query<{
     id: number; name: string; generic: string | null; company: string | null;
@@ -56,12 +60,12 @@ export type OrderOptions = {
   supplierName?: string;
   phone?: string;
   storeName?: string;
-  /** checked lines (agar diya gaya ho to sirf wahi) */
+  /** checked lines (agar diya gaya ho to sirf wahi) *//*
   lines?: OrderLine[];
   note?: string;
 };
 
-/** WhatsApp par bhejne layiq simple text */
+/** WhatsApp par bhejne layiq simple text *//*
 export function orderText(opts: OrderOptions = {}): string {
   const lines = opts.lines?.length ? opts.lines : reorderList();
   const store = (opts.storeName ?? storeNameSetting()) || "Area11";
@@ -85,7 +89,7 @@ export function orderText(opts: OrderOptions = {}): string {
   return body.join("\n");
 }
 
-/** wa.me link (bina + ya country code ke bhi chal jata hai) */
+/** wa.me link (bina + ya country code ke bhi chal jata hai) *//*
 export function waLink(phone: string | null | undefined, text: string): string {
   const digits = (phone ?? "").replace(/[^\d]/g, "");
   const num = digits.startsWith("92") ? digits : digits.startsWith("0") ? "92" + digits.slice(1) : digits;
@@ -93,7 +97,7 @@ export function waLink(phone: string | null | undefined, text: string): string {
   return `${base}?text=${encodeURIComponent(text)}`;
 }
 
-/** Din ki summary bhi WhatsApp se bhej sakte hain (Q-11) */
+/** Din ki summary bhi WhatsApp se bhej sakte hain (Q-11) *//*
 export function daySummaryText(date = "today"): string {
   const when = date === "today" ? "date('now','localtime')" : "date(?)";
   const params = date === "today" ? [] : [date];
@@ -128,3 +132,5 @@ export function daySummaryText(date = "today"): string {
 function storeNameSetting(): string {
   return get<{ value: string }>("SELECT value FROM settings WHERE key = 'store.name'")?.value?.replace(/^"|"$/g, "") ?? "";
 }
+
+*/

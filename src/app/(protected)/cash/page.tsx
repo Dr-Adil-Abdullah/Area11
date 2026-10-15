@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { daySummary, recentDrawings, recentExpenses } from "@/lib/cash";
 import { currentShift, listShifts, shiftFlow, shiftVarianceToday } from "@/lib/shifts";
 import { requireShopManagerPage } from "@/lib/page-guard";
@@ -21,3 +25,5 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
     />
   );
 }
+
+*/

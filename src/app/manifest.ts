@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -12,3 +16,5 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [],
   };
 }
+
+*/

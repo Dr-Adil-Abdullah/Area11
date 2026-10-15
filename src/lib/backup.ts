@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Backup: ab photos ke SATH (ek hi .zip file me sab kuch)
 // ---------------------------------------------------------------------------
@@ -39,7 +43,7 @@ export function dbBytes(): Buffer {
   }
 }
 
-/** data/photos/ ki sari files */
+/** data/photos/ ki sari files *//*
 export function photoFiles(): { name: string; data: Buffer }[] {
   if (!fs.existsSync(PHOTO_DIR)) return [];
   return fs
@@ -48,7 +52,7 @@ export function photoFiles(): { name: string; data: Buffer }[] {
     .map((f) => ({ name: f, data: fs.readFileSync(path.join(PHOTO_DIR, f)) }));
 }
 
-/** Poora backup: ek .zip jis me database + sari photos */
+/** Poora backup: ek .zip jis me database + sari photos *//*
 export function makeBackupZip(): { zip: Buffer; dbSize: number; photoCount: number } {
   const database = dbBytes();
   const photos = photoFiles();
@@ -96,7 +100,7 @@ export function listBackups(): BackupFile[] {
     .sort((a, b) => (a.at < b.at ? 1 : -1));
 }
 
-/** Purane backups kaat do (jagah bachane ke liye) */
+/** Purane backups kaat do (jagah bachane ke liye) *//*
 function pruneBackups(keep: number): string[] {
   const all = listBackups();
   const removed: string[] = [];
@@ -115,7 +119,7 @@ export type AutoBackupResult =
  * Waqt aa gaya to backup banao, warna chhoR do.
  * Har jagah se call ho sakti hai (safha khulte hi) — ye khud sochta hai ke
  * aaj ka backup ho chuka hai ya nahi.
- */
+ *//*
 export function autoBackupIfDue(opts: { enabled?: boolean; everyHours?: number; keep?: number } = {}): AutoBackupResult {
   const { enabled = false, everyHours = 24, keep = 7 } = opts;
   const last = listBackups()[0] ?? null;
@@ -138,7 +142,7 @@ export function autoBackupIfDue(opts: { enabled?: boolean; everyHours?: number; 
   return { ran: true, file, bytes: zip.length, dbSize, photoCount, removed };
 }
 
-/** Photos wapas data/photos/ me daalo (restore ke waqt) */
+/** Photos wapas data/photos/ me daalo (restore ke waqt) *//*
 export function restorePhotos(entries: { name: string; data: Buffer }[]): number {
   fs.mkdirSync(PHOTO_DIR, { recursive: true });
   let n = 0;
@@ -151,3 +155,5 @@ export function restorePhotos(entries: { name: string; data: Buffer }[]): number
   }
   return n;
 }
+
+*/

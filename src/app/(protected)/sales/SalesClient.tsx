@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 import { Fragment, useState } from "react";
 import Link from "next/link";
@@ -10,7 +14,7 @@ type Sale = { id: number; code: string; date: string; customer_name: string | nu
 type Item = { id: number; name: string; qty_base: number; returned_qty: number };
 
 type Prov = { pending: number; returns: Parameters<typeof ProvisionalCard>[0]["initial"]["returns"] };
-/** U-35: har bill ki wapsi ki raseed (code + raqam) */
+/** U-35: har bill ki wapsi ki raseed (code + raqam) *//*
 type ReturnSlip = { code: string; date: string; refundPaisa: number; items: number };
 
 export default function SalesClient({ sales, from, to, q, filters, provisional, returnReceipts = {} }: {
@@ -20,7 +24,7 @@ export default function SalesClient({ sales, from, to, q, filters, provisional, 
   q: string;
   filters: { method: string; status: string; margin: string; min: string; sort: string; all: boolean };
   provisional: Prov;
-  /** bill id → us ki wapsiyon ki raseedein */
+  /** bill id → us ki wapsiyon ki raseedein *//*
   returnReceipts?: Record<string | number, ReturnSlip[]>;
 }) {
   const router = useRouter();
@@ -144,7 +148,7 @@ export default function SalesClient({ sales, from, to, q, filters, provisional, 
                   <tr><td colSpan={8} className="bg-slate-50">
                     <div className="space-y-2 p-3">
                       <div className="text-sm font-medium">Return items from {s.code} (quantity in smallest units)</div>
-                      {/* U-35: is bill ki pichli wapsiyon ki raseedein (pakka number RET-… ke sath) */}
+                      {/* U-35: is bill ki pichli wapsiyon ki raseedein (pakka number RET-… ke sath) *//*}
                       {(returnReceipts[s.id] ?? returnReceipts[String(s.id)] ?? []).length > 0 && (
                         <div className="rounded border border-slate-200 bg-slate-50 p-2">
                           <div className="text-xs font-semibold text-slate-600">واپسی کی رسیدیں (return receipts)</div>
@@ -202,3 +206,5 @@ export default function SalesClient({ sales, from, to, q, filters, provisional, 
     </div>
   );
 }
+
+*/

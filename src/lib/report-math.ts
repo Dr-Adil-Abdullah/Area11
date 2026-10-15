@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Reports ka saaf (pure) hisaab -- bina database ke
 // ---------------------------------------------------------------------------
@@ -14,12 +18,12 @@
  * Wapsi ki LAAGAT sirf tab wapas milti hai jab maal waqai stock me aya ho
  * (restock = 1). Agar maal quarantine me hai ya kharaab ho gaya to laagat
  * wapas NAHI aati (nuqsan mana jata hai).
- */
+ *//*
 export function netProfitPaisa(i: {
   salesPaisa: number;
   refundPaisa: number;
   costPaisa: number;
-  /** wapas aaye (restock = 1) maal ki laagat */
+  /** wapas aaye (restock = 1) maal ki laagat *//*
   returnedCostPaisa: number;
 }): number {
   return i.salesPaisa - i.refundPaisa - (i.costPaisa - i.returnedCostPaisa);
@@ -28,13 +32,15 @@ export function netProfitPaisa(i: {
 /**
  * Margin (faisad / percent): net bikri par munafa ka hissa.
  * Net bikri zero ya manfi ho to 0 (taake hisab na bigray).
- */
+ *//*
 export function marginPercent(salesMinusRefundPaisa: number, profitPaisa: number): number {
   if (salesMinusRefundPaisa <= 0) return 0;
   return Math.round((profitPaisa / salesMinusRefundPaisa) * 1000) / 10;
 }
 
-/** Kitne number (units) waqai bike (wapsi ghat kar) */
+/** Kitne number (units) waqai bike (wapsi ghat kar) *//*
 export function netUnitsSold(soldBase: number, returnedBase: number): number {
   return Math.round((soldBase - returnedBase) * 1000) / 1000;
 }
+
+*/

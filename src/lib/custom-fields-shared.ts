@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - custom fields ki client-safe cheezein (DB import nahi karti)
 // ---------------------------------------------------------------------------
@@ -24,7 +28,7 @@ export const ENTITIES: { value: CustomEntity; label: string }[] = [
   { value: "supplier", label: "Suppliers" },
 ];
 
-/** "A, B, C" ya ["A","B"] -> ["A","B"] */
+/** "A, B, C" ya ["A","B"] -> ["A","B"] *//*
 export function parseOptions(raw: string | string[] | null | undefined): string[] {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw.map((x) => String(x).trim()).filter(Boolean);
@@ -32,7 +36,9 @@ export function parseOptions(raw: string | string[] | null | undefined): string[
     const v = JSON.parse(raw);
     if (Array.isArray(v)) return v.map((x) => String(x).trim()).filter(Boolean);
   } catch {
-    /* comma list */
+    /* comma list *//*
   }
   return raw.split(",").map((x) => x.trim()).filter(Boolean);
 }
+
+*/

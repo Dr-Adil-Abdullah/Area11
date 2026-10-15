@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { run } from "@/lib/db";
 import { setCustomValues, validateCustomValues } from "@/lib/custom-fields";
 import { savePhoto } from "@/lib/photos";
@@ -56,3 +60,5 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     );
   }
 }
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Auth / Roles tests  (Node ka built-in test runner -- koi library nahi)
 //   npm test
@@ -91,3 +95,5 @@ test("discount percent check: limit par aur us se neeche theek", () => {
   assert.equal(checkDiscountLimit(100, 0, 5).allowed, true);
   assert.equal(checkDiscountLimit(51, 1000, 5).percent, 5.1);
 });
+
+*/

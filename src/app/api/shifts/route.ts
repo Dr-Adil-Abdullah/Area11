@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Galla / shift API: khula hua dekho, kholo, band karo (owner + manager)
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
@@ -60,3 +64,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "failed" }, { status: 400 });
   }
 }
+
+*/

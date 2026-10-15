@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Catalog: products, categories, suppliers, companies
 // ---------------------------------------------------------------------------
@@ -65,7 +69,7 @@ export type ProductFilter = {
   categoryId?: number | null;
   companyId?: number | null;
   room?: string | null;              // kis kamre / rack me hai
-  /** "low" = reorder level se kam  · "out" = bilkul khatam  · "expiring" = jaldi expire */
+  /** "low" = reorder level se kam  · "out" = bilkul khatam  · "expiring" = jaldi expire *//*
   stock?: "all" | "low" | "out" | "expiring";
   sort?: "name" | "stock" | "expiry" | "margin" | "sold" | "newest";
   limit?: number;
@@ -155,7 +159,7 @@ export function listProducts(opts: ProductFilter = {}): { rows: Product[]; total
   return { rows, total };
 }
 
-/** Products ke kamre (filters me chunne ke liye) */
+/** Products ke kamre (filters me chunne ke liye) *//*
 export function listRooms(): string[] {
   return query<{ room: string }>(
     "SELECT DISTINCT room FROM products WHERE room IS NOT NULL AND TRIM(room) <> '' AND active = 1 ORDER BY room"
@@ -401,7 +405,7 @@ export function createCategory(name: string, parentId?: number | null): number {
   return res.lastInsertRowid;
 }
 
-/** Darakht (tree): har category ke sath us ki gehrai (depth) aur poora raasta */
+/** Darakht (tree): har category ke sath us ki gehrai (depth) aur poora raasta *//*
 export function listCategoriesTree(): (Category & { depth: number; path: string })[] {
   const rows = query<Category & { depth: number; path: string }>(
     `WITH RECURSIVE tree(id, name, parent_id, sort_order, active, product_count, depth, path) AS (
@@ -421,7 +425,7 @@ export function listCategoriesTree(): (Category & { depth: number; path: string 
   return rows;
 }
 
-/** Ek category aur us ki SAARI bachon (children) ki ids */
+/** Ek category aur us ki SAARI bachon (children) ki ids *//*
 export function categoryWithChildren(id: number): number[] {
   const rows = query<{ id: number }>(
     `WITH RECURSIVE sub(id) AS (
@@ -533,3 +537,5 @@ export function productStock(productId: number): number {
 }
 
 export { toBaseUnits };
+
+*/

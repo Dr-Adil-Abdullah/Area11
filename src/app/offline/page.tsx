@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 — jab shop PC ka server bilkul na mile (internet/LAN dono band)
 export const dynamic = "force-static";
 
@@ -23,3 +27,5 @@ export default function OfflinePage() {
     </main>
   );
 }
+
+*/

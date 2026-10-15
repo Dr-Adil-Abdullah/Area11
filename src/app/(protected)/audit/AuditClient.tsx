@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Blackbox: "kis ne, kab, kya kiya" -- owner/manager dekh sakte hain
@@ -29,7 +33,7 @@ const ACTION_TONE: Record<string, string> = {
   denied: "bg-rose-100 text-rose-700",
 };
 
-/** Spec 2: "purana → naya" saaf saaf dikhayein */
+/** Spec 2: "purana → naya" saaf saaf dikhayein *//*
 function diffText(row: Row): { field: string; from: string; to: string }[] {
   const short = (v: unknown) => {
     if (v == null) return "—";
@@ -43,7 +47,7 @@ function diffText(row: Row): { field: string; from: string; to: string }[] {
       return Object.keys(n).map((k) => ({ field: k, from: short(o[k]), to: short(n[k]) }));
     }
   } catch {
-    /* purana format (seedhi string) -- neeche handle hoga */
+    /* purana format (seedhi string) -- neeche handle hoga *//*
   }
   if (row.old_value || row.new_value) {
     return [{ field: "", from: short(row.old_value), to: short(row.new_value) }];
@@ -106,12 +110,12 @@ export default function AuditClient({
     setLoading(false);
   }
 
-  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [action, entity, from, to]);
+  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps *//* }, [action, entity, from, to]);
   useEffect(() => {
     if (isOwner) void loadBackups();
     // safha khulte hi jo khud-b-khud backup bana ho, us ki khabar dein
     if (autoBackup?.ran && autoBackup.file) setMsg(`Khud-b-khud backup ban gaya: ${autoBackup.file}`);
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    /* eslint-disable-next-line react-hooks/exhaustive-deps *//*
   }, [isOwner]);
 
   async function downloadBackup(what: "zip" | "db" = "zip") {
@@ -333,3 +337,5 @@ export default function AuditClient({
     </div>
   );
 }
+
+*/

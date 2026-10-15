@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { getSettings } from "@/lib/settings";
 import { requireShopManagerPage } from "@/lib/page-guard";
 import { currentUser } from "@/lib/session";
@@ -18,7 +22,7 @@ function Section({
   title: string;
   desc?: string;
   children: React.ReactNode;
-  /** true = shuru me khula hua */
+  /** true = shuru me khula hua *//*
   open?: boolean;
 }) {
   // <details> = click karne par andar ki tafseel khulti/band hoti hai (JS ki zaroorat nahi)
@@ -108,7 +112,7 @@ export default async function SettingsPage({
       )}
 
       <form action={saveSettingsAction} className="space-y-5">
-        {/* ---------------- Store & branding ---------------- */}
+        {/* ---------------- Store & branding ---------------- *//*}
         <Section
           open
           title="Store &amp; Branding"
@@ -146,7 +150,7 @@ export default async function SettingsPage({
           </Field>
         </Section>
 
-        {/* ---------------- Billing ---------------- */}
+        {/* ---------------- Billing ---------------- *//*}
         <Section open title="Bills &amp; Numbering" desc="Invoice numbers and round-off rules.">
           <Field label="Purchase bill prefix">
             <input name="bill.purchasePrefix" defaultValue={s["bill.purchasePrefix"]} className="input" />
@@ -191,7 +195,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Stock: NEGATIVE inventory (Spec 1) ---------------- */}
+        {/* ---------------- Stock: NEGATIVE inventory (Spec 1) ---------------- *//*}
         <Section
           title="Stock & Negative Inventory"
           desc="Spec 1: bikri rukni nahi chahiye — magar manfi stock par ooper bara surkh alert lazmi hai."
@@ -215,7 +219,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Returns (Spec 3) ---------------- */}
+        {/* ---------------- Returns (Spec 3) ---------------- *//*}
         <Section
           title="Returns (Wapsi) — sakht jaanch"
           desc="Spec 3: asal bill ke baghair wapsi nahi, aur hadd se zyada wapsi mumkin hi nahi."
@@ -236,7 +240,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Tax ---------------- */}
+        {/* ---------------- Tax ---------------- *//*}
         <Section title="Tax" desc="You chose tax OFF by default — switch it on any time.">
           <Check name="tax.enabled" label="Apply sales tax on bills" defaultChecked={s["tax.enabled"]} />
           <div className="grid gap-4 md:grid-cols-2">
@@ -249,7 +253,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Discount ---------------- */}
+        {/* ---------------- Discount ---------------- *//*}
         <Section
           title="Discount"
           desc="You can switch the method later; both are already built."
@@ -278,7 +282,7 @@ export default async function SettingsPage({
           </Field>
         </Section>
 
-        {/* ---------------- Expiry ---------------- */}
+        {/* ---------------- Expiry ---------------- *//*}
         <Section
           title="Expiry Alerts"
           desc="Three levels with your own days and colours — change them whenever you like."
@@ -317,7 +321,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Loyalty ---------------- */}
+        {/* ---------------- Loyalty ---------------- *//*}
         <Section
           title="Loyalty (Stars)"
           desc="You asked to keep this off for now — the structure is ready and can be switched on later."
@@ -333,7 +337,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Cloud sync (Supabase) ---------------- */}
+        {/* ---------------- Cloud sync (Supabase) ---------------- *//*}
         <Section
           title="Cloud sync (Supabase)"
           desc="Dukan ka data Supabase par bhej kar ghar se dekh sakte hain. Local database hamesha asal rahega — sync sirf aina (mirror) hai."
@@ -357,7 +361,7 @@ export default async function SettingsPage({
           </p>
         </Section>
 
-        {/* ---------------- Backup ---------------- */}
+        {/* ---------------- Backup ---------------- *//*}
         <Section
           title="Backup (mehfooz copy)"
           desc="Ek hi file me poora database AUR sari photos. Rozana khud-b-khud bhi ban sakta hai."
@@ -381,7 +385,7 @@ export default async function SettingsPage({
           </p>
         </Section>
 
-        {/* ---------------- Udhaar (credit) ---------------- */}
+        {/* ---------------- Udhaar (credit) ---------------- *//*}
         <Section
           title="Udhaar (Credit) ki hadd"
           desc="Har customer ki apni limit hoti hai (customer page par set karein). Yahan tay karein ke hadd poori hone par kya ho."
@@ -402,7 +406,7 @@ export default async function SettingsPage({
           </p>
         </Section>
 
-        {/* ---------------- Printer ---------------- */}
+        {/* ---------------- Printer ---------------- *//*}
         <Section
           title="Printer &amp; Receipt"
           desc="You were unsure of the printer model — both sizes are supported, pick one later."
@@ -430,7 +434,7 @@ export default async function SettingsPage({
           <Check name="receipt.showCostColumns" label="Show cost/profit columns (owner copy only)" defaultChecked={s["receipt.showCostColumns"]} />
         </Section>
 
-        {/* ---------------- Payments ---------------- */}
+        {/* ---------------- Payments ---------------- *//*}
         <Section title="Payment Methods" desc="You chose cash + credit for now; others can be switched on later.">
           <Check name="pay.cash" label="Cash" defaultChecked={methods.includes("cash")} />
           <Check name="pay.credit" label="Credit / Udhaar (customer account)" defaultChecked={methods.includes("credit")} />
@@ -446,7 +450,7 @@ export default async function SettingsPage({
           </Field>
         </Section>
 
-        {/* ---------------- Security ---------------- */}
+        {/* ---------------- Security ---------------- *//*}
         <Section title="Security" desc="You chose: PIN for staff, password for the owner.">
           <Field label="PIN length (digits)">
             <input type="number" name="security.pinLength" defaultValue={s["security.pinLength"]} className="input" min={4} max={8} />
@@ -468,7 +472,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* ---------------- Cloud sync ---------------- */}
+        {/* ---------------- Cloud sync ---------------- *//*}
         <CustomFieldsCard />
 
         <Section
@@ -486,7 +490,7 @@ export default async function SettingsPage({
           </div>
         </Section>
 
-        {/* Save bar */}
+        {/* Save bar *//*}
         <div className="sticky bottom-4 z-10 flex items-center justify-between gap-3 rounded-xl bg-white p-3 shadow-lg ring-1 ring-slate-200">
           <div className="text-xs text-slate-500">
             Changes apply to the app and receipts immediately (no code edits).
@@ -509,3 +513,5 @@ export default async function SettingsPage({
     </div>
   );
 }
+
+*/

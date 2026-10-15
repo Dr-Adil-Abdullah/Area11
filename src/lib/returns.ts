@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Sale returns & void (Phase 2)
 // Rules (user ke tasdeeq shuda usool, legacy demo se):
@@ -14,7 +18,7 @@ import { takeNextCode } from "./numbering";
 
 type U = { id?: number; name?: string; role?: string } | null | undefined;
 
-/** Sirf owner/manager maal stock me wapas daal sakta hai (cashier sirf QUARANTINE) */
+/** Sirf owner/manager maal stock me wapas daal sakta hai (cashier sirf QUARANTINE) *//*
 function canRestock(user?: U): boolean {
   if (!user?.role) return true; // internal calls (tests/scripts)
   return user.role === "owner" || user.role === "manager";
@@ -45,7 +49,7 @@ export type ReturnCheck = {
   ok: boolean;
   errors: string[];
   warnings: string[];
-  /** har line ke liye: kitna wapas ho sakta hai */
+  /** har line ke liye: kitna wapas ho sakta hai *//*
   lines: { saleItemId: number; name: string; sold: number; returned: number; canReturn: number }[];
   maxRefundPaisa: number;
 };
@@ -53,7 +57,7 @@ export type ReturnCheck = {
 /**
  * Bill number (code) ya id se asal sale dhoondho + wapsi se pehle jaanch.
  * UI isi ko "Check" button se bhi bula sakta hai.
- */
+ *//*
 export function validateReturn(
   saleId: number,
   lines: { saleItemId: number; qtyBase: number }[],
@@ -244,7 +248,7 @@ export function returnSaleItems(
   });
 }
 
-/** Poora bill cancel (sirf jis par koi return nahi hua) */
+/** Poora bill cancel (sirf jis par koi return nahi hua) *//*
 export function voidSale(saleId: number, reason: string | null, user?: U) {
   const data = saleWithReturns(saleId);
   if (!data) throw new Error("Sale not found");
@@ -284,9 +288,9 @@ export type QuarantineRow = {
   batch_id: number | null; batch_no: string | null; base_unit: string;
   qty_base: number; refund_paisa: number; reason: string | null;
   sale_code: string | null; customer_name: string | null; user_name: string | null;
-  /** U-34: har item ka MUSTAQIL quarantine number (Q-0001 …) */
+  /** U-34: har item ka MUSTAQIL quarantine number (Q-0001 …) *//*
   qcode: string | null;
-  /** kahan gaya: quarantine | restocked | expired | sold */
+  /** kahan gaya: quarantine | restocked | expired | sold *//*
   disposition: string;
   disposed_at: string | null;
   disposed_note: string | null;
@@ -311,7 +315,7 @@ export function quarantineRows(): QuarantineRow[] {
   );
 }
 
-/** Janch ke baad maal wapas shelf (stock) me -- sirf owner/manager */
+/** Janch ke baad maal wapas shelf (stock) me -- sirf owner/manager *//*
 export function releaseFromQuarantine(
   returnId: number,
   user?: U
@@ -389,12 +393,12 @@ export type ReturnReceipt = {
     batchNo: string | null;
     refundPaisa: number;
     restock: number;
-    /** U-34: quarantine ka mustaqil number (Q-0001) — agar maal quarantine me gaya */
+    /** U-34: quarantine ka mustaqil number (Q-0001) — agar maal quarantine me gaya *//*
     qcode: string | null;
   }[];
 };
 
-/** RET-0001 (ya jo bhi code ho) ki poori raseed */
+/** RET-0001 (ya jo bhi code ho) ki poori raseed *//*
 export function getReturnReceipt(code: string): ReturnReceipt | null {
   const rows = query<{
     id: number; date: string; code: string | null; reason: string | null;
@@ -441,7 +445,7 @@ export function getReturnReceipt(code: string): ReturnReceipt | null {
   };
 }
 
-/** Is bill par abhi tak kitni wapsiyan hui hain (raseed ke link ke liye) */
+/** Is bill par abhi tak kitni wapsiyan hui hain (raseed ke link ke liye) *//*
 export function returnsForSale(saleId: number): { code: string; date: string; refundPaisa: number; items: number }[] {
   return query<{ code: string; date: string; refundPaisa: number; items: number }>(
     `SELECT r.code AS code, MIN(r.date) AS date,
@@ -493,7 +497,7 @@ function quarantineRowOf(id: number) {
  * Quarantine ke saman ka faisla: stock me wapas / expiry-kharaab / bech diya.
  * Q number (Q-0001) hamesha wahi rehta hai -- sirf 'disposition' badalta hai,
  * taake history me poora safar nazar aaye.
- */
+ *//*
 export function decideQuarantine(
   id: number,
   disposition: QuarantineDisposition,
@@ -572,7 +576,7 @@ export function decideQuarantine(
   });
 }
 
-/** U-34: POORI history -- har Q number kahan gaya (quarantine / stock / expiry / sold) */
+/** U-34: POORI history -- har Q number kahan gaya (quarantine / stock / expiry / sold) *//*
 export function quarantineHistory(limit = 300): QuarantineRow[] {
   return query<QuarantineRow>(
     `SELECT r.id, r.date, r.product_id, p.name, r.batch_id, b.batch_no, p.base_unit,
@@ -591,3 +595,5 @@ export function quarantineHistory(limit = 300): QuarantineRow[] {
     [Math.min(limit, 1000)]
   );
 }
+
+*/

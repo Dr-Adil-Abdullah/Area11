@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // ---------------------------------------------------------------------------
@@ -28,7 +32,7 @@ const STYLE: Record<ToastKind, { box: string; icon: React.ReactNode }> = {
   error: { box: "border-rose-200 bg-rose-50 text-rose-800", icon: <AlertTriangle className="h-4 w-4" /> },
 };
 
-/** Har component me ye hook lagayein: const { toasts, push, dismiss } = useToasts(); */
+/** Har component me ye hook lagayein: const { toasts, push, dismiss } = useToasts(); *//*
 export function useToasts(autoHideMs = 4500) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const dismiss = useCallback((id: number) => {
@@ -81,7 +85,7 @@ export function ToastStack({
 /**
  * Spec 1.2: stock MINUS me jane wala bara surkh alert -- screen ke BILKUL ooper.
  * Jab tak masla rahe, ye patti rahegi (koi "close" nahi, masla hi door karein).
- */
+ *//*
 export function AlertBanner({
   title,
   children,
@@ -107,3 +111,5 @@ export function AlertBanner({
     </div>
   );
 }
+
+*/

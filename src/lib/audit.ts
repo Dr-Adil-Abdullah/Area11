@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Audit log / Blackbox (Spec 13 + Spec 2: har kaam ka pakka record)
 // ---------------------------------------------------------------------------
@@ -31,7 +35,7 @@ export type AuditAction =
   | "restore_alert"   // malik ne khatam ki hui alert wapas layi
   | "denied";         // ijazat nahi mili (security event)
 
-/** Kaun se module se kaam hua (Spec 2: "every module of the software") */
+/** Kaun se module se kaam hua (Spec 2: "every module of the software") *//*
 export type AuditModule =
   | "POS"
   | "Sales"
@@ -59,11 +63,11 @@ export type AuditEntry = {
   details?: unknown;
   ip?: string;
   module?: AuditModule;
-  /** Poora purana record (ya sirf woh fields jo dekhni hain) */
+  /** Poora purana record (ya sirf woh fields jo dekhni hain) *//*
   before?: Record<string, unknown> | null;
-  /** Poora naya record -- farq (diff) khud nikal liya jayega */
+  /** Poora naya record -- farq (diff) khud nikal liya jayega *//*
   after?: Record<string, unknown> | null;
-  /** Chahein to purani value seedhi dein (before/after ke bajaye) */
+  /** Chahein to purani value seedhi dein (before/after ke bajaye) *//*
   oldValue?: unknown;
   newValue?: unknown;
 };
@@ -111,12 +115,12 @@ export function audit(params: AuditEntry): void {
   }
 }
 
-/** async jagahon ke liye (await auditq(...)) -- kaam wahi hai */
+/** async jagahon ke liye (await auditq(...)) -- kaam wahi hai *//*
 export async function auditq(params: AuditEntry): Promise<void> {
   audit(params);
 }
 
-/** Request se IP nikalne ka chhota helper (Spec 2: accountability) */
+/** Request se IP nikalne ka chhota helper (Spec 2: accountability) *//*
 export function ipFrom(req: Request): string {
   try {
     const h = req.headers;
@@ -132,7 +136,7 @@ export function ipFrom(req: Request): string {
  * Aam "record badla" wala log -- purana aur naya record do, baqi sab khud.
  *   await auditUpdate({ module:"Inventory", entity:"Product", entityId:id,
  *                       before: puranaRecord, after: nayaRecord, user });
- */
+ *//*
 export function auditUpdate(params: {
   module: AuditModule;
   entity: string;
@@ -157,3 +161,5 @@ export function auditUpdate(params: {
     ip: params.ip,
   });
 }
+
+*/

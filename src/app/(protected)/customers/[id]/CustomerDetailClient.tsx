@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - gahak ki poori tafseel: profile + photo + apni fields + khata + bills
@@ -12,7 +16,7 @@ import type { getCustomerDetail } from "@/lib/details";
 
 type Detail = NonNullable<ReturnType<typeof getCustomerDetail>>;
 
-/** Photo chhoti kar ke data-URL banao (DB me mehfooz, offline bhi chalti hai) */
+/** Photo chhoti kar ke data-URL banao (DB me mehfooz, offline bhi chalti hai) *//*
 async function shrink(file: File, max = 512): Promise<string> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
@@ -62,7 +66,7 @@ export default function CustomerDetailClient({
     } finally { setBusy(false); }
   }
 
-  /** Camera ya kahin se bhi mili tasveer (pehle se chhoti) */
+  /** Camera ya kahin se bhi mili tasveer (pehle se chhoti) *//*
   async function savePhoto(dataUrl: string) {
     setBusy(true); setMsg("");
     try {
@@ -118,7 +122,7 @@ export default function CustomerDetailClient({
       {msg && <div className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{msg}</div>}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Profile */}
+        {/* Profile *//*}
         <div className="card card-body space-y-3">
           <div className="flex items-center gap-3">
             <label className="relative block h-20 w-20 cursor-pointer overflow-hidden rounded-full bg-slate-100">
@@ -204,7 +208,7 @@ export default function CustomerDetailClient({
           )}
         </div>
 
-        {/* Khata */}
+        {/* Khata *//*}
         <div className="card card-body space-y-2">
           <div className="card-title">Khata (account)</div>
           <div className="flex justify-between text-sm"><span className="text-slate-500">Baqaya (owes us)</span><span className={`font-semibold ${c.balance_paisa > 0 ? "text-rose-600" : "text-emerald-700"}`}>{formatPKR(c.balance_paisa)}</span></div>
@@ -226,7 +230,7 @@ export default function CustomerDetailClient({
           </div>
         </div>
 
-        {/* Provisional */}
+        {/* Provisional *//*}
         <div className="card card-body space-y-2">
           <div className="card-title">Rush returns (bill ke baghair)</div>
           {detail.provisional.length === 0 && <p className="text-sm text-slate-500">Koi nahi.</p>}
@@ -240,7 +244,7 @@ export default function CustomerDetailClient({
         </div>
       </div>
 
-      {/* Bills / payments / returns */}
+      {/* Bills / payments / returns *//*}
       <div className="card">
         <div className="card-head">
           <div className="flex gap-2">
@@ -311,3 +315,5 @@ export default function CustomerDetailClient({
     </div>
   );
 }
+
+*/

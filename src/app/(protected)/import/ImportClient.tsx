@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Excel import screen (owner + manager)
@@ -68,7 +72,7 @@ export default function ImportClient() {
         </p>
       </div>
 
-      {/* Step 1: template */}
+      {/* Step 1: template *//*}
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="font-semibold">Step 1 — Namoona file (template) lein</h2>
         <p className="mt-1 text-sm text-gray-600">
@@ -82,7 +86,7 @@ export default function ImportClient() {
         </a>
       </section>
 
-      {/* Step 2: upload + preview */}
+      {/* Step 2: upload + preview *//*}
       <section className="rounded-lg border border-gray-200 bg-white p-4">
         <h2 className="font-semibold">Step 2 — Bhari hui file upload karein (Preview)</h2>
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -107,7 +111,7 @@ export default function ImportClient() {
         )}
       </section>
 
-      {/* Preview result */}
+      {/* Preview result *//*}
       {preview && (
         <section className="rounded-lg border border-gray-200 bg-white p-4">
           <h2 className="flex items-center gap-2 font-semibold">
@@ -219,7 +223,7 @@ export default function ImportClient() {
         </section>
       )}
 
-      {/* Done */}
+      {/* Done *//*}
       {result && (
         <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
           <h2 className="flex items-center gap-2 font-semibold text-emerald-900">
@@ -248,3 +252,5 @@ export default function ImportClient() {
     </section>
   );
 }
+
+*/

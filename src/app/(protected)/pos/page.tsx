@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { getSettings } from "@/lib/settings";
 import { peekNextCode } from "@/lib/numbering";
 import { listCustomers } from "@/lib/customers";
@@ -36,3 +40,5 @@ export default async function PosPage() {
     />
   );
 }
+
+*/

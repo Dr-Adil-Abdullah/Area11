@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { get, run } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { guard } from "@/lib/api";
@@ -120,3 +124,5 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "failed" }, { status: 400 });
   }
 }
+
+*/

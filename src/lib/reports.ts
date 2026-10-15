@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Reports (Phase 5, spec §11.1): roz / mahaney ka hisab
 // ---------------------------------------------------------------------------
@@ -19,9 +23,9 @@ export type ReportTotals = {
   salesPaisa: number;
   discountPaisa: number;
   costPaisa: number;
-  /** wapas aaye maal ki laagat (restock = 1) -- munafay me wapas jama hui */
+  /** wapas aaye maal ki laagat (restock = 1) -- munafay me wapas jama hui *//*
   returnedCostPaisa: number;
-  /** kitne number (units) wapas aaye aur shelf par chale gaye */
+  /** kitne number (units) wapas aaye aur shelf par chale gaye *//*
   itemsReturned: number;
   profitPaisa: number;
   cashPaisa: number;
@@ -80,7 +84,7 @@ function totals(r: Range): ReportTotals {
     salesPaisa: row.sales,
     discountPaisa: row.disc,
     costPaisa: row.cost,
-    /** wapas aaye maal ki laagat jo munafay me wapas shamil ki gayi */
+    /** wapas aaye maal ki laagat jo munafay me wapas shamil ki gayi *//*
     returnedCostPaisa: row.returned_cost,
     itemsReturned: row.returned_qty,
     profitPaisa: profit,
@@ -179,7 +183,7 @@ export type DeadRow = {
   product_id: number; name: string; stock: number; lastSold: string | null; days: number | null;
 };
 
-/** Jo dawayen bik hi nahi raheen (dead stock) */
+/** Jo dawayen bik hi nahi raheen (dead stock) *//*
 function deadStock(days = 60, limit = 15): DeadRow[] {
   return query<DeadRow>(
     `SELECT p.id AS product_id, p.name,
@@ -209,7 +213,7 @@ export function report(range: Range, opts: { deadDays?: number } = {}) {
   };
 }
 
-/** Mahaney ke shuru/akhir ki tareekh */
+/** Mahaney ke shuru/akhir ki tareekh *//*
 export function monthRange(m?: string): Range {
   const ym = m ?? get<{ m: string }>("SELECT strftime('%Y-%m','now','localtime') AS m")!.m;
   const from = `${ym}-01`;
@@ -232,3 +236,5 @@ export function daysRange(n: number): Range {
 }
 
 export { totals as reportTotals, topProducts, byDay, byCategory, deadStock };
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Excel se purana data laane ka system (Q-19)
 // ---------------------------------------------------------------------------
@@ -95,7 +99,7 @@ function num(v: unknown): number | null {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** Rupey -> paisa (12.5 -> 1250). Galat likha ho to NaN */
+/** Rupey -> paisa (12.5 -> 1250). Galat likha ho to NaN *//*
 function money(v: unknown): number | null {
   const n = num(v);
   if (n === null) return null;
@@ -113,7 +117,7 @@ function yes(v: unknown, fallback = true): boolean {
   return ["yes", "y", "1", "true", "haan", "han", "ji"].includes(s);
 }
 
-/** expiry: 2027-06 | 06/2027 | 6-2027 | 2027-06-15 -> "2027-06" + "2027-06-15" */
+/** expiry: 2027-06 | 06/2027 | 6-2027 | 2027-06-15 -> "2027-06" + "2027-06-15" *//*
 export function parseExpiry(raw: unknown): { ym: string | null; date: string | null; problem?: string } {
   const s = text(raw);
   if (!s) return { ym: null, date: null };
@@ -213,7 +217,7 @@ export type PreviewRow = {
   status: RowStatus;
   title: string;
   messages: string[];
-  /** jo DB me jayega (sirf status=ok par) */
+  /** jo DB me jayega (sirf status=ok par) *//*
   data?: Record<string, unknown>;
 };
 
@@ -454,9 +458,11 @@ export async function commitImport(buf: Buffer, user?: { id?: number; name?: str
   return result;
 }
 
-/** preview me jo products "ok" the unka stock base nikalne ke liye chhota helper */
+/** preview me jo products "ok" the unka stock base nikalne ke liye chhota helper *//*
 export function previewStockBase(preview: ImportPreview): number {
   return preview.rows
     .filter((r) => r.sheet === SHEET_PRODUCTS && r.status === "ok")
     .reduce((n, r) => n + Number((r.data?.qtyBase as number) ?? 0), 0);
 }
+
+*/

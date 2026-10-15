@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Secrets (session secret wagera) -- settings table me chhupa hua
 // ---------------------------------------------------------------------------
@@ -8,7 +12,7 @@
 import { run, scalar } from "./db";
 import { randomBytes } from "node:crypto";
 
-/** Secret padho; na mile to bana kar save kar do (idempotent) */
+/** Secret padho; na mile to bana kar save kar do (idempotent) *//*
 export function getOrCreateSecret(key: string, envValue?: string): string {
   if (envValue && envValue.trim().length >= 16) return envValue.trim();
   const existing = scalar<string | null>(
@@ -31,3 +35,5 @@ export function getOrCreateSecret(key: string, envValue?: string): string {
   );
   return fresh;
 }
+
+*/

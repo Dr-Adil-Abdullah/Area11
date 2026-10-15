@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Supplier returns (maal wapas supplier ko) + supplier ledger
 // ---------------------------------------------------------------------------
@@ -28,7 +32,7 @@ export type SupplierReturnInput = {
   purchaseId?: number | null;
   reason?: string | null;
   note?: string | null;
-  /** 1 = naqad wapas mil gaya (cash book me aata hai) · 0 = credit note (balance kam) */
+  /** 1 = naqad wapas mil gaya (cash book me aata hai) · 0 = credit note (balance kam) *//*
   settled?: boolean;
   lines: { productId: number; batchId?: number | null; qtyBase: number; costPaisa?: number }[];
 };
@@ -282,3 +286,5 @@ export function getSupplierLedger(id: number) {
     },
   };
 }
+
+*/

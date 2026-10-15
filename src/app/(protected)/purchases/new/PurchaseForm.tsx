@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -236,7 +240,7 @@ export default function PurchaseForm({
         </div>
       )}
 
-      {/* Header */}
+      {/* Header *//*}
       <div className="card">
         <div className="card-body grid gap-4 md:grid-cols-4">
           <div className="md:col-span-2">
@@ -281,7 +285,7 @@ export default function PurchaseForm({
         </div>
       </div>
 
-      {/* Item search */}
+      {/* Item search *//*}
       <div className="card">
         <div className="card-head">
           <div className="card-title">Add items — search medicine by name, salt or barcode</div>
@@ -326,7 +330,7 @@ export default function PurchaseForm({
         </div>
       </div>
 
-      {/* Items */}
+      {/* Items *//*}
       <div className="card">
         <div className="card-head">
           <div className="card-title">Items ({rows.length})</div>
@@ -412,7 +416,7 @@ export default function PurchaseForm({
         </div>
       </div>
 
-      {/* Totals */}
+      {/* Totals *//*}
       <div className="card">
         <div className="card-body grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
@@ -465,3 +469,5 @@ export default function PurchaseForm({
     </div>
   );
 }
+
+*/

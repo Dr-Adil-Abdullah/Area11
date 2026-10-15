@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Ek staff account update (naam/role/PIN/password/active) -- sirf owner
 import { handleOwner } from "@/lib/api";
 import { getUser, updateUser, type UserInput } from "@/lib/users";
@@ -21,3 +25,5 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const { id } = await ctx.params;
   return handleOwner(() => ({ user: getUser(Number(id)) }));
 }
+
+*/

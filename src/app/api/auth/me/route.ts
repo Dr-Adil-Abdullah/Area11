@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - "Main kaun hoon?" (client ko session ki jaankari)
 import { NextResponse } from "next/server";
 import { ensureBootstrap } from "@/lib/bootstrap";
@@ -21,3 +25,5 @@ export async function GET() {
     },
   });
 }
+
+*/

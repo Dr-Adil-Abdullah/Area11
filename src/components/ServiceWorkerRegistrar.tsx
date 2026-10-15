@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 — service worker register + internet band hone par halki si patti
@@ -31,3 +35,5 @@ export default function ServiceWorkerRegistrar() {
     </div>
   );
 }
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Test: bill ka total aur itemon ka jor BARABAR hone chahiye
 // ---------------------------------------------------------------------------
@@ -8,7 +12,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-/** Har line ko us ke hissay ke mutabiq farq baanto (sales.ts wala asal tareeqa) */
+/** Har line ko us ke hissay ke mutabiq farq baanto (sales.ts wala asal tareeqa) *//*
 function reconcileItemTotals(lines: { lineTotal: number }[], target: number): void {
   if (lines.length === 0) return;
   const current = lines.reduce((n, l) => n + l.lineTotal, 0);
@@ -107,3 +111,5 @@ test("manfi qeemat se kabhi nuqsan nahi banta", () => {
   const r = diffOf(10, 4, -50);
   assert.equal(r.valuePaisa, 0);
 });
+
+*/

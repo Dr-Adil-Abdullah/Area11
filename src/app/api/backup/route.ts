@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Database backup download + restore
 //   GET  = poori DB ki mehfooz copy (VACUUM INTO -- app chalti rahe)
 //   POST = .db file wapas upload karke restore (pehle purani DB ki copy bana leta hai)
@@ -14,7 +18,7 @@ import { jsonError } from "@/lib/api";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-/** Upload ki had: 200 MB (poori DB ki file) */
+/** Upload ki had: 200 MB (poori DB ki file) *//*
 const MAX_BYTES = 200 * 1024 * 1024;
 
 function stamp() {
@@ -133,7 +137,7 @@ export async function POST(req: Request) {
     try {
       db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
     } catch {
-      /* checkpoint na bane to bhi copy theek hai */
+      /* checkpoint na bane to bhi copy theek hai *//*
     }
     db.close();
     fs.copyFileSync(tmpIn, target);
@@ -172,3 +176,5 @@ export async function POST(req: Request) {
     if (fs.existsSync(tmpIn)) fs.rmSync(tmpIn, { force: true });
   }
 }
+
+*/

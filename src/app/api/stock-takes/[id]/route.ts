@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Ek ginti session: dekho / cancel karo
 import { NextResponse } from "next/server";
 import { guard, handle, handleOwner, SHOP_ROLES } from "@/lib/api";
@@ -14,7 +18,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   return NextResponse.json({ ok: true, take, items: stockTakeItems(Number(id)) });
 }
 
-/** Khuli ginti cancel karo (owner) */
+/** Khuli ginti cancel karo (owner) *//*
 export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   return handleOwner((u) => {
@@ -22,3 +26,5 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
     return { cancelled: true };
   });
 }
+
+*/

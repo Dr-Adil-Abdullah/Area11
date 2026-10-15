@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - reorder list se WhatsApp par order bhejein (free wa.me link)
@@ -131,3 +135,5 @@ export default function WhatsAppCard({ initial }: { initial: Line[] }) {
     </div>
   );
 }
+
+*/

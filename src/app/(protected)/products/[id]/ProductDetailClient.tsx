@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - dawa ki poori tafseel: photo, rates, batches/expiry, bikri, price history, movements
@@ -16,7 +20,7 @@ async function shrink(file: File, max = 640): Promise<string> {
   return shrinkBitmap(await createImageBitmap(file), max);
 }
 
-/** Camera ya file -- dono se mili tasveer ko chhoti JPEG banayein */
+/** Camera ya file -- dono se mili tasveer ko chhoti JPEG banayein *//*
 function shrinkBitmap(bitmap: ImageBitmap, max = 640): string {
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
   const w = Math.round(bitmap.width * scale);
@@ -95,7 +99,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
     } finally { setBusy(false); }
   }
 
-  /** Purana raasta: file chun kar */
+  /** Purana raasta: file chun kar *//*
   async function uploadPhoto(file: File) {
     await savePhoto(shrinkBitmap(await createImageBitmap(file)));
   }
@@ -110,7 +114,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
       {msg && <div className="rounded bg-rose-50 px-3 py-2 text-sm text-rose-700">{msg}</div>}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Photo + identity */}
+        {/* Photo + identity *//*}
         <div className="card card-body space-y-3">
           <div className="flex gap-3">
             <label className="relative block h-24 w-24 shrink-0 cursor-pointer overflow-hidden rounded-lg bg-slate-100">
@@ -204,7 +208,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
           )}
         </div>
 
-        {/* Numbers */}
+        {/* Numbers *//*}
         <div className="card card-body space-y-1">
           <div className="card-title mb-1">Hisab</div>
           <div className="flex justify-between text-sm"><span className="text-slate-500">Stock abhi</span><span className="font-semibold">{detail.stats.stockBase} {p.base_unit}</span></div>
@@ -221,7 +225,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
           )}
         </div>
 
-        {/* Batches quick */}
+        {/* Batches quick *//*}
         <div className="card card-body space-y-2">
           <div className="card-title">Batches &amp; expiry</div>
           {detail.batches.length === 0 && <p className="text-sm text-slate-500">Koi batch nahi.</p>}
@@ -248,7 +252,7 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
         </div>
       </div>
 
-      {/* Tabs: movements + price history */}
+      {/* Tabs: movements + price history *//*}
       <div className="card">
         <div className="card-head">
           <div className="flex gap-2">
@@ -317,3 +321,5 @@ export default function ProductDetailClient({ detail, fields }: { detail: Detail
     </div>
   );
 }
+
+*/

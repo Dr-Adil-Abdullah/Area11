@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Photos: tasveerein DB ke andar NAHIN, data/photos/ folder me
 // ---------------------------------------------------------------------------
@@ -15,7 +19,7 @@ const MAX_BYTES = 6 * 1024 * 1024; // 6 MB (compressed image ke liye kaafi)
 
 export type PhotoInput = { entity: "customer" | "product"; id: number; dataUrl: string };
 
-/** Save karo; wapas file ka naam (DB me wohi rakhein) */
+/** Save karo; wapas file ka naam (DB me wohi rakhein) *//*
 export function savePhoto({ entity, id, dataUrl }: PhotoInput): string {
   const m = /^data:image\/(png|jpeg|jpg|webp|gif);base64,(.*)$/i.exec(dataUrl);
   if (!m) throw new Error("Tasveer sahi nahi lagi — dobara chunein.");
@@ -35,7 +39,7 @@ export function savePhoto({ entity, id, dataUrl }: PhotoInput): string {
   return name;
 }
 
-/** Is entity ki sab tasveerein hata do (file system se) */
+/** Is entity ki sab tasveerein hata do (file system se) *//*
 export async function deletePhotos(entity: string, id: number): Promise<void> {
   try {
     if (!fs.existsSync(PHOTO_DIR)) return;
@@ -44,16 +48,18 @@ export async function deletePhotos(entity: string, id: number): Promise<void> {
       if (f.startsWith(prefix)) fs.rmSync(path.join(PHOTO_DIR, f), { force: true });
     }
   } catch {
-    /* tasveer na hatay to app na ruke */
+    /* tasveer na hatay to app na ruke *//*
   }
 }
 
 /**
  * DB me jo bhi ho (naya file naam ya purana data: URL) -- browser ke liye src
- */
+ *//*
 export function photoSrc(stored: string | null | undefined): string | null {
   if (!stored) return null;
   if (stored.startsWith("data:")) return stored; // purana record (DB me thi)
   if (stored.startsWith("http")) return stored;   // koi bahar se URL
   return `${PHOTO_URL}${encodeURIComponent(stored)}`;
 }
+
+*/

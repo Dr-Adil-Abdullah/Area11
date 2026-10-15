@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
@@ -46,7 +50,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Brand colour runtime par setting se aati hai (RULE E-02) */}
+        {/* Brand colour runtime par setting se aati hai (RULE E-02) *//*}
         <style
           dangerouslySetInnerHTML={{
             __html: `:root{--brand:${
@@ -74,6 +78,18 @@ export default async function RootLayout({
           {children}
         </AppShell>
       </body>
+    </html>
+  );
+}
+
+*/
+
+import type { ReactNode } from "react";
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <body style={{ margin: 0 }}>{children}</body>
     </html>
   );
 }

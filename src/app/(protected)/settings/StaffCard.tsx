@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Staff accounts card (Settings ke andar, sirf owner ko dikhta hai)
 import { Save, UserPlus } from "lucide-react";
 import { addUserAction, updateUserAction } from "./actions";
@@ -155,3 +159,5 @@ export default function StaffCard({
     </div>
   );
 }
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Chhota ZIP engine (koi package, koi import nahi)
 // ---------------------------------------------------------------------------
@@ -34,7 +38,7 @@ function dosStamp(d: Date): { time: number; date: number } {
 
 export type ZipEntry = { name: string; data: Buffer };
 
-/** Sare entries ko ek .zip me band karo (STORE) */
+/** Sare entries ko ek .zip me band karo (STORE) *//*
 export function buildZip(entries: ZipEntry[]): Buffer {
   const chunks: Buffer[] = [];
   const central: Buffer[] = [];
@@ -89,7 +93,7 @@ export function buildZip(entries: ZipEntry[]): Buffer {
   return Buffer.concat([...chunks, cdBuf, end]);
 }
 
-/** .zip kholo (STORE) — wapas entries */
+/** .zip kholo (STORE) — wapas entries *//*
 export function readZip(buf: Buffer): ZipEntry[] {
   // End-of-central-directory ko peeche se dhoondo
   let eocd = -1;
@@ -128,3 +132,5 @@ export function readZip(buf: Buffer): ZipEntry[] {
   return out;
 }
 
+
+*/

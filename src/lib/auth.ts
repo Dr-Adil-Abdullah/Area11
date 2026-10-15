@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Auth helpers
 // ---------------------------------------------------------------------------
@@ -31,12 +35,12 @@ export function verifySecret(secret: string, stored: string | null | undefined):
   }
 }
 
-/** PIN sirf hindse? (security.pinLength ke mutabiq) */
+/** PIN sirf hindse? (security.pinLength ke mutabiq) *//*
 export function isValidPin(pin: string, length = 4): boolean {
   return new RegExp(`^\\d{${length},8}$`).test(pin.trim());
 }
 
-/** Password kam se kam 4 characters (owner ke liye) */
+/** Password kam se kam 4 characters (owner ke liye) *//*
 export function isValidPassword(pw: string): boolean {
   return pw.trim().length >= 4;
 }
@@ -79,3 +83,5 @@ export const ROLE_LABELS: Record<string, string> = {
   manager: "Manager",
   cashier: "Cashier",
 };
+
+*/

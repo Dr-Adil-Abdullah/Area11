@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - dawa ki poori tafseel (click on a product)
 import { notFound } from "next/navigation";
 import { getProductDetail } from "@/lib/details";
@@ -18,3 +22,5 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     />
   );
 }
+
+*/

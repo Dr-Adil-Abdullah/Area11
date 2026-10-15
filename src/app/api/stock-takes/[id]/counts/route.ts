@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Ginti likho (ek ya zyada lines)
 import { NextResponse } from "next/server";
 import { handle } from "@/lib/api";
@@ -14,3 +18,5 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   }
   return handle((u) => saveCounts(Number(id), counts, u));
 }
+
+*/

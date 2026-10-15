@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - provisional return ki client-safe cheezein (DB import nahi karti)
 // ---------------------------------------------------------------------------
@@ -25,3 +29,5 @@ export type ProvRow = {
   linked_code?: string | null;
   items?: { product_id: number; name: string; qty_base: number }[];
 };
+
+*/

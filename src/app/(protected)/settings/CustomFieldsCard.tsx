@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Settings me "apni fields" (custom fields) banane wala card
@@ -53,7 +57,7 @@ export default function CustomFieldsCard() {
     if (r.ok) setFields(r.fields);
     setLoading(false);
   }
-  useEffect(() => { void load(entity); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [entity]);
+  useEffect(() => { void load(entity); /* eslint-disable-next-line react-hooks/exhaustive-deps *//* }, [entity]);
 
   async function post(body: unknown, method = "POST") {
     setMsg("");
@@ -201,3 +205,5 @@ export default function CustomFieldsCard() {
     </div>
   );
 }
+
+*/

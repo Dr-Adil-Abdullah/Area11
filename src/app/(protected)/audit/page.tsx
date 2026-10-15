@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Blackbox (audit) + backup/restore ka page
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/session";
@@ -28,3 +32,5 @@ export default async function AuditPage() {
 
   return <AuditClient isOwner={user.role === "owner"} autoBackup={autoBackup} />;
 }
+
+*/

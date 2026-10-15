@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - expiry wali dawaen seedha supplier ko wapas (do click)
@@ -132,7 +136,7 @@ export default function QuickReturnCard({
           </>
         )}
 
-        {/* Sample / bonus stock */}
+        {/* Sample / bonus stock *//*}
         <div className="border-t pt-3">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-700">
             <PackageX className="h-4 w-4" /> Sample / bonus maal ({samples.length})
@@ -164,3 +168,5 @@ export default function QuickReturnCard({
     </div>
   );
 }
+
+*/

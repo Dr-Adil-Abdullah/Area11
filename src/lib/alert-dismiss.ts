@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - ALERT DISMISS (malik ki wajah ke sath)  -- U-31
 // ---------------------------------------------------------------------------
@@ -44,7 +48,7 @@ export type DismissedRow = {
 
 type U = { id?: number; name?: string; role?: string } | null | undefined;
 
-/** Kaunsi alerts malik pehle hi khatam kar chuka hai (wajah ke sath) */
+/** Kaunsi alerts malik pehle hi khatam kar chuka hai (wajah ke sath) *//*
 export function dismissals(): DismissedRow[] {
   try {
     return query<DismissedRow>(
@@ -97,7 +101,7 @@ export function activeAlerts(): AlertRow[] {
       });
     }
   } catch {
-    /* table abhi bani hi nahi to koi baat nahi */
+    /* table abhi bani hi nahi to koi baat nahi *//*
   }
 
   // (2) BINA BILL WAPSI (jaldi wali) -- U-33:
@@ -141,7 +145,7 @@ export function activeAlerts(): AlertRow[] {
       });
     }
   } catch {
-    /* ignore */
+    /* ignore *//*
   }
 
   // (3) QUARANTINE (U-34): jo maal abhi bhi quarantine me hai -- malik faisla kare
@@ -169,7 +173,7 @@ export function activeAlerts(): AlertRow[] {
       });
     }
   } catch {
-    /* ignore */
+    /* ignore *//*
   }
 
   return out;
@@ -214,7 +218,7 @@ export function dismissAlert(
   return { ok: true, key: input.key };
 }
 
-/** Malik chahe to khatam ki hui alert wapas bhi la sakta hai (wajah ke sath) */
+/** Malik chahe to khatam ki hui alert wapas bhi la sakta hai (wajah ke sath) *//*
 export function restoreAlert(key: string, user?: U): void {
   const role = user?.role ?? "";
   if (role && role !== "owner") {
@@ -234,3 +238,5 @@ export function restoreAlert(key: string, user?: U): void {
     details: { key },
   });
 }
+
+*/

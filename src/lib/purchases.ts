@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Purchases / Stock-In engine (Spec 3 + Spec 5)
 // ---------------------------------------------------------------------------
@@ -299,7 +303,7 @@ export function createPurchase(
   });
 }
 
-/** Expiry input ko YYYY-MM-DD banao (user "2026-05" ya "2026-05-15" likh sakta hai) */
+/** Expiry input ko YYYY-MM-DD banao (user "2026-05" ya "2026-05-15" likh sakta hai) *//*
 export function normaliseExpiry(raw: string): string | null {
   const s = (raw || "").trim();
   if (!s) return null;
@@ -311,7 +315,9 @@ export function normaliseExpiry(raw: string): string | null {
   return null;
 }
 
-/** Kitne batches stock me hain (dashboard ke liye) */
+/** Kitne batches stock me hain (dashboard ke liye) *//*
 export function batchesInStock(): number {
   return scalar<number>("SELECT COUNT(*) AS c FROM batches WHERE qty_base > 0 AND active = 1");
 }
+
+*/

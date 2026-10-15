@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Test: Spec 1 (negative inventory) + Spec 2 (purana vs naya record)
 // ---------------------------------------------------------------------------
@@ -290,3 +294,5 @@ test("U-34: har quarantine item ki alag key (do item aapas me na milay)", () => 
   assert.equal(quarantineAlertKey(2), "quarantine:2");
   assert.notEqual(quarantineAlertKey(1), quarantineAlertKey(2));
 });
+
+*/

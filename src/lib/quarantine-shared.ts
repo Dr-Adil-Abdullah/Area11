@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - QUARANTINE ka saaf (pure) hisaab -- bina database ke (U-34)
 // ---------------------------------------------------------------------------
@@ -7,12 +11,12 @@
 // nahi chahiye -- taake `npm test` in par nazar rakhe.
 // ---------------------------------------------------------------------------
 
-/** Quarantine ke saman ka aakhiri anjam (kahan gaya) */
+/** Quarantine ke saman ka aakhiri anjam (kahan gaya) *//*
 export type Disposition = "quarantine" | "restocked" | "expired" | "sold";
 
 export const DISPOSITIONS: Disposition[] = ["quarantine", "restocked", "expired", "sold"];
 
-/** Urdu mein saaf matlab (malik ke liye) */
+/** Urdu mein saaf matlab (malik ke liye) *//*
 export function dispositionLabel(d: string): string {
   switch (d) {
     case "quarantine":
@@ -31,17 +35,19 @@ export function dispositionLabel(d: string): string {
 /**
  * Kya ye anjam "aakhri" hai? (yaani ab is par dobara faisla nahi ho sakta)
  * quarantine = abhi faisla baqi; baqi sab = aakhri.
- */
+ *//*
 export function isFinalDisposition(d: string): boolean {
   return d === "restocked" || d === "expired" || d === "sold";
 }
 
-/** Kya is anjam ke baad maal stock me wapas aata hai? (sirf restocked) */
+/** Kya is anjam ke baad maal stock me wapas aata hai? (sirf restocked) *//*
 export function addsBackToStock(d: string): boolean {
   return d === "restocked";
 }
 
-/** Alerts ke liye: har quarantine item ki alag (aur mustaqil) key */
+/** Alerts ke liye: har quarantine item ki alag (aur mustaqil) key *//*
 export function quarantineAlertKey(returnId: number): string {
   return `quarantine:${returnId}`;
 }
+
+*/

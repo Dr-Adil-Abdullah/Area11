@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Custom fields: owner khud nayi fields bana sakta hai
 // ---------------------------------------------------------------------------
@@ -43,7 +47,7 @@ function toField(r: RawField): CustomField {
   };
 }
 
-/** Fields (default: sirf chalu wali). includeInactive=true se settings me sab dikhein */
+/** Fields (default: sirf chalu wali). includeInactive=true se settings me sab dikhein *//*
 export function listCustomFields(entity?: CustomEntity, includeInactive = false): CustomField[] {
   const where: string[] = [];
   const params: (string | number)[] = [];
@@ -122,7 +126,7 @@ export function updateCustomField(
   });
 }
 
-/** Values: { "<fieldId>": "value" } */
+/** Values: { "<fieldId>": "value" } *//*
 export function getCustomValues(entity: CustomEntity, entityId: number): Record<string, string> {
   const rows = query<{ field_id: number; value: string | null }>(
     "SELECT field_id, value FROM custom_values WHERE entity = ? AND entity_id = ?",
@@ -133,7 +137,7 @@ export function getCustomValues(entity: CustomEntity, entityId: number): Record<
   return out;
 }
 
-/** Saari values ek dafa (list ke liye: id -> {fieldId: value}) */
+/** Saari values ek dafa (list ke liye: id -> {fieldId: value}) *//*
 export function getCustomValuesBulk(entity: CustomEntity, ids: number[]): Record<number, Record<string, string>> {
   if (!ids.length) return {};
   const ph = ids.map(() => "?").join(",");
@@ -150,7 +154,7 @@ export function getCustomValuesBulk(entity: CustomEntity, ids: number[]): Record
 /**
  * Pehle SIRF janch karo (kuch nahi likhta). create/update se pehle chalao taake
  * zaroori field khali ho to naya product/gahak banney se pehle hi rok lage.
- */
+ *//*
 export function validateCustomValues(entity: CustomEntity, values: Record<string, unknown>): void {
   const fields = listCustomFields(entity);
   for (const f of fields) {
@@ -169,7 +173,7 @@ export function validateCustomValues(entity: CustomEntity, values: Record<string
   }
 }
 
-/** Values save karo (jo fields band ho chuki hain un ki values nahi chhedte) */
+/** Values save karo (jo fields band ho chuki hain un ki values nahi chhedte) *//*
 export function setCustomValues(
   entity: CustomEntity,
   entityId: number,
@@ -194,7 +198,7 @@ export function setCustomValues(
   void user; // audit upar caller ke paas hai (customer/product save ke saath)
 }
 
-/** Kisi field ko poori tarah khatam (sirf owner -- values bhi chali jayengi) */
+/** Kisi field ko poori tarah khatam (sirf owner -- values bhi chali jayengi) *//*
 export function deleteCustomField(id: number, user?: U): void {
   const f = get<RawField>("SELECT * FROM custom_fields WHERE id = ?", [id]);
   if (!f) throw new Error("Field nahi mili.");
@@ -207,3 +211,5 @@ export function deleteCustomField(id: number, user?: U): void {
     details: { label: f.label },
   });
 }
+
+*/

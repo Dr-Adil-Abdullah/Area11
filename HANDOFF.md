@@ -54,11 +54,13 @@ npm run build && npm start     # same port 3000; other devices: http://<PC-IP>:3
 * `node:sqlite` prints an *ExperimentalWarning* — harmless.
 * The legacy demo is its own Vite project: `cd legacy-demo-vite && npm ci && npm run dev` (its own `package.json`, tests and `netlify.toml`).
 
-## 2a. Latest change — 2026-10-12 (purana code kamenṭ; nayi heading "Windows Software")
+## 2a. Latest change — 2026-10-12 (PURANI WEBSITE hi kamenṭ; heading "Windows Software")
 
-- `docs/technology-comparison.html` (interactive comparison page — priority sliders + **score ranking**; copied here from `arena/0cbbd7cd-area11` @ `de86a88`): **the whole previous code is now commented out** — old `<title>`, all CSS, every page section and the entire `<script>` sit inside HTML comments (kept readable so it can be studied later, but never executed → it cannot throw errors). The 5 old `<!-- … -->` section markers were neutralised by reopening the outer comment right after each `-->`, so nothing leaks out live.
-- The page's only live content is the new heading **`<h1>Windows Software</h1>`** (`<title>` set to match). Verified with a comment-aware parser: rendered tags = `html/head/meta/meta/title/body/h1`, visible text = "Windows Software" only.
-- Owner will state the next working method after this — **do not build anything new yet.** (checkpoint `stage-47`)
+- `docs/technology-comparison.html` (interactive comparison page — sliders + **score ranking**; from `arena/0cbbd7cd-area11` @ `de86a88`): **whole previous code commented out** — readable, never executed. The 5 old `<!-- … -->` markers were neutralised (outer comment reopened after each `-->`); live content = `<h1>Windows Software</h1>` only.
+- **Owner (2026-10-12): "WHole website all code" → the ENTIRE website source is now parked the same way.** Every file under `src/**` (*.ts/*.tsx/*.css) + `public/sw.js` = **161 files** wrapped in `/* … */` block comments (inner `*/` neutralised via `*//*`, verified by a comment-aware scanner: no live old code anywhere).
+  - **Only 3 files carry a tiny live shell** (old code of each is commented above it): `src/app/layout.tsx` (html/body), `src/app/(protected)/layout.tsx` (passes children), `src/app/(protected)/page.tsx` (renders **`<h1>Windows Software</h1>`**) — so `npm run dev` opens clean on `/` with the heading and nothing else runs.
+  - Left live on purpose (tooling, not website UI code): `package.json`, `next.config.ts`, `tsconfig.json`, `tailwind/postcss` configs, `scripts/*` (ckpt), `public/manifest.webmanifest` (JSON cannot be commented), icons. `legacy-demo-vite/` untouched (already the `old/` reference project, excluded from tsconfig).
+  - Consequences while parked: `npx tsc --noEmit` still 0 errors; `npm run build` / `npm test` of the old app no longer apply (their code is commented). **Owner will state the next working method — do not build anything new yet.** (checkpoints `stage-47`…`stage-48`)
 
 ## 3. What is DONE
 

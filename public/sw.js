@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 /* ---------------------------------------------------------------------------
  * Area11 service worker — internet band ho to bhi app ki shakal khuli rahe.
  * Soch:
@@ -7,7 +11,7 @@
  *   - /api/*                           -> HAMESHA network (data zinda rehna chahiye);
  *                                         fail ho to saaf error, purana data nahi
  * Ahem: asli data shop PC par (SQLite) hota hai — SW sirf UI ko zinda rakhta hai.
- * ------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------- *//*
 const VERSION = "area11-v1";
 const STATIC = VERSION + "-static";
 const PAGES = VERSION + "-pages";
@@ -97,3 +101,5 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(req))
   );
 });
+
+*/

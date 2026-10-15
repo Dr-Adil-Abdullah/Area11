@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import Link from "next/link";
 import { get, scalar } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
@@ -108,7 +112,7 @@ export default async function DashboardPage() {
       owner?.password_hash
     );
   } catch {
-    /* ignore */
+    /* ignore *//*
   }
 
   const todayTotal = todayRow?.total ?? 0;
@@ -276,5 +280,23 @@ export default async function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+*/
+
+export default function Page() {
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        fontFamily: "system-ui, sans-serif",
+        background: "#f8fafc",
+      }}
+    >
+      <h1 style={{ fontSize: 42, margin: 0, color: "#0e7490" }}>Windows Software</h1>
+    </main>
   );
 }

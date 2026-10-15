@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - supplier ki poori tafseel (ledger + maal wapas)
 import { notFound } from "next/navigation";
 import { getSupplierLedger } from "@/lib/supplier-returns";
@@ -41,3 +45,5 @@ export default async function SupplierDetailPage({ params }: { params: Promise<{
     />
   );
 }
+
+*/

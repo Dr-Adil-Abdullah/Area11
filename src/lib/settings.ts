@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Settings (RULE E: har cheez badalne ke qabil)
 // ---------------------------------------------------------------------------
@@ -136,7 +140,7 @@ export const SETTING_DEFAULTS = {
 
 export type AppSettings = typeof SETTING_DEFAULTS;
 
-/** Sab settings (defaults + DB ki values mila kar) */
+/** Sab settings (defaults + DB ki values mila kar) *//*
 export async function getSettings(): Promise<AppSettings> {
   const out = { ...SETTING_DEFAULTS } as Record<string, unknown>;
   try {
@@ -155,7 +159,7 @@ export async function getSettings(): Promise<AppSettings> {
   return out as AppSettings;
 }
 
-/** Ek setting save karo */
+/** Ek setting save karo *//*
 export async function setSetting(key: string, value: unknown): Promise<void> {
   run(
     `INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now','localtime'))
@@ -164,14 +168,14 @@ export async function setSetting(key: string, value: unknown): Promise<void> {
   );
 }
 
-/** Kai settings ek saath save karo */
+/** Kai settings ek saath save karo *//*
 export async function setSettings(patch: Record<string, unknown>): Promise<void> {
   for (const [key, value] of Object.entries(patch)) {
     await setSetting(key, value);
   }
 }
 
-/** Default setting rows banao (jo missing hain) */
+/** Default setting rows banao (jo missing hain) *//*
 export async function ensureSettingRows(): Promise<void> {
   const have = new Set(
     query<{ key: string }>("SELECT key FROM settings").map((r) => r.key)
@@ -185,7 +189,9 @@ export async function ensureSettingRows(): Promise<void> {
   }
 }
 
-/** Bill number generate karo: prefix + zero-padded number */
+/** Bill number generate karo: prefix + zero-padded number *//*
 export function formatBillCode(prefix: string, no: number, padding: number): string {
   return `${prefix}${String(no).padStart(padding, "0")}`;
 }
+
+*/
