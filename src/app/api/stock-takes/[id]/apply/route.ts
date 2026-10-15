@@ -14,3 +14,5 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 }
 
 */
+
+export {};

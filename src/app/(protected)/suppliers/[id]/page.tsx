@@ -47,3 +47,7 @@ export default async function SupplierDetailPage({ params }: { params: Promise<{
 }
 
 */
+
+export default function Page() {
+  return null;
+}

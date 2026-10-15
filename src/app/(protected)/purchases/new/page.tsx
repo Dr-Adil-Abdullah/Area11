@@ -22,3 +22,7 @@ export default async function NewPurchasePage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

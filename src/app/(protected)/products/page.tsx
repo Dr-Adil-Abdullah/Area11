@@ -25,3 +25,7 @@ export default async function ProductsPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

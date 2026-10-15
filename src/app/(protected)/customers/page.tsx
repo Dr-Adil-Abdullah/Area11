@@ -18,3 +18,7 @@ export default function CustomersPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

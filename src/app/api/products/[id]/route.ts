@@ -62,3 +62,5 @@ export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string 
 }
 
 */
+
+export {};

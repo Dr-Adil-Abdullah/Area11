@@ -29,3 +29,7 @@ export default function OfflinePage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

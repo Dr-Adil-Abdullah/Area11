@@ -27,3 +27,7 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
 }
 
 */
+
+export default function Page() {
+  return null;
+}

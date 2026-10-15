@@ -24,3 +24,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 }
 
 */
+
+export default function Page() {
+  return null;
+}

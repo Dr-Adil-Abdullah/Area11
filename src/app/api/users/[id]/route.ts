@@ -27,3 +27,5 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 }
 
 */
+
+export {};

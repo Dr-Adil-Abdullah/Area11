@@ -134,3 +134,7 @@ export default async function AlertsPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

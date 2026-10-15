@@ -20,3 +20,7 @@ export default async function StockPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

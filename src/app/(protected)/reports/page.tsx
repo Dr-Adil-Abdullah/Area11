@@ -32,3 +32,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 }
 
 */
+
+export default function Page() {
+  return null;
+}

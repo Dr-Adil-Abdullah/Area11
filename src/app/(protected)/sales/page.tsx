@@ -54,3 +54,7 @@ export default async function SalesPage({ searchParams }: {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

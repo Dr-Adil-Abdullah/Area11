@@ -15,3 +15,7 @@ export default async function StockTakePage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

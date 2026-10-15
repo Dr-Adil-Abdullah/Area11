@@ -515,3 +515,7 @@ export default async function SettingsPage({
 }
 
 */
+
+export default function Page() {
+  return null;
+}

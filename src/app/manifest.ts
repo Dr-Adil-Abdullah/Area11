@@ -18,3 +18,15 @@ export default function manifest(): MetadataRoute.Manifest {
 }
 
 */
+
+export default function manifest() {
+  return {
+    name: "Windows Software",
+    short_name: "Windows Software",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#ffffff",
+    theme_color: "#0e7490",
+    icons: [],
+  };
+}

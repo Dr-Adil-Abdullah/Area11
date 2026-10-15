@@ -115,3 +115,7 @@ export default async function PurchasesPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

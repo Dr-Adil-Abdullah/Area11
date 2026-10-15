@@ -34,3 +34,7 @@ export default async function AuditPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

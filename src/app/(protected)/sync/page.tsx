@@ -15,3 +15,7 @@ export default async function SyncPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

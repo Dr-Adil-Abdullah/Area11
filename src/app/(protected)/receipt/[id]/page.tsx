@@ -416,3 +416,7 @@ export default async function ReceiptPage({
 }
 
 */
+
+export default function Page() {
+  return null;
+}

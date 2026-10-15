@@ -42,3 +42,7 @@ export default async function PosPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

@@ -26,3 +26,7 @@ export default async function ImportPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}

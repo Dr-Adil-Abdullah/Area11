@@ -15,3 +15,7 @@ export default async function SuppliersPage() {
 }
 
 */
+
+export default function Page() {
+  return null;
+}
