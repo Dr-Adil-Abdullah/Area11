@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Database layer (SQLite, ZERO dependency)
 // ---------------------------------------------------------------------------
@@ -54,12 +58,12 @@ export const db: DatabaseSync = new Proxy({} as DatabaseSync, {
   },
 });
 
-/** Backup RESTORE ke baad nayi file ko dobara kholo (purani handle band kar ke) */
+/** Backup RESTORE ke baad nayi file ko dobara kholo (purani handle band kar ke) *//*
 export function reopenDb(): void {
   try {
     current.close();
   } catch {
-    /* pehle hi band thi to koi baat nahi */
+    /* pehle hi band thi to koi baat nahi *//*
   }
   g.__area11db = undefined;
   migrated = false;
@@ -104,7 +108,7 @@ export function migrate(database: DatabaseSync = db): void {
       try {
         database.exec("ROLLBACK");
       } catch {
-        /* transaction pehle hi khatam */
+        /* transaction pehle hi khatam *//*
       }
       console.error(`[db] migration FAIL: ${m.id}`, e);
       throw e;
@@ -147,7 +151,7 @@ export function scalar<T = number>(sql: string, params: Param[] = []): T {
   return row[keys[0]];
 }
 
-/** Transaction: sab kuch ho jaye ya kuch bhi na ho */
+/** Transaction: sab kuch ho jaye ya kuch bhi na ho *//*
 export function tx<T>(fn: () => T): T {
   db.exec("BEGIN");
   try {
@@ -163,3 +167,5 @@ export function tx<T>(fn: () => T): T {
 export function dbPath(): string {
   return DB_PATH;
 }
+
+*/

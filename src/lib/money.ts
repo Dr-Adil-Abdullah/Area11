@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Money helpers
 // ---------------------------------------------------------------------------
@@ -6,19 +10,19 @@
 // JavaScript ke float (0.1 + 0.2 = 0.30000000000000004) se bachne ke liye.
 // ---------------------------------------------------------------------------
 
-/** Rupees (decimal allowed) -> paisa (integer) */
+/** Rupees (decimal allowed) -> paisa (integer) *//*
 export function toPaisa(rupees: number | string): number {
   const n = typeof rupees === "string" ? Number(rupees.replace(/[^0-9.\-]/g, "")) : rupees;
   if (!isFinite(n)) return 0;
   return Math.round(n * 100);
 }
 
-/** Paisa -> rupees (number, 2 decimals) */
+/** Paisa -> rupees (number, 2 decimals) *//*
 export function toRupees(paisa: number): number {
   return Math.round(paisa) / 100;
 }
 
-/** Paisa -> "1,234.50" (bina currency symbol) */
+/** Paisa -> "1,234.50" (bina currency symbol) *//*
 export function formatAmount(paisa: number, decimals = 2): string {
   const v = toRupees(paisa);
   return v.toLocaleString("en-PK", {
@@ -27,12 +31,12 @@ export function formatAmount(paisa: number, decimals = 2): string {
   });
 }
 
-/** Paisa -> "Rs 1,234.50" */
+/** Paisa -> "Rs 1,234.50" *//*
 export function formatPKR(paisa: number, decimals = 2): string {
   return `Rs ${formatAmount(paisa, decimals)}`;
 }
 
-/** Paisa -> "1,234" (agar poora rupay ho to decimals nahi) */
+/** Paisa -> "1,234" (agar poora rupay ho to decimals nahi) *//*
 export function formatPKRShort(paisa: number): string {
   const v = toRupees(paisa);
   return `Rs ${v.toLocaleString("en-PK", { maximumFractionDigits: 0 })}`;
@@ -42,7 +46,7 @@ export function formatPKRShort(paisa: number): string {
  * Downward floor round-off (Spec 8.2): sirf NEECHE, kabhi upar nahi.
  *   545 -> 540 ;  556 -> 550
  * Return: roundOff (negative paisa) aur final amount
- */
+ *//*
 export function applyDownwardRound(
   totalPaisa: number,
   stepRupees = 10
@@ -57,7 +61,7 @@ export function applyDownwardRound(
  * Round-off WITH COST PROTECTION (user ka tasdeeq shuda usool, 30-Sep-2026):
  * agar neeche round karne se raqam KHARID LAGAT se kam ho jaye to round NAHI hoga.
  *   545 bill, lagat 543 -> 540 < 543 -> 545 hi wasool    (545/500 -> 540)
- */
+ *//*
 export function applyRoundWithCostGuard(
   totalPaisa: number,
   stepRupees: number,
@@ -73,13 +77,13 @@ export function applyRoundWithCostGuard(
 /**
  * Discount on PROFIT MARGIN (Spec 7.2.1):
  *   cost 200, sell 300, 10% discount -> discount sirf 100 par = 10 => final 290
- */
+ *//*
 export function marginDiscount(costPaisa: number, sellPaisa: number, percent: number): number {
   const margin = Math.max(0, sellPaisa - costPaisa);
   return Math.round((margin * percent) / 100);
 }
 
-/** Discount on total retail price (Spec 7.2.2) */
+/** Discount on total retail price (Spec 7.2.2) *//*
 export function retailDiscount(sellPaisa: number, percent: number): number {
   return Math.round((sellPaisa * percent) / 100);
 }
@@ -87,7 +91,7 @@ export function retailDiscount(sellPaisa: number, percent: number): number {
 /**
  * Pack formula (Spec 4.2): 1 Box = boxStrips strips = boxStrips * stripTablets base units
  * unit: "box" | "strip" | "base"
- */
+ *//*
 export function toBaseUnits(
   qty: number,
   unit: "box" | "strip" | "base",
@@ -104,7 +108,7 @@ export function toBaseUnits(
   return round3(qty);
 }
 
-/** Base units -> display: kitne box/strip/tablet bante hain */
+/** Base units -> display: kitne box/strip/tablet bante hain *//*
 export function fromBaseUnits(
   qtyBase: number,
   boxStrips: number,
@@ -129,7 +133,9 @@ function round3(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
 
-/** Percentage helper */
+/** Percentage helper *//*
 export function percentOf(amountPaisa: number, percent: number): number {
   return Math.round((amountPaisa * percent) / 100);
 }
+
+*/

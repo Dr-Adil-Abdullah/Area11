@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -167,7 +171,7 @@ export default function PosClient({
       const raw = localStorage.getItem("area11.heldCarts");
       if (raw) setHeld(JSON.parse(raw));
     } catch {
-      /* ignore */
+      /* ignore *//*
     }
   }, []);
 
@@ -175,7 +179,7 @@ export default function PosClient({
     try {
       localStorage.setItem("area11.heldCarts", JSON.stringify(held));
     } catch {
-      /* ignore */
+      /* ignore *//*
     }
   }, [held]);
 
@@ -183,7 +187,7 @@ export default function PosClient({
    * Spec 1.2 + 4: LIVE jaanch -- is waqt cart me koi aisi cheez hai
    * jis ki miqdar maujood stock se zyada ho (yani stock MINUS me jayega)?
    * Ek hi dawa ki kai line hon to sab ka jama mila kar dekha jata hai.
-   */
+   *//*
   const overLines = useMemo(() => {
     const need = new Map<string, { name: string; want: number; have: number }>();
     for (const l of lines) {
@@ -535,7 +539,7 @@ export default function PosClient({
         </div>
       )}
     <div className="space-y-3">
-      {/* ===== Spec 1.2 + 4: screen ke BILKUL OOPER wala bara alert ===== */}
+      {/* ===== Spec 1.2 + 4: screen ke BILKUL OOPER wala bara alert ===== *//*}
       {overLines.length > 0 && (
         <AlertBanner title={`Stock MINUS me ja raha hai — ${overLines.length} cheez(en)`}>
           {overLines.map((o) => (
@@ -565,7 +569,7 @@ export default function PosClient({
       <ToastStack toasts={toasts} onDismiss={dismiss} />
 
       <div className="grid gap-4 lg:grid-cols-5">
-      {/* ---------------- LEFT: search ---------------- */}
+      {/* ---------------- LEFT: search ---------------- *//*}
       <div className="space-y-3 lg:col-span-3">
         <div className="card">
           <div className="card-body">
@@ -634,7 +638,7 @@ export default function PosClient({
           </div>
         )}
 
-        {/* results */}
+        {/* results *//*}
         {results.length > 0 && (
           <div className="card">
             <div className="card-head">
@@ -750,7 +754,7 @@ export default function PosClient({
           </div>
         )}
 
-        {/* cart lines (also visible under search on wide screens) */}
+        {/* cart lines (also visible under search on wide screens) *//*}
         <div className="card lg:hidden">
           <div className="card-head">
             <div className="card-title">Cart ({lines.length})</div>
@@ -759,7 +763,7 @@ export default function PosClient({
         </div>
       </div>
 
-      {/* ---------------- RIGHT: cart ---------------- */}
+      {/* ---------------- RIGHT: cart ---------------- *//*}
       <div className="lg:col-span-2">
         <div className="card sticky top-20">
           <div className="card-head">
@@ -856,7 +860,7 @@ export default function PosClient({
           </div>
 
           <div className="border-t border-slate-200 p-4 space-y-3">
-            {/* customer */}
+            {/* customer *//*}
             <div>
               <label className="label flex items-center gap-1">
                 <User className="h-3 w-3" /> Customer (needed for credit / VIP rate)
@@ -930,7 +934,7 @@ export default function PosClient({
               )}
             </div>
 
-            {/* discount */}
+            {/* discount *//*}
             {settings.discountEnabled && (
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -949,7 +953,7 @@ export default function PosClient({
               </div>
             )}
 
-            {/* payment */}
+            {/* payment *//*}
             <div>
               <label className="label">Payment</label>
               <div className="flex flex-wrap gap-2">
@@ -1042,7 +1046,7 @@ export default function PosClient({
               )}
             </div>
 
-            {/* totals */}
+            {/* totals *//*}
             <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm">
               <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
@@ -1132,3 +1136,5 @@ export default function PosClient({
   </div>
   );
 }
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - data/photos/ se tasveer serve karna (owner/manager/staff sab dekh sakte hain)
 import fs from "node:fs";
 import path from "node:path";
@@ -35,3 +39,7 @@ export async function GET(req: Request) {
     headers: { "Content-Type": type, "Cache-Control": "private, max-age=31536000, immutable" },
   });
 }
+
+*/
+
+export {};

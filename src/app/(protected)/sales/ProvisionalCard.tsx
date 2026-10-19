@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Rush-time return (bill ke baghair) + pending bill alert (spec 9.2)
@@ -209,7 +213,7 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
                         </div>
                       ) : (
                         <span className="inline-flex gap-1">
-                          {/* U-35: bina-bill wapsi ki bhi raseed chhapein */}
+                          {/* U-35: bina-bill wapsi ki bhi raseed chhapein *//*}
                           <Link
                             className="btn-secondary !py-1"
                             href={`/receipt/${r.id}?type=provisional&auto=1`}
@@ -233,3 +237,5 @@ export default function ProvisionalCard({ initial }: { initial: { pending: numbe
     </div>
   );
 }
+
+*/

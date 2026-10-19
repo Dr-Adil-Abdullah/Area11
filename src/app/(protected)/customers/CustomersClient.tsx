@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
@@ -34,7 +38,7 @@ export default function CustomersClient({
   const [fSort, setFSort] = useState("name");
   const owed = rows.reduce((a, c) => a + Math.max(0, c.balance_paisa), 0);
 
-  /** Server se filtered list (search + type + baqaya + tarteeb) */
+  /** Server se filtered list (search + type + baqaya + tarteeb) *//*
   async function loadFiltered() {
     const p = new URLSearchParams();
     if (search.trim()) p.set("q", search.trim());
@@ -47,7 +51,7 @@ export default function CustomersClient({
   useEffect(() => {
     const t = setTimeout(() => { void loadFiltered(); }, 250);
     return () => clearTimeout(t);
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    /* eslint-disable-next-line react-hooks/exhaustive-deps *//*
   }, [search, fCat, fBal, fSort]);
 
   useEffect(() => {
@@ -279,3 +283,5 @@ export default function CustomersClient({
     </div>
   );
 }
+
+*/

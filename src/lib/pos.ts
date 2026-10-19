@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - POS search engine (Spec 5.2 FIFO + Spec 11.1 multi-search)
 // ---------------------------------------------------------------------------
@@ -41,7 +45,7 @@ export type PosProduct = {
 
 export type ExpiryLevels = { level: number; days: number; color: string; label: string }[];
 
-/** Expiry status nikalo (settings ke levels ke mutabiq) */
+/** Expiry status nikalo (settings ke levels ke mutabiq) *//*
 export function expiryStatus(expiryYm: string | null, levels: ExpiryLevels): PosBatch["status"] {
   if (!expiryYm) return "ok";
   const [y, m] = expiryYm.split("-").map(Number);
@@ -63,7 +67,7 @@ export function expiryStatus(expiryYm: string | null, levels: ExpiryLevels): Pos
   return "ok";
 }
 
-/** Dawa talaash karo (POS ke liye) -- batches ke saath, FIFO tarteeb me */
+/** Dawa talaash karo (POS ke liye) -- batches ke saath, FIFO tarteeb me *//*
 export function searchForPos(
   q: string,
   levels: ExpiryLevels,
@@ -164,7 +168,7 @@ export function searchForPos(
   });
 }
 
-/** Barcode se seedha product (scanner ke liye) */
+/** Barcode se seedha product (scanner ke liye) *//*
 export function findByBarcodePos(barcode: string, levels: ExpiryLevels) {
   const found = searchForPos(barcode, levels, 1);
   if (found.length === 1 && found[0].barcode === barcode.trim()) return found[0];
@@ -177,7 +181,7 @@ export function findByBarcodePos(barcode: string, levels: ExpiryLevels) {
   return again.find((p) => p.id === row.id) ?? null;
 }
 
-/** Rate chuno (customer category ke mutabiq) -- Spec 7.1 */
+/** Rate chuno (customer category ke mutabiq) -- Spec 7.1 *//*
 export function priceFor(
   batch: Pick<PosBatch, "retail_paisa" | "vip_paisa" | "doctor_paisa"> | null,
   product: Pick<PosProduct, "retail_paisa" | "vip_paisa" | "doctor_paisa">,
@@ -190,3 +194,5 @@ export function priceFor(
   };
   return pick(batch ?? product);
 }
+
+*/

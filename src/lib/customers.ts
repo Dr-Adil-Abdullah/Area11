@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Customers (minimal for now; full profiles arrive in Phase 4)
 // ---------------------------------------------------------------------------
@@ -25,7 +29,7 @@ export type Customer = {
 export type CustomerFilter = {
   search?: string;
   category?: "all" | "normal" | "vip" | "doctor";
-  /** "due" = baqaya wale  · "clear" = kisi ka kuch nahi dena */
+  /** "due" = baqaya wale  · "clear" = kisi ka kuch nahi dena *//*
   balance?: "all" | "due" | "clear";
   sort?: "name" | "due" | "recent" | "spent" | "newest";
 };
@@ -140,7 +144,7 @@ export function updateCustomer(
   );
 }
 
-/** Customer ko udhaar/wasooli ka record */
+/** Customer ko udhaar/wasooli ka record *//*
 export function customerLedger(customerId: number) {
   const sales = query<{
     id: number;
@@ -166,3 +170,5 @@ export function customerLedger(customerId: number) {
 export function customerCount(): number {
   return get<{ c: number }>("SELECT COUNT(*) AS c FROM customers WHERE active = 1")?.c ?? 0;
 }
+
+*/

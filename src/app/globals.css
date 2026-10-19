@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +9,7 @@
 /* ---------------------------------------------------------------------------
    Area11 - base styles
    Brand rang CSS variable se aata hai (Setting -> Branding -> Primary colour)
-   --------------------------------------------------------------------------- */
+   --------------------------------------------------------------------------- *//*
 
 :root {
   --brand: #0e7490;
@@ -21,7 +25,7 @@ body {
   @apply bg-slate-100 text-slate-800 antialiased;
 }
 
-/* Cards / panels */
+/* Cards / panels *//*
 .card {
   @apply rounded-xl bg-white shadow-sm ring-1 ring-slate-200;
 }
@@ -35,7 +39,7 @@ body {
   @apply p-4;
 }
 
-/* Form controls */
+/* Form controls *//*
 .label {
   @apply mb-1 block text-xs font-medium text-slate-600;
 }
@@ -55,7 +59,7 @@ body {
   @apply h-4 w-4 rounded border-slate-300 text-slate-800;
 }
 
-/* Buttons */
+/* Buttons *//*
 .btn {
   @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium
          transition disabled:cursor-not-allowed disabled:opacity-50;
@@ -70,7 +74,7 @@ body {
   @apply btn text-slate-600 hover:bg-slate-100;
 }
 
-/* Badges */
+/* Badges *//*
 .badge {
   @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium;
 }
@@ -90,7 +94,7 @@ body {
   @apply badge bg-slate-100 text-slate-600;
 }
 
-/* Tables */
+/* Tables *//*
 .tbl {
   @apply w-full text-sm;
 }
@@ -101,14 +105,16 @@ body {
   @apply border-b border-slate-100 px-3 py-2;
 }
 
-/* Print: receipt hanya (Phase 1 me istemal hoga) */
+/* Print: receipt hanya (Phase 1 me istemal hoga) *//*
 @media print {
   .no-print {
     display: none !important;
   }
 }
 
-/* Chhota, neela, sirf text wala button (table ke andar) */
+/* Chhota, neela, sirf text wala button (table ke andar) *//*
 .btn-link {
   @apply rounded px-2 py-1 text-xs font-medium text-cyan-700 hover:bg-cyan-50 inline-flex items-center gap-1;
 }
+
+*/

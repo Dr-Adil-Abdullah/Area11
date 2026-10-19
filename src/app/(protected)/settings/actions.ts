@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -235,3 +239,5 @@ export async function updateUserAction(fd: FormData): Promise<void> {
   if (error) redirect("/settings?staffError=" + encodeURIComponent(error));
   redirect("/settings?staffSaved=" + encodeURIComponent("Account saved"));
 }
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Sales / POS engine (Spec 8 + Spec 9 + Spec 7)
 // ---------------------------------------------------------------------------
@@ -35,7 +39,7 @@ export type SaleInput = {
   customerId?: number | null;
   items: CartLineInput[];
   billDiscountPaisa?: number;
-  /** Counter par grahak ne jo cash diya (change nikalne ke liye) -- revenue nahi */
+  /** Counter par grahak ne jo cash diya (change nikalne ke liye) -- revenue nahi *//*
   tenderedPaisa?: number;
   paymentMethod?: "cash" | "credit" | "online" | "card" | "split";
   paidPaisa?: number;
@@ -44,11 +48,11 @@ export type SaleInput = {
    *   [{ method: "cash", amountPaisa: 50000 }, { method: "credit", amountPaisa: 20000 }]
    * Diya gaya to isi ka jama hona `total` ke barabar hona chahiye.
    * "credit" wala hissa gahak ke udhaar (khatay) me jata hai.
-   */
+   *//*
   splits?: { method: "cash" | "credit" | "online" | "card"; amountPaisa: number }[];
   notes?: string | null;
   status?: "paid" | "credit" | "hold";
-  /** Loyalty redeem: kitne points bill se katne hain (settings on hona zaroori) */
+  /** Loyalty redeem: kitne points bill se katne hain (settings on hona zaroori) *//*
   redeemPoints?: number;
 };
 
@@ -65,7 +69,7 @@ export type SaleResult = {
   tenderedPaisa: number;
   changePaisa: number;
   warnings: string[];
-  /** Spec 1.2: jin cheezon ka stock is bill se MINUS me gaya */
+  /** Spec 1.2: jin cheezon ka stock is bill se MINUS me gaya *//*
   negativeItems: NegativeItem[];
 };
 
@@ -77,7 +81,7 @@ export type NegativeItem = {
   afterBase: number;
 };
 
-/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye */
+/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye *//*
 function roundQty(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
@@ -87,7 +91,7 @@ function roundQty(n: number): number {
  * Round-off / loyalty ki chhoot bill par lagti hai -- is liye woh farq
  * yahan har line me us ke hissay ke mutabiq baant diya jata hai
  * (aakhri line rounding ka bacha hua le leti hai).
- */
+ *//*
 function reconcileItemTotals(
   lines: { lineTotal: number }[],
   target: number
@@ -607,11 +611,11 @@ export function listSales(opts: {
   limit?: number;
   from?: string;
   to?: string;
-  /** cash | credit | split */
+  /** cash | credit | split *//*
   method?: "all" | "cash" | "credit";
-  /** all | paid | due | void | returned */
+  /** all | paid | due | void | returned *//*
   status?: string;
-  /** all | profit | loss */
+  /** all | profit | loss *//*
   margin?: "all" | "profit" | "loss";
   minTotalPaisa?: number;
   sort?: "recent" | "oldest" | "biggest" | "profit";
@@ -687,7 +691,7 @@ export function listSales(opts: {
   );
 }
 
-/** Aaj ki sale summary (shift closing ke liye -- Phase 2 me poora) */
+/** Aaj ki sale summary (shift closing ke liye -- Phase 2 me poora) *//*
 export function todaySummary() {
   return get<{ bills: number; total: number; cash: number; credit: number; profit: number }>(
     `SELECT COUNT(*) AS bills,
@@ -706,3 +710,5 @@ export function todaySummary() {
 export function saleItemCount(): number {
   return scalar<number>("SELECT COUNT(*) AS c FROM sale_items");
 }
+
+*/

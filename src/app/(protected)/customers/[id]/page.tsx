@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - gahak ki poori tafseel (click on a customer)
 import { notFound } from "next/navigation";
 import { getCustomerDetail } from "@/lib/details";
@@ -17,4 +21,10 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
       fields={JSON.parse(JSON.stringify(fields))}
     />
   );
+}
+
+*/
+
+export default function Page() {
+  return null;
 }

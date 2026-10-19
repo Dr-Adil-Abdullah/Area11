@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // ---------------------------------------------------------------------------
@@ -34,7 +38,7 @@ export default function AlertBar({
   canDismiss,
 }: {
   alerts: GlobalAlert[];
-  /** sirf malik (owner) alerts khatam kar sakta hai */
+  /** sirf malik (owner) alerts khatam kar sakta hai *//*
   canDismiss: boolean;
 }) {
   const router = useRouter();
@@ -74,7 +78,7 @@ export default function AlertBar({
 
   return (
     <div className="sticky top-0 z-40 border-b-2">
-      {/* ---- sab se ahem alert (hamesha nazar aaye) ---- */}
+      {/* ---- sab se ahem alert (hamesha nazar aaye) ---- *//*}
       <div
         className={`flex flex-wrap items-center gap-2 px-4 py-2 text-sm ${first.tone === "red" ? RED : AMBER}`}
       >
@@ -108,7 +112,7 @@ export default function AlertBar({
         )}
       </div>
 
-      {/* ---- wajah likhne ki jagah (sirf malik) ---- */}
+      {/* ---- wajah likhne ki jagah (sirf malik) ---- *//*}
       {askKey && (
         <div className={`px-4 pb-3 pt-1 text-sm ${alerts.find((a) => a.key === askKey)?.tone === "red" ? RED : AMBER}`}>
           <div className="max-w-2xl">
@@ -149,7 +153,7 @@ export default function AlertBar({
         </div>
       )}
 
-      {/* ---- baqi alerts ki fehrist ---- */}
+      {/* ---- baqi alerts ki fehrist ---- *//*}
       {open && alerts.length > 1 && (
         <div className={`max-h-64 overflow-auto px-4 pb-3 text-sm ${first.tone === "red" ? RED : AMBER}`}>
           <ul className="space-y-2">
@@ -176,3 +180,5 @@ export default function AlertBar({
     </div>
   );
 }
+
+*/

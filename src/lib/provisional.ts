@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Rush-time "provisional" return (spec 9.2.2 / 9.2.3)
 // ---------------------------------------------------------------------------
@@ -26,7 +30,7 @@ export type ProvInput = {
   items: { productId: number; qtyBase: number }[];
 };
 
-/** Agla PR- number (settings me apna counter) */
+/** Agla PR- number (settings me apna counter) *//*
 function nextProvisionalCode(): string {
   const row = get<{ value: string }>("SELECT value FROM settings WHERE key = 'bill.nextProvisionalNo'");
   let no = 1;
@@ -170,7 +174,7 @@ export function pendingProvisionalCount(): number {
   return get<{ v: number }>("SELECT COUNT(*) v FROM provisional_returns WHERE status = 'pending'")?.v ?? 0;
 }
 
-/** Gahak ka purana hisaab dekhne ke liye: is phone ke bills (spec 9.2.1) */
+/** Gahak ka purana hisaab dekhne ke liye: is phone ke bills (spec 9.2.1) *//*
 export function findBillsForPhone(phone: string, limit = 20) {
   return query<{ id: number; code: string; date: string; total_paisa: number; customer_name: string | null }>(
     `SELECT s.id, s.code, s.date, s.total_paisa, c.name AS customer_name
@@ -181,7 +185,7 @@ export function findBillsForPhone(phone: string, limit = 20) {
   );
 }
 
-/** Owner/manager: asal bill se jodo; aur chahein to maal stock me wapas daalein */
+/** Owner/manager: asal bill se jodo; aur chahein to maal stock me wapas daalein *//*
 export function linkProvisional(
   id: number,
   saleId: number,
@@ -252,7 +256,7 @@ export function linkProvisional(
   });
 }
 
-/** Owner/manager: nahi mila to pending note hata do (wajah likh kar) */
+/** Owner/manager: nahi mila to pending note hata do (wajah likh kar) *//*
 export function cancelProvisional(id: number, reason: string | null, user?: U): void {
   if (user?.role && user.role !== "owner" && user.role !== "manager")
     throw new Error("Sirf owner ya manager yeh note hata sakta hai.");
@@ -276,7 +280,7 @@ export function cancelProvisional(id: number, reason: string | null, user?: U): 
   });
 }
 
-/** U-35: bina-bill (jaldi) wapsi ki raseed ke liye ek hi record */
+/** U-35: bina-bill (jaldi) wapsi ki raseed ke liye ek hi record *//*
 export function getProvisionalReceipt(id: number) {
   const rows = query<{
     id: number; code: string; date: string; phone: string | null; reason: string | null;
@@ -312,3 +316,5 @@ export function getProvisionalReceipt(id: number) {
       .map((r) => ({ name: r.name, qtyBase: r.qty_base, baseUnit: r.base_unit })),
   };
 }
+
+*/

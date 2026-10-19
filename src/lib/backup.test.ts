@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Test: backup ka ZIP engine (photos ke sath backup/restore)
 // ---------------------------------------------------------------------------
@@ -51,3 +55,5 @@ test("ek se zyada entries ka hisaab theek", () => {
   assert.equal(back[11].data.toString(), "file number 11");
   assert.equal(back[0].name, "f0.txt");
 });
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - supplier ki poori tafseel: khata, bills, payments, returns + wapas bhejna
@@ -162,7 +166,7 @@ export default function SupplierDetailClient({
 
       {msg && <div className={`rounded px-3 py-2 text-sm ${msg.includes("gaya") ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-700"}`}>{msg}</div>}
 
-      {/* Supplier ko maal wapas */}
+      {/* Supplier ko maal wapas *//*}
       {showReturn && (
         <div className="card card-body space-y-3">
           <div className="card-title">Maal wapas bhejein (expiry / damaged / ghalat maal)</div>
@@ -211,7 +215,7 @@ export default function SupplierDetailClient({
       )}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Profile */}
+        {/* Profile *//*}
         <div className="card card-body space-y-2">
           <div className="card-title">Tafseel</div>
           {edit ? (
@@ -254,7 +258,7 @@ export default function SupplierDetailClient({
           )}
         </div>
 
-        {/* Khata */}
+        {/* Khata *//*}
         <div className="card card-body space-y-1">
           <div className="card-title mb-1">Khata</div>
           <div className="flex justify-between text-sm">
@@ -273,7 +277,7 @@ export default function SupplierDetailClient({
           </div>
         </div>
 
-        {/* Quick */}
+        {/* Quick *//*}
         <div className="card card-body space-y-2">
           <div className="card-title">Jaldi kaam</div>
           <Link href="/purchases" className="btn-secondary"><PackagePlus className="h-4 w-4" /> Nayi khareed (PINV)</Link>
@@ -284,7 +288,7 @@ export default function SupplierDetailClient({
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs *//*}
       <div className="card">
         <div className="card-head">
           <div className="flex gap-2">
@@ -352,3 +356,5 @@ export default function SupplierDetailClient({
     </div>
   );
 }
+
+*/

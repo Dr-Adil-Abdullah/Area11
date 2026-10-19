@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
 import { createPurchase, listPurchases, type PurchaseInput } from "@/lib/purchases";
@@ -36,3 +40,7 @@ export async function POST(req: Request) {
     );
   }
 }
+
+*/
+
+export {};

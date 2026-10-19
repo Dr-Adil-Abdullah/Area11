@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Spec 1: NEGATIVE inventory ke usool (pure functions)
 // ---------------------------------------------------------------------------
@@ -9,32 +13,32 @@
 // NOTE: ye module jaan-bujh kar kisi cheez ko import nahi karta -- is liye
 //       is par test baghair database ke chal jata hai.
 
-/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye */
+/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye *//*
 function roundQty(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
 export type NegativeInput = {
   name: string;
-  /** is waqt kitna maujood hai (batch ya poori dawa) */
+  /** is waqt kitna maujood hai (batch ya poori dawa) *//*
   inStockBase: number;
-  /** kitna becha ja raha hai */
+  /** kitna becha ja raha hai *//*
   sellBase: number;
-  /** Settings: manfi stock ki ijazat? */
+  /** Settings: manfi stock ki ijazat? *//*
   allowNegative: boolean;
-  /** Settings: alert dikhayein? */
+  /** Settings: alert dikhayein? *//*
   warn: boolean;
-  /** kis cheez ka stock dekha (masalan "batch B12") */
+  /** kis cheez ka stock dekha (masalan "batch B12") *//*
   stockLabel?: string;
 };
 
 export type NegativeVerdict = {
-  /** stock minus me gaya? */
+  /** stock minus me gaya? *//*
   short: boolean;
-  /** bikri ROKNI hai? (allowNegative OFF hone par hi true) */
+  /** bikri ROKNI hai? (allowNegative OFF hone par hi true) *//*
   block: boolean;
-  /** ooper wale bade alert ka paigham ( Urdu ) */
+  /** ooper wale bade alert ka paigham ( Urdu ) *//*
   message: string;
-  /** is ke baad stock kitna hoga */
+  /** is ke baad stock kitna hoga *//*
   afterBase: number;
 };
 
@@ -42,7 +46,7 @@ export type NegativeVerdict = {
  * Faisla: ye line stock ko minus me le jayegi ya nahi?
  *  - allowNegative ON  → bikri HOTI rahe + bara alert
  *  - allowNegative OFF → bikri RUK jaye
- */
+ *//*
 export function evaluateNegativeStock(i: NegativeInput): NegativeVerdict {
   const shortBy = i.sellBase - i.inStockBase;
   const afterBase = roundQty(i.inStockBase - i.sellBase);
@@ -73,3 +77,5 @@ export function evaluateNegativeStock(i: NegativeInput): NegativeVerdict {
 
   return { short: true, block: false, message: i.warn ? warned : "", afterBase };
 }
+
+*/

@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { expiryAlerts, stockAlerts, sampleStock } from "@/lib/alerts";
 import { getSettings } from "@/lib/settings";
 import type { ExpiryLevels } from "@/lib/pos";
@@ -67,7 +71,7 @@ export default async function AlertsPage() {
       <div><h1 className="text-xl font-semibold text-slate-800">Expiry &amp; stock alerts</h1>
         <p className="text-sm text-slate-500">Expiry windows come from Settings (now {levels.map((l) => l.days).join(" / ")} days). Reorder level is set per product.</p></div>
 
-      {/* ===== Spec 1.2: sab se ooper wala surkh alert ===== */}
+      {/* ===== Spec 1.2: sab se ooper wala surkh alert ===== *//*}
       {negative.length > 0 && (
         <div className="rounded-lg border-2 border-rose-300 bg-rose-100 p-3 text-rose-900">
           <div className="flex items-center gap-2 text-sm font-bold">
@@ -127,4 +131,10 @@ export default async function AlertsPage() {
       <WhatsAppCard initial={JSON.parse(JSON.stringify(reorder))} />
     </div>
   );
+}
+
+*/
+
+export default function Page() {
+  return null;
 }

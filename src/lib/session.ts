@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Session (Login ke baad "kaun andar hai")
 // ---------------------------------------------------------------------------
@@ -24,7 +28,7 @@ export function sessionSecret(): string {
   return getOrCreateSecret(SESSION_SECRET_KEY, process.env.SESSION_SECRET);
 }
 
-/** Token banao (login ke waqt) */
+/** Token banao (login ke waqt) *//*
 export async function createSessionToken(userId: number, role: string): Promise<string> {
   const settings = await getSettings();
   const hours = Number(settings["security.sessionHours"]) || 12;
@@ -33,7 +37,7 @@ export async function createSessionToken(userId: number, role: string): Promise<
   return signToken(payload, sessionSecret());
 }
 
-/** Cookie se token parh kar user nikalo (kuch bhi ghalat ho to null) */
+/** Cookie se token parh kar user nikalo (kuch bhi ghalat ho to null) *//*
 export async function getSessionUser(): Promise<SessionUser | null> {
   try {
     const store = await cookies();
@@ -52,7 +56,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   }
 }
 
-/** Pehla active owner (jab security.requireLogin band ho) */
+/** Pehla active owner (jab security.requireLogin band ho) *//*
 function firstActiveOwner(): SessionUser | null {
   return (
     get<SessionUser>(
@@ -68,7 +72,7 @@ function firstActiveOwner(): SessionUser | null {
  *  - Login hua hai to wohi
  *  - warna: agar security.requireLogin = OFF hai to owner (purani behaviour)
  *  - warna null (matlab login zaroori)
- */
+ *//*
 export async function currentUser(): Promise<SessionUser | null> {
   const session = await getSessionUser();
   if (session) return session;
@@ -81,7 +85,7 @@ export async function currentUser(): Promise<SessionUser | null> {
   return null;
 }
 
-/** Login zaroori -- warna error (API routes ke liye) */
+/** Login zaroori -- warna error (API routes ke liye) *//*
 export async function requireUser(): Promise<SessionUser> {
   const user = await currentUser();
   if (!user) {
@@ -92,7 +96,7 @@ export async function requireUser(): Promise<SessionUser> {
   return user;
 }
 
-/** Sirf owner (staff/backup/settings ke liye) */
+/** Sirf owner (staff/backup/settings ke liye) *//*
 export async function requireOwner(): Promise<SessionUser> {
   const user = await requireUser();
   if (user.role !== "owner") {
@@ -109,7 +113,7 @@ function forbidden(message: string): Error {
   return err;
 }
 
-/** Owner ya Manager (kharidari, supplier payment, settings wagera) */
+/** Owner ya Manager (kharidari, supplier payment, settings wagera) *//*
 export async function requireShopManager(): Promise<SessionUser> {
   const user = await requireUser();
   if (user.role !== "owner" && user.role !== "manager") {
@@ -118,7 +122,7 @@ export async function requireShopManager(): Promise<SessionUser> {
   return user;
 }
 
-/** Handle() ke andar role check karne ke liye */
+/** Handle() ke andar role check karne ke liye *//*
 export function assertShopManager(user: SessionUser): SessionUser {
   if (user.role !== "owner" && user.role !== "manager") {
     throw forbidden("Owner or Manager only");
@@ -126,7 +130,9 @@ export function assertShopManager(user: SessionUser): SessionUser {
   return user;
 }
 
-/** Kis user ne login kiya -- audit ke liye chhota helper */
+/** Kis user ne login kiya -- audit ke liye chhota helper *//*
 export async function loginStamp(userId: number): Promise<void> {
   run(`UPDATE users SET last_login_at = datetime('now','localtime') WHERE id = ?`, [userId]);
 }
+
+*/

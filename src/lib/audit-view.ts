@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Blackbox viewer: "kis ne, kab, kya kiya" -- sirf owner
 // ---------------------------------------------------------------------------
@@ -13,11 +17,11 @@ export type AuditRow = {
   entity_id: string | null;
   details: string | null;
   ip: string | null;
-  /** Spec 2: kaunse module se kaam hua (POS / Inventory / Settings ...) */
+  /** Spec 2: kaunse module se kaam hua (POS / Inventory / Settings ...) *//*
   module: string | null;
-  /** Spec 2: tabdeeli se PEHLE ki value (sirf badli hui felds) */
+  /** Spec 2: tabdeeli se PEHLE ki value (sirf badli hui felds) *//*
   old_value: string | null;
-  /** Spec 2: tabdeeli ke BAAD ki value */
+  /** Spec 2: tabdeeli ke BAAD ki value *//*
   new_value: string | null;
 };
 
@@ -38,13 +42,13 @@ export const AUDIT_ACTIONS = [
   "sync", "negative_sale", "denied",
 ];
 
-/** Modules ki fehrist (filter ke dropdown ke liye) */
+/** Modules ki fehrist (filter ke dropdown ke liye) *//*
 export const AUDIT_MODULES = [
   "POS", "Sales", "Returns", "Inventory", "Purchases", "Customers",
   "Suppliers", "Stock", "Settings", "Users", "Backup", "Sync", "Import", "Auth", "Other",
 ];
 
-/** Blackbox kabhi delete nahi hota -- is liye sirf parhna hai, mitana nahi */
+/** Blackbox kabhi delete nahi hota -- is liye sirf parhna hai, mitana nahi *//*
 export function listAudit(f: AuditFilters = {}): { rows: AuditRow[]; total: number; byAction: Record<string, number> } {
   const where: string[] = [];
   const params: (string | number)[] = [];
@@ -104,14 +108,14 @@ export function listAudit(f: AuditFilters = {}): { rows: AuditRow[]; total: numb
   return { rows, total, byAction };
 }
 
-/** Filter chunne ke liye: kaun kaun se entity hain */
+/** Filter chunne ke liye: kaun kaun se entity hain *//*
 export function auditEntities(): string[] {
   return query<{ entity: string }>(
     "SELECT DISTINCT entity FROM audit_logs WHERE entity IS NOT NULL ORDER BY entity"
   ).map((r) => r.entity);
 }
 
-/** Filter ke liye: kaun kaun se module istemal hue */
+/** Filter ke liye: kaun kaun se module istemal hue *//*
 export function auditModules(): string[] {
   return query<{ module: string }>(
     "SELECT DISTINCT module FROM audit_logs WHERE module IS NOT NULL ORDER BY module"
@@ -124,7 +128,7 @@ export function auditUsers(): string[] {
   ).map((r) => r.user_name);
 }
 
-/** Blackbox ko CSV me nikala ja sake (owner apne hisab se dekh sake) */
+/** Blackbox ko CSV me nikala ja sake (owner apne hisab se dekh sake) *//*
 export function auditCsv(f: AuditFilters = {}): string {
   const { rows } = listAudit({ ...f, limit: Math.min(f.limit ?? 5000, 5000) });
   const esc = (v: unknown) => {
@@ -143,3 +147,5 @@ export function auditCsv(f: AuditFilters = {}): string {
   }
   return lines.join("\n");
 }
+
+*/

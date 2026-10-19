@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // ---------------------------------------------------------------------------
@@ -26,7 +30,7 @@ export default function DismissedAlertsCard({
   canRestore,
 }: {
   initial: Row[];
-  /** sirf malik hi wapas la sakta hai */
+  /** sirf malik hi wapas la sakta hai *//*
   canRestore: boolean;
 }) {
   const router = useRouter();
@@ -125,3 +129,5 @@ export default function DismissedAlertsCard({
     </div>
   );
 }
+
+*/

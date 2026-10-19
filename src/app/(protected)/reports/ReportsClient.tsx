@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Reports: roz / hafta / mahina — bikri, munafa, top dawayen, dead stock
@@ -36,7 +40,7 @@ export default function ReportsClient({ initial, whatsappEnabled }: { initial: D
   const [data, setData] = useState<Data>(initial);
   const [loading, setLoading] = useState(false);
 
-  /** Range badlo: server se naya hisab lao (page reload ke baghair) */
+  /** Range badlo: server se naya hisab lao (page reload ke baghair) *//*
   async function pick(p: "today" | "7" | "30" | "month") {
     setPreset(p);
     setLoading(true);
@@ -109,7 +113,7 @@ export default function ReportsClient({ initial, whatsappEnabled }: { initial: D
         <Card title="Kharchay" value={formatPKR(t.expensesPaisa)} hint={`Khareed: ${formatPKR(t.purchasesPaisa)}`} />
       </div>
 
-      {/* Roz ka graph (simple bars) */}
+      {/* Roz ka graph (simple bars) *//*}
       {data.daily.length > 0 && (
         <div className="card">
           <div className="card-head"><div className="card-title">Roz ki bikri</div><CalendarRange className="h-4 w-4 text-slate-400" /></div>
@@ -196,3 +200,5 @@ export default function ReportsClient({ initial, whatsappEnabled }: { initial: D
     </div>
   );
 }
+
+*/

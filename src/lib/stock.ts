@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Stock adjustments (nuqsan / write-off aur ginti ki durusti)
 // ---------------------------------------------------------------------------
@@ -50,7 +54,7 @@ export type StockAdjustResult = {
   valuePaisa: number;
   newBatchQty: number;
   newProductQty: number;
-  /** Spec 1.2: stock minus me gaya to yahan warning aayegi (bikri nahi rukegi) */
+  /** Spec 1.2: stock minus me gaya to yahan warning aayegi (bikri nahi rukegi) *//*
   warning: string | null;
 };
 
@@ -209,7 +213,7 @@ export type AdjustmentRow = {
   user_name: string | null;
 };
 
-/** Aakhri adjustments (report/dekhne ke liye) */
+/** Aakhri adjustments (report/dekhne ke liye) *//*
 export function listAdjustments(opts: { limit?: number; productId?: number } = {}): AdjustmentRow[] {
   const limit = Math.max(1, Math.min(500, opts.limit ?? 50));
   if (opts.productId) {
@@ -239,7 +243,7 @@ export function listAdjustments(opts: { limit?: number; productId?: number } = {
   );
 }
 
-/** Aaj + is mahine ka nuqsan (dashboard/report ke liye) */
+/** Aaj + is mahine ka nuqsan (dashboard/report ke liye) *//*
 export function writeOffSummary(): { todayPaisa: number; monthPaisa: number } {
   const today =
     get<{ v: number }>(
@@ -253,3 +257,5 @@ export function writeOffSummary(): { todayPaisa: number; monthPaisa: number } {
     )?.v ?? 0;
   return { todayPaisa: today, monthPaisa: month };
 }
+
+*/

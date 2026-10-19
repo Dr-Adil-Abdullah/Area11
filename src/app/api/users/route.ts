@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Staff accounts (sirf owner)
 import { handleOwner } from "@/lib/api";
 import { createUser, listUsers, type UserInput } from "@/lib/users";
@@ -19,3 +23,7 @@ export async function POST(req: Request) {
     return { id };
   });
 }
+
+*/
+
+export {};

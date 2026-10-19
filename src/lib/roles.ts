@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Roles (Login ke baad "kaun kya kar sakta hai")
 // ---------------------------------------------------------------------------
@@ -14,17 +18,17 @@ export function isRole(value: string | null | undefined): value is Role {
   return value === "owner" || value === "manager" || value === "cashier";
 }
 
-/** Kya ye role settings/staff/backup kar sakta hai? */
+/** Kya ye role settings/staff/backup kar sakta hai? *//*
 export function canManageShop(role: string | null | undefined): boolean {
   return role === "owner" || role === "manager";
 }
 
-/** Sab kuch (staff, backup, settings) sirf owner */
+/** Sab kuch (staff, backup, settings) sirf owner *//*
 export function isOwner(role: string | null | undefined): boolean {
   return role === "owner";
 }
 
-/** Discount ki max percent is role ke liye (settings se aati hai) */
+/** Discount ki max percent is role ke liye (settings se aati hai) *//*
 export function maxDiscountPercent(
   role: string | null | undefined,
   limits: { cashier: number; manager: number; owner: number }
@@ -37,7 +41,7 @@ export function maxDiscountPercent(
 /**
  * Bill discount check: percent limit se zyada hai?
  * Return: { allowed, percent, limit }
- */
+ *//*
 export function checkDiscountLimit(
   discountPaisa: number,
   linesTotalPaisa: number,
@@ -53,3 +57,5 @@ export function checkDiscountLimit(
     limit: limitPercent,
   };
 }
+
+*/

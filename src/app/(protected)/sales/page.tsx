@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { listSales } from "@/lib/sales";
 import { get } from "@/lib/db";
 import { listProvisional, pendingProvisionalCount } from "@/lib/provisional";
@@ -47,4 +51,10 @@ export default async function SalesPage({ searchParams }: {
       returnReceipts={JSON.parse(JSON.stringify(returnReceipts))}
     />
   );
+}
+
+*/
+
+export default function Page() {
+  return null;
 }

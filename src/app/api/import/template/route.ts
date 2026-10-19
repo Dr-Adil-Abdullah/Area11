@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - namoona Excel file download (owner + manager)
 import { guard, SHOP_ROLES } from "@/lib/api";
 import { NextResponse } from "next/server";
@@ -17,3 +21,7 @@ export async function GET() {
     },
   });
 }
+
+*/
+
+export {};

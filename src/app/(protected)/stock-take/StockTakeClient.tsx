@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Ginti (stock-take): ginno, farq dekho, lagu karo
@@ -191,7 +195,7 @@ export default function StockTakeClient({
         <div className="rounded border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{msg}</div>
       )}
 
-      {/* Purani ginti */}
+      {/* Purani ginti *//*}
       {takes.length > 0 && (
         <div className="card">
           <div className="card-head"><div className="card-title">Ginti ki tarikh</div></div>
@@ -306,3 +310,5 @@ export default function StockTakeClient({
     </div>
   );
 }
+
+*/

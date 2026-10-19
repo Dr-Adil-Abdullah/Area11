@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Stock-take (ginti)
 // ---------------------------------------------------------------------------
@@ -73,7 +77,7 @@ export type CountInput = {
  * Ginti ka farq (kitab vs haath) -- saaf hisab, test ke qabil.
  * kami  = manfi diff (nuqsan)   ziyada = musbat diff (fayda)
  * Qeemat hamesha PURCHASE COST par.
- */
+ *//*
 export function diffOf(
   systemQty: number,
   countedQty: number,
@@ -388,7 +392,7 @@ export function stockTakeItems(stockTakeId: number): StockTakeItem[] {
   );
 }
 
-/** Session ka khulasa (kitni ginti hui, kitne farq, qeemat) */
+/** Session ka khulasa (kitni ginti hui, kitne farq, qeemat) *//*
 function recalcSummary(stockTakeId: number): void {
   const s = get<{ c: number; short_p: number; extra_p: number }>(
     `SELECT COUNT(*) AS c,
@@ -403,3 +407,5 @@ function recalcSummary(stockTakeId: number): void {
     [s?.c ?? 0, s?.short_p ?? 0, s?.extra_p ?? 0, stockTakeId]
   );
 }
+
+*/

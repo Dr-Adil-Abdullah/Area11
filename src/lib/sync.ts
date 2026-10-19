@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Cloud sync (Supabase) — dukan ka data ghar se dekhne ke liye
 // ---------------------------------------------------------------------------
@@ -33,7 +37,7 @@ export type SyncPacket = {
   data: Record<string, Record<string, unknown>[]>;
 };
 
-/** Kaun kaun se table bhejein (aur kis hisaab se chhote rakhein) */
+/** Kaun kaun se table bhejein (aur kis hisaab se chhote rakhein) *//*
 const TABLES: { name: string; where?: string; limit?: number; order?: string }[] = [
   { name: "categories" },
   { name: "companies" },
@@ -50,7 +54,7 @@ const TABLES: { name: string; where?: string; limit?: number; order?: string }[]
   { name: "stock_movements", limit: 20000 },
 ];
 
-/** Dukan ka data ka snapshot (bhejne layak) */
+/** Dukan ka data ka snapshot (bhejne layak) *//*
 export function buildPacket(): SyncPacket {
   const s = getSettingsSync();
   const data: Record<string, Record<string, unknown>[]> = {};
@@ -74,7 +78,7 @@ export function buildPacket(): SyncPacket {
   };
 }
 
-/** Settings ko seedha (sync ke liye) */
+/** Settings ko seedha (sync ke liye) *//*
 function getSettingsSync(): AppSettings {
   // getSettings async hai; yahan ek chhoti synchronous copy padhte hain
   const rows = query<{ key: string; value: string }>("SELECT key, value FROM settings");
@@ -259,7 +263,7 @@ export async function pullSync(
 // ---------------------------------------------------------------------------
 // APPLY — cloud ka snapshot local DB me daalo (pehle backup!)
 // ---------------------------------------------------------------------------
-/** Har table ki primary key */
+/** Har table ki primary key *//*
 const PK: Record<string, string> = {
   categories: "id", companies: "id", products: "id", customers: "id",
   suppliers: "id", batches: "id", sales: "id", sale_items: "id",
@@ -276,7 +280,7 @@ export function applyPacket(packet: SyncPacket): Record<string, number> {
     fs.mkdirSync(path.join(process.cwd(), "data", "backups"), { recursive: true });
     fs.copyFileSync(target, path.join(process.cwd(), "data", "backups", `area11-before-sync-${stamp}.db`));
   } catch {
-    /* backup na ban sake to bhi aage barho */
+    /* backup na ban sake to bhi aage barho *//*
   }
 
   tx(() => {
@@ -330,3 +334,5 @@ export function syncStatus(): {
     counts,
   };
 }
+
+*/

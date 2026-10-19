@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 import { useEffect, useState } from "react";
@@ -196,3 +200,5 @@ export default function LoginClient({
     </div>
   );
 }
+
+*/

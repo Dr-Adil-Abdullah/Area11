@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Cash shift (galla / shift): kholna, zinda hisaab, band karna, farq
 // ---------------------------------------------------------------------------
@@ -65,7 +69,7 @@ export function getShift(id: number): ShiftRow | undefined {
   );
 }
 
-/** Khula galla kholo (agar pehle se khula ho to mana kar do) */
+/** Khula galla kholo (agar pehle se khula ho to mana kar do) *//*
 export function openShift(openingFloatPaisa: number, user?: U, note?: string | null): { id: number } {
   const open = currentShift();
   if (open) {
@@ -85,7 +89,7 @@ export function openShift(openingFloatPaisa: number, user?: U, note?: string | n
   return { id: res.lastInsertRowid };
 }
 
-/** Shift ke waqt me hone wali sari cash harkat + expected galla */
+/** Shift ke waqt me hone wali sari cash harkat + expected galla *//*
 export function shiftFlow(shiftId: number): ShiftFlow {
   const s = getShift(shiftId);
   if (!s) throw new Error("Shift nahi mili");
@@ -139,16 +143,16 @@ export function shiftFlow(shiftId: number): ShiftFlow {
 }
 
 export type CloseShiftInput = {
-  /** Ginta hua cash */
+  /** Ginta hua cash *//*
   actualPaisa: number;
   note?: string | null;
-  /** Agla kaun senbhalega (user id) */
+  /** Agla kaun senbhalega (user id) *//*
   handedToUserId?: number | null;
-  /** Ginta hua cash agle shift ka opening float ban jaye? */
+  /** Ginta hua cash agle shift ka opening float ban jaye? *//*
   openNext?: boolean;
 };
 
-/** Ginta hua cash de kar shift band karo -> farq mehfooz (+ handover) */
+/** Ginta hua cash de kar shift band karo -> farq mehfooz (+ handover) *//*
 export function closeShift(input: CloseShiftInput, user?: U): {
   id: number; expectedPaisa: number; actualPaisa: number; differencePaisa: number;
   nextShiftId: number | null; handedToName: string | null;
@@ -233,7 +237,7 @@ export function closeShift(input: CloseShiftInput, user?: U): {
   });
 }
 
-/** Is shift me kitne bill bane */
+/** Is shift me kitne bill bane *//*
 function flow0(shiftId: number): number {
   const s = getShift(shiftId);
   if (!s) return 0;
@@ -254,7 +258,7 @@ export type HandoverSlip = {
   bills: number;
 };
 
-/** Handover parchi ke liye poora hisaab (chhapne layak) */
+/** Handover parchi ke liye poora hisaab (chhapne layak) *//*
 export function handoverSlip(shiftId: number): HandoverSlip {
   const s = getShift(shiftId);
   if (!s) throw new Error("Shift nahi mili.");
@@ -268,14 +272,14 @@ export function handoverSlip(shiftId: number): HandoverSlip {
   };
 }
 
-/** Handover ke liye users ki chhoti fehrist */
+/** Handover ke liye users ki chhoti fehrist *//*
 export function shiftUsers(): { id: number; name: string; role: string }[] {
   return query<{ id: number; name: string; role: string }>(
     `SELECT id, name, role FROM users WHERE active = 1 ORDER BY role, name`
   );
 }
 
-/** Purani shifts (history) */
+/** Purani shifts (history) *//*
 export function listShifts(limit = 20): ShiftRow[] {
   return query<ShiftRow>(
     `SELECT s.*, u.name AS user_name
@@ -285,10 +289,12 @@ export function listShifts(limit = 20): ShiftRow[] {
   );
 }
 
-/** Aaj ki total farq (owner ke liye ek nazar me) */
+/** Aaj ki total farq (owner ke liye ek nazar me) *//*
 export function shiftVarianceToday(): number {
   return get<{ v: number }>(
     `SELECT COALESCE(SUM(difference_paisa),0) v FROM shifts
       WHERE status='closed' AND date(closed_at) = date('now','localtime')`
   )?.v ?? 0;
 }
+
+*/

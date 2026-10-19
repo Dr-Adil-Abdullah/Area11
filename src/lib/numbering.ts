@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Bill numbering (auto sequence; settings se)
 // ---------------------------------------------------------------------------
@@ -5,7 +9,7 @@
 import { get, run } from "./db";
 import { getSettings, formatBillCode, type AppSettings } from "./settings";
 
-/** Har qism ka prefix + agla number (settings keys) */
+/** Har qism ka prefix + agla number (settings keys) *//*
 function keysFor(kind: BillKind): [string, string] {
   if (kind === "sale") return ["bill.salePrefix", "bill.nextSaleNo"];
   if (kind === "purchase") return ["bill.purchasePrefix", "bill.nextPurchaseNo"];
@@ -26,7 +30,7 @@ function codeParts(kind: BillKind, s: AppSettings): [string, number] {
 export type BillKind =
   | "sale" | "purchase" | "supplierReturn" | "provisional" | "stockTake" | "return" | "quarantine";
 
-/** Agla bill number nikalo (settings se) */
+/** Agla bill number nikalo (settings se) *//*
 export async function peekNextCode(kind: BillKind): Promise<string> {
   const s = await getSettings();
   const [prefix, no] = codeParts(kind, s);
@@ -36,7 +40,7 @@ export async function peekNextCode(kind: BillKind): Promise<string> {
 /**
  * Bill number reserve karo (transaction ke andar chalna chahiye).
  * Do counter ek hi number na lein -- is liye number foran barha diya jata hai.
- */
+ *//*
 export function takeNextCode(kind: BillKind): string {
   const [prefixKey, noKey] = keysFor(kind);
   const padKey = "bill.numberPadding";
@@ -82,3 +86,5 @@ export function takeNextCode(kind: BillKind): string {
 
   return code;
 }
+
+*/

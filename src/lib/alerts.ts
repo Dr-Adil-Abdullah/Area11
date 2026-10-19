@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Expiry & low-stock alerts (levels settings se: RULE E)
 import { get, query } from "./db";
 import { expiryStatus, type ExpiryLevels } from "./pos";
@@ -14,7 +18,7 @@ export function expiryAlerts(levels: ExpiryLevels) {
   return rows.map((r) => ({ ...r, status: expiryStatus(r.expiry_ym, levels), lossPaisa: Math.round(r.qty_base * r.cost_paisa) }));
 }
 
-/** Sample / bonus stock: jo maal muft mila (bills me 0 jura) — ab us ki alag list */
+/** Sample / bonus stock: jo maal muft mila (bills me 0 jura) — ab us ki alag list *//*
 export function sampleStock() {
   return query<{
     batch_id: number; product_id: number; name: string; batch_no: string;
@@ -66,7 +70,7 @@ export function negativeStockSummary(): { items: number; worst: number } {
  * (restock = 0 wali sale_returns). Ye maal stock me to nahi hota magar
  * dukan me maujood hota hai -- is liye yahan nazar aana chahiye, warna
  * chup-chapat "ghaib" ho jata hai.
- */
+ *//*
 export function quarantineList() {
   try {
     return query<{
@@ -92,3 +96,5 @@ export function quarantineList() {
     return [];
   }
 }
+
+*/

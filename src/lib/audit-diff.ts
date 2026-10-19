@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Audit: PURANA vs NAYA nikalne ka saada (pure) hisaab
 // ---------------------------------------------------------------------------
@@ -11,7 +15,7 @@ export type FieldDiff = Record<string, { from: unknown; to: unknown }>;
 /**
  * Do records ka farq: sirf wahi fields jo BADLI hain.
  *   diffFields({a:1,b:"x"}, {a:2,b:"x"})  →  { a: { from: 1, to: 2 } }
- */
+ *//*
 export function diffFields(
   before: Record<string, unknown> | null | undefined,
   after: Record<string, unknown> | null | undefined
@@ -28,7 +32,7 @@ export function diffFields(
   return out;
 }
 
-/** Farq ko do column (purana / naya) me baant do */
+/** Farq ko do column (purana / naya) me baant do *//*
 export function splitDiff(diff: FieldDiff): {
   oldValue: Record<string, unknown>;
   newValue: Record<string, unknown>;
@@ -42,7 +46,7 @@ export function splitDiff(diff: FieldDiff): {
   return { oldValue, newValue };
 }
 
-/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye */
+/** 3.5 tablet ko "3.5" aur 4 ko "4" dikhane ke liye *//*
 export function roundQty(n: number): number {
   return Math.round(n * 1000) / 1000;
 }
@@ -53,7 +57,7 @@ export function roundQty(n: number): number {
  *   naya record  → purana null, naya = poori value
  *   mitaya gaya  → purana = poori value, naya null
  *   badla gaya   → sirf wahi felds jo badli hain
- */
+ *//*
 export function valuesForLog(
   before: Record<string, unknown> | null | undefined,
   after: Record<string, unknown> | null | undefined
@@ -69,3 +73,5 @@ export function valuesForLog(
   }
   return { oldValue: null, newValue: null };
 }
+
+*/

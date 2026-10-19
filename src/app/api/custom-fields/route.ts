@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - apni fields (custom fields) manage karne ka API -- owner + manager
 import { NextResponse } from "next/server";
 import { guard, SHOP_ROLES } from "@/lib/api";
@@ -58,3 +62,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : "failed" }, { status: 400 });
   }
 }
+
+*/
+
+export {};

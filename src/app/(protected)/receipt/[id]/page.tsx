@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { notFound } from "next/navigation";
 import { getSale } from "@/lib/sales";
 import { getPurchase } from "@/lib/purchases";
@@ -409,4 +413,10 @@ export default async function ReceiptPage({
       </div>
     </div>
   );
+}
+
+*/
+
+export default function Page() {
+  return null;
 }

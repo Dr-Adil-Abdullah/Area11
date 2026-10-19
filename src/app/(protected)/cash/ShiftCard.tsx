@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Galla / shift card: kholein, zinda hisaab dekhein, ginta hua cash de kar band karein
@@ -94,7 +98,7 @@ export default function ShiftCard({
     }
   }
 
-  /** Handover parchi lao (chhapne ke liye) */
+  /** Handover parchi lao (chhapne ke liye) *//*
   async function loadSlip(id: number) {
     const r = await post({ action: "slip", shiftId: id });
     if (r?.slip) setSlip(r.slip as Slip);
@@ -179,7 +183,7 @@ export default function ShiftCard({
             <input className="input-sm flex-1" placeholder="Band karne ka note (optional)" value={closeNote} onChange={(e) => setCloseNote(e.target.value)} />
           </div>
 
-          {/* ---- Handover: galla kis ko diya ja raha hai ---- */}
+          {/* ---- Handover: galla kis ko diya ja raha hai ---- *//*}
           <div className="mt-2 rounded border border-slate-200 bg-slate-50 p-2">
             <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
               Handover (galla kis ko de rahe hain)
@@ -277,3 +281,5 @@ export default function ShiftCard({
     </div>
   );
 }
+
+*/

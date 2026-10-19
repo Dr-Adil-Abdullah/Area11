@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // ---------------------------------------------------------------------------
@@ -43,7 +47,7 @@ export default function QuarantineCard({
 }: {
   initial: Row[];
   history: Row[];
-  /** sirf owner/manager faisla kar sakte hain */
+  /** sirf owner/manager faisla kar sakte hain *//*
   canDecide: boolean;
 }) {
   const router = useRouter();
@@ -85,7 +89,7 @@ export default function QuarantineCard({
 
   return (
     <div className="space-y-3">
-      {/* ===== (1) ABHI QUARANTINE ME ===== */}
+      {/* ===== (1) ABHI QUARANTINE ME ===== *//*}
       <div className="card border-amber-200">
         <div className="card-head">
           <div>
@@ -195,7 +199,7 @@ export default function QuarantineCard({
         </div>
       </div>
 
-      {/* ===== (2) POORI HISTORY: kaun sa saman kidhar gaya ===== */}
+      {/* ===== (2) POORI HISTORY: kaun sa saman kidhar gaya ===== *//*}
       <div className="card">
         <div className="card-head">
           <div>
@@ -253,3 +257,5 @@ export default function QuarantineCard({
     </div>
   );
 }
+
+*/

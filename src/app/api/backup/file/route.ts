@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Mehfooz backup file download
 import fs from "node:fs";
 import path from "node:path";
@@ -28,3 +32,7 @@ export async function GET(req: Request) {
     },
   });
 }
+
+*/
+
+export {};

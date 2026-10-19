@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 import AlertBar, { type GlobalAlert } from "@/components/AlertBar";
@@ -12,7 +16,7 @@ type NavItem = {
   icon: React.ElementType;
   ready: boolean;
   phase?: string;
-  /** kaun dekh sakta hai (khaali = sab) */
+  /** kaun dekh sakta hai (khaali = sab) *//*
   roles?: string[];
 };
 
@@ -59,13 +63,13 @@ export default function AppShell({
   userRole: string;
   isAuthed: boolean;
   autoLockMinutes: number;
-  /** Spec 1.2: kitni cheezein stock me MINUS hain (har safhe par alert) */
+  /** Spec 1.2: kitni cheezein stock me MINUS hain (har safhe par alert) *//*
   negativeStock?: { items: number; worst: number };
-  /** Spec 1.2: ye alert dikhana hai ya nahi (Settings: stock.warnNegative) */
+  /** Spec 1.2: ye alert dikhana hai ya nahi (Settings: stock.warnNegative) *//*
   warnNegative?: boolean;
-  /** U-31: zinda alerts jo malik wajah likh kar khatam kar sakta hai */
+  /** U-31: zinda alerts jo malik wajah likh kar khatam kar sakta hai *//*
   alerts?: GlobalAlert[];
-  /** U-31: kya ye user malik hai (sirf malik hi alert khatam kar sakta hai) */
+  /** U-31: kya ye user malik hai (sirf malik hi alert khatam kar sakta hai) *//*
   canDismiss?: boolean;
 }) {
   const pathname = usePathname();
@@ -122,7 +126,7 @@ export default function AppShell({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
+      {/* Sidebar *//*}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-white ring-1 ring-slate-200 transition-transform
         lg:static lg:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
@@ -218,7 +222,7 @@ export default function AppShell({
         />
       )}
 
-      {/* Main */}
+      {/* Main *//*}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur">
           <button
@@ -248,7 +252,7 @@ export default function AppShell({
         {/* ===== Spec 1.2 + U-31: HAR SAFHE ke bilkul ooper alerts =====
              Malik ka hukum: manfi stock kaam nahi rokta, SIRF alert jata hai;
              aur alert us waqt tak rahta hai jab tak malik wajah likh kar
-             khatam na kare. (Pehle ye sirf usi session ke liye chhupta tha.) */}
+             khatam na kare. (Pehle ye sirf usi session ke liye chhupta tha.) *//*}
         {warnNegative && (negativeStock?.items ?? 0) > 0 && (
           <div className="flex flex-wrap items-center gap-2 border-b-2 border-rose-300 bg-rose-100 px-4 py-2 text-rose-900">
             <span className="text-base leading-none">⚠</span>
@@ -276,3 +280,5 @@ export default function AppShell({
     </div>
   );
 }
+
+*/

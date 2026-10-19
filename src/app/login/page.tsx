@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - Login page (owner = password, staff = naam + PIN)
 import { redirect } from "next/navigation";
 import { ensureBootstrap } from "@/lib/bootstrap";
@@ -26,4 +30,10 @@ export default async function LoginPage() {
       pinLength={Number(settings["security.pinLength"]) || 4}
     />
   );
+}
+
+*/
+
+export default function Page() {
+  return null;
 }

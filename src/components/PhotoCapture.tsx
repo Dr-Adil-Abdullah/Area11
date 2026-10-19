@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 // Area11 - Camera se seedhi tasveer (product / customer ke safhe par)
@@ -13,20 +17,20 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Loader2, SwitchCamera, X } from "lucide-react";
 
 type Props = {
-  /** Tasveer tayyar ho jaye to yeh chalega (chhoti ki hui data-URL) */
+  /** Tasveer tayyar ho jaye to yeh chalega (chhoti ki hui data-URL) *//*
   onCapture: (dataUrl: string) => void | Promise<void>;
-  /** Chhota label (masalan "Camera") */
+  /** Chhota label (masalan "Camera") *//*
   label?: string;
   className?: string;
 };
 
-/** Camera ka istemal ho sakta hai ya nahi */
+/** Camera ka istemal ho sakta hai ya nahi *//*
 export function cameraSupported(): boolean {
   if (typeof window === "undefined") return false;
   return Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
-/** Secure origin hai? (https / localhost) -- warna camera band */
+/** Secure origin hai? (https / localhost) -- warna camera band *//*
 export function secureOrigin(): boolean {
   if (typeof window === "undefined") return false;
   const h = window.location.hostname;
@@ -143,7 +147,7 @@ export default function PhotoCapture({ onCapture, label = "Camera", className }:
             </div>
 
             <div className="relative bg-black">
-              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption *//*}
               <video ref={videoRef} playsInline muted className="h-72 w-full object-contain" />
               {starting && (
                 <div className="absolute inset-0 flex items-center justify-center text-sm text-white">
@@ -179,3 +183,5 @@ export default function PhotoCapture({ onCapture, label = "Camera", className }:
     </>
   );
 }
+
+*/

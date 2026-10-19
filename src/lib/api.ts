@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - chhota API helper: har route me try/catch dobara na likhna pade (RULE U-08)
 // ---------------------------------------------------------------------------
@@ -11,14 +15,14 @@ import { ensureBootstrap } from "./bootstrap";
 import { requireUser, requireOwner, type SessionUser } from "./session";
 import { audit, type AuditAction, type AuditModule } from "./audit";
 
-/** Har route apna naam bata sake to log saaf rahe (Spec 2: universal log security) */
+/** Har route apna naam bata sake to log saaf rahe (Spec 2: universal log security) *//*
 export type AuditMeta = {
   action?: AuditAction;
   module?: AuditModule;
   entity?: string;
   entityId?: string | number;
   req?: Request;
-  /** kaamyab kaam ko bhi yahan se likhna ho (aksar lib khud likh deti hai) */
+  /** kaamyab kaam ko bhi yahan se likhna ho (aksar lib khud likh deti hai) *//*
   logSuccess?: boolean;
 };
 
@@ -49,7 +53,7 @@ export function jsonError(e: unknown): NextResponse {
 /**
  * Guard: har route ke shuru me -- login nahi to 401 jawab, warna null.
  *   const denied = await guard(); if (denied) return denied;
- */
+ *//*
 export const SHOP_ROLES = ["owner", "manager"];
 
 export async function guard(
@@ -80,7 +84,7 @@ export async function guard(
   }
 }
 
-/** Login lazmi route */
+/** Login lazmi route *//*
 export async function handle<T>(
   fn: (user: SessionUser) => T | Promise<T>,
   meta: AuditMeta = {}
@@ -129,7 +133,7 @@ export async function handle<T>(
   }
 }
 
-/** Sirf owner */
+/** Sirf owner *//*
 export async function handleOwner<T>(
   fn: (user: SessionUser) => T | Promise<T>
 ): Promise<NextResponse> {
@@ -142,3 +146,5 @@ export async function handleOwner<T>(
     return jsonError(e);
   }
 }
+
+*/

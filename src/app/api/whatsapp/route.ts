@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - WhatsApp text banane ka API (free: sirf text + wa.me link)
 import { NextResponse } from "next/server";
 import { guard } from "@/lib/api";
@@ -5,7 +9,7 @@ import { daySummaryText, orderText, reorderList, waLink, type OrderLine } from "
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/whatsapp?kind=reorder|day  → text + wa.me link */
+/** GET /api/whatsapp?kind=reorder|day  → text + wa.me link *//*
 export async function GET(req: Request) {
   const denied = await guard();
   if (denied) return denied;
@@ -36,7 +40,7 @@ export async function GET(req: Request) {
   });
 }
 
-/** POST: chuni hui lines ke sath text banao (UI se direct) */
+/** POST: chuni hui lines ke sath text banao (UI se direct) *//*
 export async function POST(req: Request) {
   const denied = await guard();
   if (denied) return denied;
@@ -50,3 +54,7 @@ export async function POST(req: Request) {
       : orderText({ supplierName: b.supplier, note: b.note, lines: b.lines ?? reorderList() });
   return NextResponse.json({ ok: true, text, link: waLink(b.phone ?? "", text) });
 }
+
+*/
+
+export {};

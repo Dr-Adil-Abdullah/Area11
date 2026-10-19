@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Windows Software</title>
+<!-- ============================================================
+     PREVIOUS CODE - commented out on purpose (2026-10-12).
+     Reference only: kept here so it can be read and studied later,
+     but NOTHING inside runs, so it cannot throw errors.
+     (The old interactive technology-comparison page:
+      priority sliders, score ranking, cards, table, script.)
+     ============================================================
+     
+<title>Area11 — Technology Comparison</title>
+<style>
+  :root {
+    --brand: #0e7490;
+    --ink: #1e293b;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --bg: #f8fafc;
+    --good: #059669;
+    --warn: #d97706;
+    --bad: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); line-height: 1.5; }
+  header { background: linear-gradient(135deg, #0e7490, #155e75); color: #fff; padding: 36px 24px; }
+  header h1 { margin: 0 0 8px; font-size: 28px; }
+  header p { margin: 0; opacity: .92; max-width: 860px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  section { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 22px; }
+  h2 { margin: 0 0 6px; font-size: 21px; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+  ul.bullets li { margin: 4px 0; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; background: #e0f2fe; color: #075985; margin: 2px 4px 2px 0; }
+
+  /* architecture */
+  .arch { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: center; gap: 8px; }
+  .box { border: 2px solid var(--brand); border-radius: 12px; padding: 14px; background: #ecfeff; }
+  .box h3 { margin: 0 0 6px; font-size: 16px; }
+  .box p { margin: 0; font-size: 13px; color: #334155; }
+  .arrow { text-align: center; font-size: 22px; color: var(--brand); }
+  @media (max-width: 720px) { .arch { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); } }
+
+  /* priorities form */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px 22px; }
+  .field label { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+  .field span.val { color: var(--brand); }
+  .field input[type=range] { width: 100%; accent-color: var(--brand); }
+  .field small { color: var(--muted); font-size: 12px; }
+  .results { margin-top: 18px; }
+  .row { display: grid; grid-template-columns: 210px 1fr 60px; gap: 10px; align-items: center; margin: 8px 0; }
+  .bar { height: 14px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, #06b6d4, var(--brand)); border-radius: 999px; transition: width .35s; }
+  .score { font-weight: 700; text-align: right; }
+  .rank-1 .name { color: var(--good); font-weight: 700; }
+
+  /* cards */
+  .cards { display: grid; gap: 12px; }
+  details { border: 1px solid var(--line); border-radius: 10px; padding: 0; background: #fff; }
+  details[open] { border-color: var(--brand); box-shadow: 0 2px 10px rgba(14,116,144,.12); }
+  summary { cursor: pointer; padding: 14px 16px; list-style: none; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; color: var(--brand); transition: transform .2s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  summary .title { font-weight: 700; font-size: 16px; }
+  summary .tag { font-size: 12px; color: var(--muted); }
+  .detail { padding: 0 18px 18px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .detail { grid-template-columns: 1fr; } }
+  .detail h4 { margin: 0 0 4px; font-size: 14px; }
+  .detail .good h4 { color: var(--good); }
+  .detail .bad h4 { color: var(--bad); }
+  .detail .wide { grid-column: 1 / -1; }
+  .kv { display: grid; grid-template-columns: 150px 1fr; gap: 4px 12px; font-size: 14px; }
+  .kv b { color: #334155; }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: center; }
+  th:first-child, td:first-child { text-align: left; font-weight: 600; }
+  th { background: #f1f5f9; }
+  .dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .legend { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+  .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+  .btn { background: var(--brand); color: #fff; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; }
+  .btn.ghost { background: #fff; color: var(--brand); border: 1px solid var(--brand); }
+</style>
+-->
+</head>
+<body>
+
+<h1>Windows Software</h1>
+
+<!-- ============================================================
+     PREVIOUS CODE - commented out on purpose (2026-10-12).
+     Reference only: kept here so it can be read and studied later,
+     but NOTHING inside runs, so it cannot throw errors.
+     (The old interactive technology-comparison page:
+      priority sliders, score ranking, cards, table, script.)
+     ============================================================
+     
+
+
+<header>
+  <h1>Area11 — Which technology should we use?</h1>
+  <p>An interactive comparison of six realistic options for a shop app that runs on the main computer, works offline, prints and scans directly, and gives your Android phone access to the data. Open each card, or set your own priorities below to see the ranking.</p>
+</header>
+
+<main>
+
+<!-- ============ 1. ARCHITECTURE ============ --><!--
+<section>
+  <h2>1. How the system works</h2>
+  <p class="sub">The data stays on one main computer. The other devices connect to it.</p>
+  <div class="arch">
+    <div class="box">
+      <h3>Main computer (server)</h3>
+      <p>Holds the database file. Runs the app. Connected to the printer, scanner, and cash drawer. Must be on for the shop to run.</p>
+    </div>
+    <div class="arrow">⇄</div>
+    <div class="box">
+      <h3>Other computers (counters)</h3>
+      <p>Connect over the local network (LAN). Bill and read data through the main computer.</p>
+    </div>
+    <div class="arrow">⇄</div>
+    <div class="box">
+      <h3>Android phone</h3>
+      <p>Reads data from the main computer on the LAN, or from the cloud (Supabase) when away from the shop.</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:14px">
+    <b>Design rule:</b> one main computer owns the data. If the internet is down, the shop keeps working on the LAN. Cloud sync is a copy for the phone and for backup, not the place where sales are recorded.
+  </div>
+</section>
+
+<!-- ============ 2. PRIORITIES FORM ============ --><!--
+<section>
+  <h2>2. Set your priorities</h2>
+  <p class="sub">Move the sliders. Higher = more important to you. The ranking updates instantly.</p>
+  <div class="form-grid" id="sliders"></div>
+  <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">
+    <button class="btn ghost" onclick="resetSliders()">Reset to defaults</button>
+    <button class="btn ghost" onclick="preset('free')">Preset: lowest cost</button>
+    <button class="btn ghost" onclick="preset('speed')">Preset: fastest</button>
+    <button class="btn ghost" onclick="preset('android')">Preset: Android included</button>
+  </div>
+  <div class="results" id="results"></div>
+</section>
+
+<!-- ============ 3. TECHNOLOGY CARDS ============ --><!--
+<section>
+  <h2>3. The six technologies</h2>
+  <p class="sub">Click any card to open it. Each card covers how it works, its pros and cons, and how it handles printing, scanners, and Android.</p>
+  <div class="cards" id="cards"></div>
+</section>
+
+<!-- ============ 4. COMPARISON TABLE ============ --><!--
+<section>
+  <h2>4. Side-by-side comparison</h2>
+  <p class="sub">Ratings from 1 (weak) to 5 (strong). These are my judgement based on typical results, not measurements on your PC.</p>
+  <div style="overflow-x:auto">
+  <table id="table"></table>
+  </div>
+  <div class="legend">
+    <span class="dot" style="background:#059669"></span>4–5 strong &nbsp;
+    <span class="dot" style="background:#d97706"></span>3 fair &nbsp;
+    <span class="dot" style="background:#dc2626"></span>1–2 weak
+  </div>
+</section>
+
+<!-- ============ 5. RECOMMENDATION ============ --><!--
+<section>
+  <h2>5. Recommendation and next steps</h2>
+  <ul class="bullets">
+    <li><b>Best fit for Windows speed and hardware:</b> WPF (C#). Starts fast, prints and scans natively. It runs on Windows only, so it doesn't meet your "works on Linux" wish.</li>
+    <li><b>Best if the phone must also bill, and you want Linux:</b> Avalonia (C#). One C# codebase for Windows, Linux, and Android.</li>
+    <li><b>Fastest way to keep the current TypeScript code:</b> Electron or Tauri 2. Electron is heavier. Tauri is lighter but needs Rust.</li>
+    <li><b>Strongest for hardware on any OS, but more complex:</b> Qt. Check its licence before you sell the software.</li>
+    <li><b>Free and small:</b> Lazarus (free Pascal) is free. Delphi is paid, so check its free edition limits first.</li>
+  </ul>
+  <div class="note" style="margin-top:12px">
+    <b>Decision needed:</b> Tell me which technology you pick, and answer three questions: Windows version on the shop PC, printer model and paper width, and scanner type. Then I'll start the project on your branch.
+  </div>
+</section>
+
+</main>
+
+<script>
+// ---------- DATA ----------
+// ratings: 1 (weak) .. 5 (strong)
+const CRITERIA = [
+  { key: "speed",    label: "Speed (startup and screens)",     def: 5, hint: "How quickly the app opens and responds" },
+  { key: "cost",     label: "Free / low cost",                 def: 4, hint: "5 = free to use and sell" },
+  { key: "hw",       label: "Printer and scanner support",     def: 5, hint: "USB printing, ESC/POS, cash drawer, scanner input" },
+  { key: "android",  label: "Android phone access",            def: 4, hint: "Can the same codebase run on Android?" },
+  { key: "linux",    label: "Linux support",                   def: 2, hint: "Can the main computer run on Linux?" },
+  { key: "reuse",    label: "Reuse of current TypeScript code",def: 2, hint: "How much of the existing code carries over" },
+  { key: "build",    label: "Easy to build with AI help",      def: 3, hint: "How well AI coding tools handle this stack" },
+  { key: "install",  label: "Easy install for the shop",       def: 4, hint: "One installer, small download, no setup" },
+  { key: "maturity", label: "Maturity and community",          def: 3, hint: "Stable tools, documentation, hiring pool" },
+];
+
+const TECHS = [
+  {
+    name: "C# with WPF (.NET)", short: "WPF", tag: "Windows native · recommended for Windows-first",
+    r: { speed: 5, cost: 5, hw: 5, android: 1, linux: 1, reuse: 1, build: 5, install: 5, maturity: 5 },
+    what: "Microsoft's native Windows UI framework. Screens are written in XAML, logic in C#. Runs on .NET 8 or a newer LTS version.",
+    pros: ["Starts in about a second and responds immediately", "Best Windows hardware access: USB printers, serial ports, raw printing", "Mature data grids for products and sales", "Free and open source (.NET). Visual Studio Community is free for individuals and small teams", "Single installer, no runtime needed for the shop PC if self-contained"],
+    cons: ["Windows only. Does not run natively on Linux", "Android needs a separate app or a web viewer", "XAML has a learning curve", "Full rewrite of the current app"],
+    speedNote: "Very fast. Typically the quickest to open and print on Windows.",
+    cost: "Free (.NET is free and open source).",
+    printing: "Sends raw ESC/POS bytes to the printer through the Windows print API (RAW data type). Receipts print without a print dialog. Cash drawer opens with ESC p.",
+    scanner: "USB keyboard-style scanners work with a focused input field. Serial (COM) scanners through SerialPort.",
+    android: "Not native. Use a companion Android app or a viewer that reads the database over the LAN or from Supabase.",
+    linux: "No. Would need a different stack for Linux.",
+    reuse: "Only as a reference for business rules. The screens are rebuilt.",
+    best: "A Windows-only shop that wants the fastest, most reliable hardware support."
+  },
+  {
+    name: "Avalonia UI (C#)", short: "Avalonia", tag: "Cross-platform C# · Windows, Linux, Android",
+    r: { speed: 4, cost: 5, hw: 4, android: 4, linux: 5, reuse: 1, build: 4, install: 4, maturity: 3 },
+    what: "A XAML framework similar to WPF that runs on Windows, Linux, macOS, and Android from one C# codebase.",
+    pros: ["One codebase for Windows, Linux, and Android", "Free core under the MIT licence", "Uses the same skills as WPF", "Good fit if the phone must also bill"],
+    cons: ["Smaller ecosystem and fewer tutorials than WPF", "Some controls are less mature", "Android printing over Bluetooth needs Android-specific code", "Needs a careful test on each platform"],
+    speedNote: "Close to WPF on Windows. Fast startup and low memory use.",
+    cost: "Free (MIT licence for the core framework).",
+    printing: "On Windows, the same raw printing approach as WPF through P/Invoke. On Linux, printing usually goes through CUPS.",
+    scanner: "USB keyboard-style scanners work as text input. Serial scanners through a serial library.",
+    android: "Native Android app from the same code. Bluetooth printers need Android-specific code.",
+    linux: "Yes. Runs on Linux desktops.",
+    reuse: "Only as a reference for business rules.",
+    best: "Windows and Linux main computers, with a phone app that also bills."
+  },
+  {
+    name: "Electron (JavaScript / TypeScript)", short: "Electron", tag: "Web tech in a desktop shell · reuses TypeScript",
+    r: { speed: 2, cost: 5, hw: 4, android: 1, linux: 5, reuse: 5, build: 5, install: 3, maturity: 5 },
+    what: "A desktop app that bundles Chromium and Node.js. The UI is HTML and CSS; the backend is Node.js.",
+    pros: ["Reuses your current TypeScript code and UI most directly", "Huge npm ecosystem, including ESC/POS printing and serial packages", "Works on Windows, Linux, and macOS", "Fast to build with AI help"],
+    cons: ["Heavy: installers often 100 MB or more", "Startup takes 1–3 seconds, and memory use can exceed 200 MB", "Native modules (serial, USB) must be rebuilt for each Electron version", "Android not supported"],
+    speedNote: "Screens are quick once open, but startup and memory are heavier than native.",
+    cost: "Free (MIT licence).",
+    printing: "Silent HTML printing with webContents.print({ silent: true, deviceName }). Raw ESC/POS through a Node package. HTML printing is less exact than raw bytes.",
+    scanner: "Keyboard-style scanners work in web inputs. Serial scanners through the serialport package.",
+    android: "Not supported. You'd need a separate app or viewer.",
+    linux: "Yes. Works on Linux.",
+    reuse: "High. Much of the TypeScript logic and UI can carry over.",
+    best: "The fastest route if keeping the current TypeScript code matters most."
+  },
+  {
+    name: "Tauri 2 (Rust + web UI)", short: "Tauri 2", tag: "Small and light · Windows, Linux, Android",
+    r: { speed: 4, cost: 5, hw: 3, android: 4, linux: 5, reuse: 3, build: 3, install: 4, maturity: 3 },
+    what: "A desktop and mobile app that uses the system WebView (WebView2 on Windows) for the UI and Rust for the backend.",
+    pros: ["Small installers, usually under 20 MB", "Low memory compared with Electron", "Supports Windows, Linux, and Android", "Keeps a web-style UI, so some frontend code can be reused"],
+    cons: ["Rust has a steep learning curve and long compile times", "Business logic would need rewriting in Rust, or running as a separate Node process", "Smaller plugin ecosystem for POS hardware", "Still a web-style UI, so it's not as responsive as native"],
+    speedNote: "Fast startup and low memory use. Printing and scanner code is written by hand.",
+    cost: "Free (MIT or Apache-2.0).",
+    printing: "Raw printing needs Rust crates or custom Windows API calls. Plugins for printing exist but raw ESC/POS usually needs custom code.",
+    scanner: "Keyboard-style scanners work in web inputs. Serial scanners through a Rust serial crate.",
+    android: "Supported in Tauri 2, but the mobile side is newer than the desktop side.",
+    linux: "Yes.",
+    reuse: "Partial. The UI can be reused, but the logic would move to Rust.",
+    best: "A light app with a web-style UI, if you're happy to work with Rust."
+  },
+  {
+    name: "Qt (C++ or Python with PySide6)", short: "Qt", tag: "Mature native framework · Windows, Linux, Android",
+    r: { speed: 5, cost: 3, hw: 5, android: 4, linux: 5, reuse: 1, build: 3, install: 3, maturity: 5 },
+    what: "A mature cross-platform native framework used in industrial, kiosk, and embedded software. Qt Widgets for desktop screens; C++ or Python (PySide6) for logic.",
+    pros: ["Very fast native code", "Built-in printing (QPrinter) and serial ports (QSerialPort)", "Runs on Windows, Linux, and Android", "PySide6 lets you write the app in Python quickly"],
+    cons: ["Licence needs checking. LGPL allows free use under conditions, but commercial licences are needed for some closed-source uses", "C++ is hard to learn", "PySide6 apps are large, often over 100 MB", "Default styling needs work to look modern"],
+    speedNote: "Very fast. Strong for hardware-heavy work.",
+    cost: "Free under LGPL with conditions. Commercial licence available if the conditions don't suit you. Check the current terms.",
+    printing: "QPrinter for documents. Raw ESC/POS through the OS print API or QSerialPort.",
+    scanner: "Keyboard-style scanners work as text input. Serial scanners through QSerialPort.",
+    android: "Supported, but Android builds need more setup than desktop.",
+    linux: "Yes. Native Linux support.",
+    reuse: "Low. The screens and logic are rebuilt.",
+    best: "A hardware-heavy app across Windows and Linux, if you accept a more complex licence and tooling."
+  },
+  {
+    name: "Delphi or Lazarus (Object Pascal)", short: "Delphi / Lazarus", tag: "Native compiled · small single .exe",
+    r: { speed: 5, cost: 3, hw: 4, android: 3, linux: 4, reuse: 1, build: 2, install: 5, maturity: 4 },
+    what: "A native compiler for Object Pascal. Delphi (paid) uses VCL for Windows and FireMonkey for cross-platform, including Android. Lazarus is the free equivalent.",
+    pros: ["Single small .exe with no runtime to install", "Very fast startup and direct Windows API printing", "FireDAC handles SQLite cleanly", "Long history in business and POS software"],
+    cons: ["Delphi is commercial. Lazarus is free but has a smaller community", "Fewer developers available to hire", "FireMonkey Android support is less polished than native", "AI coding help for Pascal is weaker than for C# or TypeScript"],
+    speedNote: "Excellent on Windows. Very small and quick to start.",
+    cost: "Lazarus is free. Delphi is paid, with a Community Edition that has usage limits. Check current terms.",
+    printing: "Windows printer API with raw data type. Lazarus can do this too.",
+    scanner: "Keyboard-style scanners work as input. Serial scanners through a serial component.",
+    android: "Possible with FireMonkey. Less polished than native Android code.",
+    linux: "Lazarus runs on Linux.",
+    reuse: "Low. The logic and screens are rebuilt.",
+    best: "A small, fast Windows app, if you can hire Pascal developers or are comfortable with Lazarus."
+  }
+];
+
+// ---------- SLIDERS ----------
+const state = {};
+function buildSliders() {
+  const box = document.getElementById("sliders");
+  box.innerHTML = "";
+  CRITERIA.forEach(c => {
+    state[c.key] = c.def;
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    wrap.innerHTML = `
+      <label>${c.label} <span class="val" id="v-${c.key}">${c.def}</span></label>
+      <input type="range" min="0" max="5" step="1" value="${c.def}" id="s-${c.key}" />
+      <small>${c.hint}</small>`;
+    box.appendChild(wrap);
+    wrap.querySelector("input").addEventListener("input", e => {
+      state[c.key] = Number(e.target.value);
+      document.getElementById("v-" + c.key).textContent = state[c.key];
+      renderResults();
+    });
+  });
+}
+function setSlider(key, val) {
+  state[key] = val;
+  document.getElementById("s-" + key).value = val;
+  document.getElementById("v-" + key).textContent = val;
+}
+function resetSliders() { CRITERIA.forEach(c => setSlider(c.key, c.def)); renderResults(); }
+function preset(which) {
+  const p = {
+    free:    { cost: 5, install: 5, reuse: 4, speed: 3, hw: 3, android: 2, linux: 3, build: 4, maturity: 3 },
+    speed:   { speed: 5, hw: 5, install: 4, cost: 3, android: 2, linux: 2, reuse: 1, build: 3, maturity: 3 },
+    android: { android: 5, linux: 4, hw: 4, speed: 4, cost: 4, install: 3, reuse: 2, build: 3, maturity: 3 },
+  }[which];
+  CRITERIA.forEach(c => setSlider(c.key, p[c.key] ?? c.def));
+  renderResults();
+}
+
+// ---------- RESULTS ----------
+function renderResults() {
+  const totalW = CRITERIA.reduce((s, c) => s + state[c.key], 0) || 1;
+  const scored = TECHS.map(t => {
+    const raw = CRITERIA.reduce((s, c) => s + state[c.key] * t.r[c.key], 0);
+    return { t, pct: Math.round((raw / (totalW * 5)) * 100) };
+  }).sort((a, b) => b.pct - a.pct);
+  const max = scored[0].pct || 1;
+  document.getElementById("results").innerHTML =
+    `<h3 style="margin:0 0 6px">Your ranking</h3>` +
+    scored.map((s, i) => `
+      <div class="row ${i === 0 ? "rank-1" : ""}">
+        <div class="name">${i + 1}. ${s.t.short}</div>
+        <div class="bar"><div style="width:${Math.round((s.pct / 100) * 100)}%"></div></div>
+        <div class="score">${s.pct}%</div>
+      </div>`).join("") +
+    `<p class="sub" style="margin-top:10px">Score = your priorities × each technology's ratings, as a share of the maximum possible.</p>`;
+}
+
+// ---------- CARDS ----------
+function renderCards() {
+  document.getElementById("cards").innerHTML = TECHS.map((t, i) => `
+    <details ${i === 0 ? "open" : ""}>
+      <summary>
+        <span class="title">${t.name}</span>
+        <span class="tag">${t.tag}</span>
+      </summary>
+      <div class="detail">
+        <div class="wide"><p style="margin:0">${t.what}</p></div>
+        <div class="good">
+          <h4>Pros</h4>
+          <ul class="bullets">${t.pros.map(p => `<li>${p}</li>`).join("")}</ul>
+        </div>
+        <div class="bad">
+          <h4>Cons</h4>
+          <ul class="bullets">${t.cons.map(p => `<li>${p}</li>`).join("")}</ul>
+        </div>
+        <div class="wide kv">
+          <b>Speed</b><span>${t.speedNote}</span>
+          <b>Cost</b><span>${t.cost}</span>
+          <b>Printing</b><span>${t.printing}</span>
+          <b>USB scanner</b><span>${t.scanner}</span>
+          <b>Android</b><span>${t.android}</span>
+          <b>Linux</b><span>${t.linux}</span>
+          <b>Reuse of current code</b><span>${t.reuse}</span>
+          <b>Best for</b><span>${t.best}</span>
+        </div>
+      </div>
+    </details>`).join("");
+}
+
+// ---------- TABLE ----------
+function dot(v) {
+  const c = v >= 4 ? "#059669" : v === 3 ? "#d97706" : "#dc2626";
+  return `<span class="dot" style="background:${c}"></span>${v}`;
+}
+function renderTable() {
+  const head = `<tr><th>Technology</th>${CRITERIA.map(c => `<th>${c.label.replace(" (startup and screens)","").replace(" (Reuse of current TypeScript code)","")}</th>`).join("")}</tr>`;
+  const rows = TECHS.map(t => `<tr><td>${t.short}</td>${CRITERIA.map(c => `<td>${dot(t.r[c.key])}</td>`).join("")}</tr>`).join("");
+  document.getElementById("table").innerHTML = `<thead>${head}</thead><tbody>${rows}</tbody>`;
+}
+
+buildSliders();
+renderCards();
+renderTable();
+renderResults();
+</script>
+
+-->
+</body>
+</html>

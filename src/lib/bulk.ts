@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Sare records ek file se UPDATE karna (bulk edit) -- photos ke siwa
 // ---------------------------------------------------------------------------
@@ -113,7 +117,7 @@ const SHEETS = {
   Settings: SETTINGS_COLS,
 } as const;
 
-/** Kabhi file se na badalne wali settings (suraksha) */
+/** Kabhi file se na badalne wali settings (suraksha) *//*
 const LOCKED_SETTINGS = ["security.sessionSecret", "bill.nextSaleNo", "bill.nextPurchaseNo", "bill.nextProvisionalNo", "bill.nextSupplierReturnNo", "bill.nextStockTakeNo"];
 
 const CLEAR = "__CLEAR__";
@@ -301,7 +305,7 @@ export function buildDataFile(): Buffer {
   return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
 }
 
-/** Setting ki asal qeemat (array/object/number/string) */
+/** Setting ki asal qeemat (array/object/number/string) *//*
 function parseSetting(raw: string): unknown {
   try {
     return JSON.parse(raw);
@@ -310,7 +314,7 @@ function parseSetting(raw: string): unknown {
   }
 }
 
-/** File me dikhane ke liye: array/object ho to poora JSON, warni saada likhat */
+/** File me dikhane ke liye: array/object ho to poora JSON, warni saada likhat *//*
 function safeSettingText(raw: string): string {
   const v = parseSetting(raw);
   if (v == null) return "";
@@ -318,7 +322,7 @@ function safeSettingText(raw: string): string {
   return String(v);
 }
 
-/** File se wapas padhte waqt: qisam (number / true-false / JSON) pehle jaisi rahe */
+/** File se wapas padhte waqt: qisam (number / true-false / JSON) pehle jaisi rahe *//*
 function parseSettingInput(raw: string): unknown {
   if (raw === "") return "";
   if (raw === "true") return true;
@@ -362,7 +366,7 @@ function text(v: unknown): string {
   return String(v).trim();
 }
 
-/** KHALI = chhoR do · __CLEAR__ = saaf kar do · warna naya value */
+/** KHALI = chhoR do · __CLEAR__ = saaf kar do · warna naya value *//*
 function val(v: unknown): { set: boolean; clear: boolean; raw: string } {
   const t = text(v);
   if (t === "") return { set: false, clear: false, raw: "" };
@@ -995,3 +999,5 @@ export async function commitBulkUpdate(
 
   return out;
 }
+
+*/

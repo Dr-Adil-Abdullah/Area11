@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 "use client";
 
 import { Fragment, useEffect, useMemo, useState } from "react";
@@ -109,7 +113,7 @@ export default function ProductsClient({
     );
   }, [products, search]);
 
-  /** Filters ke mutabiq server se list mangwao (server hi sort karta hai) */
+  /** Filters ke mutabiq server se list mangwao (server hi sort karta hai) *//*
   async function loadFiltered() {
     const p = new URLSearchParams({ limit: "300" });
     if (search.trim()) p.set("q", search.trim());
@@ -246,10 +250,10 @@ export default function ProductsClient({
   useEffect(() => {
     const t = setTimeout(() => { void loadFiltered(); }, 250);
     return () => clearTimeout(t);
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    /* eslint-disable-next-line react-hooks/exhaustive-deps *//*
   }, [search, fCat, fComp, fRoom, fStock, fSort]);
 
-  /** Groups: category / company / room ke hisaab se band-o-basta */
+  /** Groups: category / company / room ke hisaab se band-o-basta *//*
   const groups = useMemo(() => {
     if (groupBy === "none") return null;
     const key = (p: Product) =>
@@ -263,7 +267,7 @@ export default function ProductsClient({
       map.get(k)!.push(p);
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    /* eslint-disable-next-line react-hooks/exhaustive-deps *//*
   }, [filtered, groupBy]);
 
 
@@ -321,7 +325,7 @@ export default function ProductsClient({
     await refreshLists(); router.refresh();
   }
 
-  /** Select ke andar se nayi category (naam wapas milega) */
+  /** Select ke andar se nayi category (naam wapas milega) *//*
   async function addCategoryInline(name: string): Promise<number | null> {
     const r = await (await fetch("/api/categories", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }),
@@ -401,7 +405,7 @@ export default function ProductsClient({
         </button>
       </div>
 
-      {/* Form */}
+      {/* Form *//*}
       {showForm && (
         <div className="card">
           <div className="card-head">
@@ -555,7 +559,7 @@ export default function ProductsClient({
       )}
 
       <div className="grid gap-4 lg:grid-cols-4">
-        {/* List */}
+        {/* List *//*}
         <div className="card lg:col-span-3">
           <div className="card-head flex-col !items-stretch gap-2">
             <div className="flex items-center justify-between gap-2">
@@ -570,7 +574,7 @@ export default function ProductsClient({
                 />
               </div>
             </div>
-            {/* Filters */}
+            {/* Filters *//*}
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <select className="select !py-1 !text-xs" value={fCat} onChange={(e) => setFCat(e.target.value)}>
                 <option value="">Sab categories</option>
@@ -699,7 +703,7 @@ export default function ProductsClient({
           </div>
         </div>
 
-        {/* Side: categories + companies */}
+        {/* Side: categories + companies *//*}
         <div className="space-y-4">
           <div className="card">
             <div className="card-head">
@@ -850,3 +854,5 @@ export default function ProductsClient({
     </div>
   );
 }
+
+*/

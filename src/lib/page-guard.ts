@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Page guard (sirf owner/manager wale safhe)
 // ---------------------------------------------------------------------------
@@ -7,7 +11,7 @@
 import { redirect } from "next/navigation";
 import { currentUser, type SessionUser } from "./session";
 
-/** Owner ya Manager ke liye safha -- warna wapas dashboard/counter par */
+/** Owner ya Manager ke liye safha -- warna wapas dashboard/counter par *//*
 export async function requireShopManagerPage(): Promise<SessionUser> {
   const me = await currentUser();
   if (!me) redirect("/login");
@@ -15,10 +19,12 @@ export async function requireShopManagerPage(): Promise<SessionUser> {
   return me;
 }
 
-/** Sirf owner wale safhe (Settings ke staff card jaisa) */
+/** Sirf owner wale safhe (Settings ke staff card jaisa) *//*
 export async function requireOwnerPage(): Promise<SessionUser> {
   const me = await currentUser();
   if (!me) redirect("/login");
   if (me.role !== "owner") redirect("/");
   return me;
 }
+
+*/

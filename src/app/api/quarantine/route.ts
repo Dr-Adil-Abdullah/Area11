@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - QUARANTINE (Spec 3.3 + U-34): wapsi hua maal jo abhi shelf par nahi
 //   GET    = fehrist (abhi quarantine me) + poori history
 //   POST   = faisla: stock me wapas / expiry-kharaab / bech diya  (sirf owner/manager)
@@ -33,3 +37,7 @@ export async function POST(req: Request) {
     { action: "update", module: "Returns", entity: "Quarantine", entityId: b.id, req }
   );
 }
+
+*/
+
+export {};

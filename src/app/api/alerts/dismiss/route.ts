@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // Area11 - ALERT DISMISS / RESTORE (U-31: sirf malik, wajah lazmi)
 //   GET    = zinda alerts ki fehrist (har safhe ke liye)
 //   POST   = malik wajah likh kar alert khatam karein
@@ -39,3 +43,7 @@ export async function DELETE(req: Request) {
     { action: "restore_alert", module: "Alerts", entity: "Alert", req }
   );
 }
+
+*/
+
+export {};

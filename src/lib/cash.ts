@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 // ---------------------------------------------------------------------------
 // Area11 - Cash book: day summary, customer collections, supplier payments,
 // expenses, owner drawings. (Phase 2 ka zaroori hissa)
@@ -36,7 +40,7 @@ export function daySummary(day?: string) {
   const expectedCash = cashIn - cashRefunds - supplierPaid - expenses - drawings;
   return { day: d, bills, voided, salesTotal, creditGiven, returnsTotal,
            profit: netProfitPaisa({ salesPaisa: salesTotal, refundPaisa: returnsTotal, costPaisa: salesTotal - profit, returnedCostPaisa: returnedCost }),
-           /** waqai stock me wapas aaye maal ki laagat (tafail ke liye) */
+           /** waqai stock me wapas aaye maal ki laagat (tafail ke liye) *//*
            returnedCostPaisa: returnedCost,
            cashIn, cashRefunds, supplierPaid, expenses, drawings, expectedCash };
 }
@@ -144,3 +148,5 @@ export const recentExpenses = () => query<{ id: number; date: string; category: 
   "SELECT id, date, category, title, amount_paisa FROM expenses ORDER BY id DESC LIMIT 15");
 export const recentDrawings = () => query<{ id: number; date: string; type: string; amount_paisa: number; note: string | null }>(
   "SELECT id, date, type, amount_paisa, note FROM owner_drawings ORDER BY id DESC LIMIT 15");
+
+*/

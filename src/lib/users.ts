@@ -1,3 +1,7 @@
+/*
+PREVIOUS CODE - commented out on purpose (2026-10-12).
+Reference only: kept readable so it can be studied later,
+but NOTHING inside runs, so it cannot throw errors.
 import { audit } from "./audit";
 // ---------------------------------------------------------------------------
 // Area11 - Users (staff accounts: Owner / Manager / Cashier)
@@ -23,7 +27,7 @@ export type UserRow = {
   created_at: string;
 };
 
-/** DB row + secret columns (sirf andar istemal -- bahar kabhi nahi jate) */
+/** DB row + secret columns (sirf andar istemal -- bahar kabhi nahi jate) *//*
 type UserSecretRow = UserRow & { pin_hash: string | null; password_hash: string | null };
 
 export type UserPublic = {
@@ -89,11 +93,11 @@ export type UserInput = {
   active?: boolean;
 };
 
-/** Naya user banao (sirf owner kar sakta hai -- check API me hota hai) */
+/** Naya user banao (sirf owner kar sakta hai -- check API me hota hai) *//*
 export function createUser(
   input: UserInput,
   pinLength = 4,
-  /** Spec 2: kaun bana raha hai (actor) -- log me isi ka naam jayega */
+  /** Spec 2: kaun bana raha hai (actor) -- log me isi ka naam jayega *//*
   actor?: { id?: number; name?: string } | null
 ): number {
   const name = (input.name ?? "").trim();
@@ -140,12 +144,12 @@ export function createUser(
   return newId;
 }
 
-/** User update karo (naam, role, PIN/password, active) */
+/** User update karo (naam, role, PIN/password, active) *//*
 export function updateUser(
   id: number,
   patch: Partial<UserInput>,
   pinLength = 4,
-  /** Spec 2: kaun badal raha hai (actor) */
+  /** Spec 2: kaun badal raha hai (actor) *//*
   actor?: { id?: number; name?: string } | null
 ): void {
   const current = get<UserSecretRow>(`SELECT * FROM users WHERE id = ?`, [id]);
@@ -222,7 +226,7 @@ export type LoginResult =
   | { ok: true; user: { id: number; name: string; role: string } }
   | { ok: false; error: string };
 
-/** Login check: owner = password, staff = naam + PIN */
+/** Login check: owner = password, staff = naam + PIN *//*
 export function checkLogin(input: {
   mode: "owner" | "staff";
   name?: string;
@@ -255,3 +259,5 @@ export function checkLogin(input: {
 }
 
 export const ALL_ROLES = ROLES;
+
+*/
